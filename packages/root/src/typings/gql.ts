@@ -270,6 +270,8 @@ export type Queue = {
   name: Scalars['String'];
   readonly?: Maybe<Scalars['Boolean']>;
   keyPrefix?: Maybe<Scalars['String']>;
+  /** Cosmetic label used by the dashboard to group related queues under a single collapsible entry in the sidebar. Set via QueueConfig.group when wrapping the queue in a BullAdapter/BullMQAdapter. */
+  group?: Maybe<Scalars['String']>;
   /** https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#queuecount */
   count: Scalars['Int'];
   /** https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#queuegetjobcounts */

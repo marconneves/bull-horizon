@@ -21,6 +21,12 @@ export const queueTypeDef = gql`
     readonly: Boolean
     keyPrefix: String
     """
+    Cosmetic label used by the dashboard to group related queues under a
+    single collapsible entry in the sidebar. Set via QueueConfig.group when
+    wrapping the queue in a BullAdapter/BullMQAdapter.
+    """
+    group: String
+    """
     https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#queuecount
     """
     count: Int!

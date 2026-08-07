@@ -14,12 +14,22 @@ const jobStatuses = without(
   JobStatus.Stuck
 ) as JobStatus[];
 
+// Demo-only: shows off queue grouping without needing real business flows.
+const DEMO_GROUPS: Record<number, string> = {
+  0: 'Ingest & Processing',
+  1: 'Ingest & Processing',
+  2: 'Ingest & Processing',
+  3: 'Typesense Indexing',
+  4: 'Typesense Indexing',
+};
+
 const generateData = () => {
   const queues = range(QUEUES_AMOUNT).map((n) => ({
     id: uuidv4(),
     name: `queue:${n}`,
     isPaused: false,
     keyPrefix: 'bull',
+    group: DEMO_GROUPS[n] ?? null,
   }));
   const jobs = range(JOBS_AMOUNT).map((n) => {
     const status = sample(jobStatuses) as JobStatus;

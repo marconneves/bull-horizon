@@ -1,15 +1,19 @@
 import { JobStatus } from '@/typings/gql';
-import { deepPurple, grey, cyan, red, green, blue } from '@mui/material/colors';
 
+// Job-status semantics are intentionally separate from the brand accent
+// (see memorys/architecture.md / theme.ts `horizon` palette) — these read as
+// signal colors on an instrument panel, not as extensions of the amber
+// brand mark.
 const palette: Record<JobStatus, string> = {
-  [JobStatus.Failed]: red[500],
-  [JobStatus.Completed]: green[500],
-  [JobStatus.Delayed]: blue[800],
-  [JobStatus.Waiting]: deepPurple[500],
-  [JobStatus.Paused]: grey[600],
-  [JobStatus.Active]: cyan[500],
-  [JobStatus.Stuck]: grey[400],
-  [JobStatus.Unknown]: grey[300],
+  [JobStatus.Failed]: '#e5484d',
+  [JobStatus.Completed]: '#3dd68c',
+  [JobStatus.Delayed]: '#4c9fe8',
+  [JobStatus.Waiting]: '#8d82e6',
+  [JobStatus.Active]: '#33c2c9',
+  [JobStatus.Prioritized]: '#ec4899',
+  [JobStatus.Paused]: '#83795f',
+  [JobStatus.Stuck]: '#a79c86',
+  [JobStatus.Unknown]: '#6b6353',
 };
 export const useJobStatusesPalette = () => palette;
 export const useJobStatusColor = (status: JobStatus): string => {

@@ -12,6 +12,7 @@ import { useRemoveJobSelectionOnUnmount } from './hooks';
 import ms from 'ms';
 import AccordionJsonView from '@/components/AccordionJsonView';
 import { usePreferencesStore } from '@/stores/preferences';
+import { useAddDataSearchFilter } from '@/screens/jobs/Filters/DataSearch/hooks';
 
 const useStyles = makeStyles((theme) => ({
   rowWithExtra: {
@@ -47,6 +48,7 @@ const Job = ({
   readonly,
 }: TJobProps) => {
   const prefs = usePreferencesStore();
+  const addDataSearchFilter = useAddDataSearchFilter();
   const date = useFormatDateTime(job.timestamp);
   const cls = useStyles();
   useRemoveJobSelectionOnUnmount(job.id, isSelected, removeSelected);
@@ -97,6 +99,8 @@ const Job = ({
                 <AccordionJsonView
                   defaultExpanded={prefs.expandJobData}
                   header="Job Data"
+                  filterBasePath="data"
+                  onFilterAdded={addDataSearchFilter}
                 >
                   {job.data}
                 </AccordionJsonView>

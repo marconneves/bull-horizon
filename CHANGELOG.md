@@ -15,6 +15,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * expose `Query.metricsEnabled` in the GraphQL schema and hide the Metrics tab/icon in the dashboard UI when the metrics collector isn't configured, instead of showing a raw GraphQL error on click
 * add `Mutation.promoteJobs(queue, jobs)` to bulk-promote delayed jobs, and wire it into the dashboard's "selected jobs" toolbar (shown when the Delayed tab has jobs selected), instead of only allowing one-by-one promotion
+* add `Queue.group`, a cosmetic label set via `QueueConfig.group` on `BullAdapter`/`BullMQAdapter`, and render queues that share a group as a collapsible entry in the dashboard sidebar (chevron + indented children), with a per-group job-count summary that only shows non-zero statuses; queues without a group render exactly as before
 
 
 ## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)

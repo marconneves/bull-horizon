@@ -9,7 +9,7 @@ import { JobStatus } from '@/typings/gql';
 import { useActiveStep } from './hooks';
 import makeStyles from '@mui/styles/makeStyles';
 import Box from '@mui/material/Box';
-import SimpleJsonView from '@/components/SimpleJsonView';
+import JsonTreeView from '@/components/JsonTreeView';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -77,10 +77,10 @@ export default function JobInfo({ job }: TProps) {
         </Step>
       </Stepper>
       {returnData && (
-        <SimpleJsonView className={cls.text}>{returnData}</SimpleJsonView>
+        <JsonTreeView className={cls.text}>{returnData}</JsonTreeView>
       )}
       {job.opts && (
-        <SimpleJsonView className={cls.text}>{job.opts}</SimpleJsonView>
+        <JsonTreeView className={cls.text}>{job.opts}</JsonTreeView>
       )}
     </Box>
   );

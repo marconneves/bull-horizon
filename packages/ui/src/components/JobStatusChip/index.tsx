@@ -18,6 +18,9 @@ export default function JobStatusChip(props: TProps) {
       style={{
         color: '#fff',
         backgroundColor,
+        fontFamily: '"IBM Plex Mono", ui-monospace, monospace',
+        fontVariantNumeric: 'tabular-nums',
+        fontWeight: 600,
       }}
       size={props.size}
       className={props.className}

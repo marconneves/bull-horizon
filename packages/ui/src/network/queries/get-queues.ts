@@ -12,6 +12,7 @@ export const getQueues = (): Promise<GetQueuesQuery> =>
           readonly
           name
           keyPrefix
+          group
           isPaused
           jobsCounts {
             waiting
