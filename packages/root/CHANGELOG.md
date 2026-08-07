@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [6.0.0](https://github.com/s-r-x/bull-monitor/compare/v5.4.0...v6.0.0) (2026-08-07)
+# [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
 
 
 ### Features
@@ -15,6 +15,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### BREAKING CHANGES
 
 * BullMonitor is no longer generic and no longer owns an ApolloServer instance (createServer()/startServer()/the `server` field were removed) — framework adapters now instantiate and own @apollo/server themselves, using the new createContext() method
+* npm scope renamed: `@bull-monitor/root` → `@bull-horizon/root` (first publish under the new scope). The Redis key prefix (`bull_monitor::metrics::`) is intentionally kept unchanged for metrics continuity.
 
 
 

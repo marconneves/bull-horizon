@@ -1,19 +1,19 @@
-# @bull-monitor/fastify
+# @bull-horizon/fastify
 
-[Fastify](https://github.com/fastify/fastify) adapter for [bull-monitor](https://github.com/s-r-x/bull-monitor)
+[Fastify](https://github.com/fastify/fastify) adapter for [bull-horizon](https://github.com/marconneves/bull-horizon)
 
 ## Usage
 
 ```sh
-npm i @bull-monitor/fastify
+npm i @bull-horizon/fastify
 ```
 
 ```typescript
 import Fastify from 'fastify';
-import { BullMonitorFastify } from '@bull-monitor/fastify';
-import { BullAdapter } from '@bull-monitor/root/dist/bull-adapter';
+import { BullMonitorFastify } from '@bull-horizon/fastify';
+import { BullAdapter } from '@bull-horizon/root/dist/bull-adapter';
 // for BullMQ users
-// import { BullMQAdapter } from "@bull-monitor/root/dist/bullmq-adapter";
+// import { BullMQAdapter } from "@bull-horizon/root/dist/bullmq-adapter";
 import Queue from 'bull';
 
 (async () => {

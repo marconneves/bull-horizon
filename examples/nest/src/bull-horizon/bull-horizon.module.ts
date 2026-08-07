@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bull';
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { BullMonitorService } from './bull-monitor.service';
+import { BullMonitorService } from './bull-horizon.service';
 
 @Module({
   imports: [BullModule.registerQueue({ name: 'person' })],
@@ -10,6 +10,6 @@ export class BullMonitorModule implements NestModule {
   constructor(private monitor: BullMonitorService) {}
   async configure(consumer: MiddlewareConsumer) {
     await this.monitor.init();
-    consumer.apply(this.monitor.router).forRoutes('/bull-monitor');
+    consumer.apply(this.monitor.router).forRoutes('/bull-horizon');
   }
 }

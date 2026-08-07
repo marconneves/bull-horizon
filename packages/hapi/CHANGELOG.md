@@ -3,9 +3,9 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [6.0.0](https://github.com/s-r-x/bull-monitor/compare/v5.4.0...v6.0.0) (2026-08-07)
+# [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
 
-**Note:** No functional change. Internal adjustment only, to keep building against `@bull-monitor/root` v6 (which stopped owning an `ApolloServer` instance) — this package intentionally stays on `apollo-server-hapi` v3, since Apollo dropped first-party Hapi support in `@apollo/server` v4. See ADR-001 in `memorys/architecture.md`.
+**Note:** No functional change. Internal adjustment only, to keep building against `@bull-horizon/root` v6 (which stopped owning an `ApolloServer` instance) — this package intentionally stays on `apollo-server-hapi` v3, since Apollo dropped first-party Hapi support in `@apollo/server` v4. See ADR-001 in `memorys/architecture.md`. Also renamed npm scope: `@bull-monitor/hapi` → `@bull-horizon/hapi` (first publish under the new scope).
 
 
 

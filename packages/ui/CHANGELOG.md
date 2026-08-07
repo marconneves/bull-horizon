@@ -3,9 +3,9 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [6.0.0](https://github.com/s-r-x/bull-monitor/compare/v5.4.0...v6.0.0) (2026-08-07)
+# [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
 
-**Note:** Version bump only for package @bull-monitor/ui (bumped `graphql` to `^16` to match the server-side @apollo/server v4 migration; no UI-facing change).
+**Note:** Bumped `graphql` to `^16` to match the server-side @apollo/server v4 migration; no UI-facing change. Also renamed npm scope: `@bull-monitor/ui` → `@bull-horizon/ui` (first publish under the new scope) — note the CDN-loaded dashboard assets (jsDelivr) now resolve against this new package name, so `@bull-horizon/ui` must be published before any `@bull-horizon/*` server adapter is used in production, or the dashboard UI will fail to load its assets.
 
 
 

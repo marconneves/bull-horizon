@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { BullMonitorFastify } from '@bull-monitor/fastify';
+import { BullMonitorFastify } from '@bull-horizon/fastify';
 
 const port = 3000;
 const baseUrl = '/some/nested/url';

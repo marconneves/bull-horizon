@@ -1,4 +1,4 @@
-## bull-monitor search
+## bull-horizon search
 
 Let's take this job as an example:
 

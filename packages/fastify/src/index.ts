@@ -3,7 +3,7 @@ import {
   typeDefs,
   resolvers,
   type BullMonitorContext,
-} from '@bull-monitor/root';
+} from '@bull-horizon/root';
 import { ApolloServer, HeaderMap } from '@apollo/server';
 import type { HTTPGraphQLRequest } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';

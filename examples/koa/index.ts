@@ -1,4 +1,4 @@
-import { BullMonitorKoa } from '@bull-monitor/koa';
+import { BullMonitorKoa } from '@bull-horizon/koa';
 import Koa from 'koa';
 
 const port = 3000;

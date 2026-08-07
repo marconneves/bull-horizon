@@ -1,12 +1,12 @@
 {
-  "name": "@bull-monitor/entrypoint",
+  "name": "@bull-horizon/entrypoint",
   "version": "0.1.0",
   "description": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git"
+    "url": "https://github.com/marconneves/bull-horizon.git"
   },
-  "homepage": "https://s-r-x.github.io/bull-monitor",
+  "homepage": "https://marconneves.github.io/bull-horizon",
   "main": "index.js",
   "keywords": [],
   "author": "",

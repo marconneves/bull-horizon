@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [6.0.0](https://github.com/s-r-x/bull-monitor/compare/v5.4.0...v6.0.0) (2026-08-07)
+# [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
 
 
 ### Features
@@ -14,6 +14,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### BREAKING CHANGES
 
 * now depends on @apollo/server instead of apollo-server-fastify; requires typescript >=4.7 and Node >=14.16 in consuming projects that type-check against this package
+* npm scope renamed: `@bull-monitor/fastify` → `@bull-horizon/fastify` (first publish under the new scope)
 
 
 

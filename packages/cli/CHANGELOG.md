@@ -3,9 +3,9 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [6.0.0](https://github.com/s-r-x/bull-monitor/compare/v5.4.0...v6.0.0) (2026-08-07)
+# [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
 
-**Note:** Version bump only for package @bull-monitor/cli
+**Note:** Renamed npm scope `@bull-monitor/cli` → `@bull-horizon/cli` (first publish under the new scope) and renamed the CLI binary `bull-monitor` → `bull-horizon`.
 
 
 

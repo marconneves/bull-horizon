@@ -62,7 +62,7 @@ export abstract class BullMonitor {
       this._metricsCollector.startCollecting();
     } else {
       console.warn(
-        'Metrics collector is not initialized. Please pass the metrics config while initializing bull-monitor: { metrics: { collectInterval: { hours: 1 } } }'
+        'Metrics collector is not initialized. Please pass the metrics config while initializing bull-horizon: { metrics: { collectInterval: { hours: 1 } } }'
       );
     }
   }
@@ -126,7 +126,7 @@ export abstract class BullMonitor {
     });
     if (hasInvalid) {
       console.error(
-        'Since version 3.0.0 every queue should be wrapped in bull or bullmq adapter. Check out the bull-monitor docs for more info - https://github.com/s-r-x/bull-monitor'
+        'Since version 3.0.0 every queue should be wrapped in bull or bullmq adapter. Check out the bull-horizon docs for more info - https://github.com/marconneves/bull-horizon'
       );
     }
     return validated;

@@ -1,21 +1,21 @@
-# @bull-monitor/koa
+# @bull-horizon/koa
 
-[Koa](https://github.com/koajs/koa) adapter for [bull-monitor](https://github.com/s-r-x/bull-monitor)
+[Koa](https://github.com/koajs/koa) adapter for [bull-horizon](https://github.com/marconneves/bull-horizon)
 
 ## Usage
 
-@bull-monitor/koa has a peer dependency of koa-router
+@bull-horizon/koa has a peer dependency of koa-router
 
 ```sh
-npm i @bull-monitor/koa koa-router
+npm i @bull-horizon/koa koa-router
 ```
 
 ```typescript
-import { BullMonitorKoa } from '@bull-monitor/koa';
+import { BullMonitorKoa } from '@bull-horizon/koa';
 import Koa from 'koa';
-import { BullAdapter } from '@bull-monitor/root/dist/bull-adapter';
+import { BullAdapter } from '@bull-horizon/root/dist/bull-adapter';
 // for BullMQ users
-// import { BullMQAdapter } from "@bull-monitor/root/dist/bullmq-adapter";
+// import { BullMQAdapter } from "@bull-horizon/root/dist/bullmq-adapter";
 import Queue from 'bull';
 
 (async () => {
@@ -42,7 +42,7 @@ import Queue from 'bull';
     },
   });
   await monitor.init({
-    // optional middleware that will run before the bull-monitor router
+    // optional middleware that will run before the bull-horizon router
     middleware: async (_ctx, next) => {
       console.log('do something');
       await next();

@@ -1,19 +1,19 @@
-# @bull-monitor/hapi
+# @bull-horizon/hapi
 
-[Hapi](https://github.com/hapijs/hapi) adapter for [bull-monitor](https://github.com/s-r-x/bull-monitor)
+[Hapi](https://github.com/hapijs/hapi) adapter for [bull-horizon](https://github.com/marconneves/bull-horizon)
 
 ## Usage
 
 ```sh
-npm i @bull-monitor/hapi
+npm i @bull-horizon/hapi
 ```
 
 ```typescript
-import { BullMonitorHapi } from '@bull-monitor/hapi';
+import { BullMonitorHapi } from '@bull-horizon/hapi';
 import Hapi from '@hapi/hapi';
-import { BullAdapter } from '@bull-monitor/root/dist/bull-adapter';
+import { BullAdapter } from '@bull-horizon/root/dist/bull-adapter';
 // for BullMQ users
-// import { BullMQAdapter } from "@bull-monitor/root/dist/bullmq-adapter";
+// import { BullMQAdapter } from "@bull-horizon/root/dist/bullmq-adapter";
 import Queue from 'bull';
 
 (async () => {

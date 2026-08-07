@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import { ALIASES, DST } from './vite.config.constants';
 
 export default defineConfig({
-  base: '/bull-monitor/',
+  base: '/bull-horizon/',
   build: {
     target: 'es2015',
     outDir: DST,

@@ -1,15 +1,15 @@
 {
-  "name": "@bull-monitor/ui",
+  "name": "@bull-horizon/ui",
   "version": "6.0.0",
   "license": "MIT",
   "author": "Ilya Strus <strax1990@gmail.com>",
-  "description": "bull-monitor ui",
+  "description": "bull-horizon ui",
   "keywords": [
     "bull"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git",
+    "url": "https://github.com/marconneves/bull-horizon.git",
     "directory": "packages/ui"
   },
   "scripts": {

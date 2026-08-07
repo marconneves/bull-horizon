@@ -5,8 +5,8 @@
 // `@apollo/server` v4 (`graphql ^16`). O ajuste abaixo (construir o
 // `ApolloServer` localmente via `createContext()`) é só para acompanhar a
 // remoção de `createServer()`/`server` da classe base `BullMonitor` em
-// `@bull-monitor/root` — não é o início de uma migração para v4.
-import { BullMonitor, typeDefs, resolvers } from '@bull-monitor/root';
+// `@bull-horizon/root` — não é o início de uma migração para v4.
+import { BullMonitor, typeDefs, resolvers } from '@bull-horizon/root';
 import {
   ApolloServer,
   ApolloServerPluginStopHapiServer,
@@ -33,7 +33,7 @@ export class BullMonitorHapi extends BullMonitor {
     });
     await this.server.start();
     this.plugin = {
-      name: 'bull-monitor',
+      name: 'bull-horizon',
       register: async (app) => {
         app.route({
           method: 'GET',

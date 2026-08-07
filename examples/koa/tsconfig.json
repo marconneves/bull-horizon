@@ -10,8 +10,8 @@
     "sourceMap": false,
     "lib": ["ESNext"],
     "paths": {
-      "@bull-monitor/root": ["../../packages/root/src"],
-      "@bull-monitor/koa": ["../../packages/koa/src"]
+      "@bull-horizon/root": ["../../packages/root/src"],
+      "@bull-horizon/koa": ["../../packages/koa/src"]
     }
   },
   "exclude": ["node_modules"]

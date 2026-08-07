@@ -1,13 +1,13 @@
 {
-  "name": "@bull-monitor/fastify",
+  "name": "@bull-horizon/fastify",
   "version": "6.0.0",
-  "description": "bull-monitor for fastify",
+  "description": "bull-horizon for fastify",
   "keywords": [
     "bull"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git",
+    "url": "https://github.com/marconneves/bull-horizon.git",
     "directory": "packages/fastify"
   },
   "author": "Ilya Strus <strax1990@gmail.com>",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@apollo/server": "^4.0.0",
-    "@bull-monitor/root": "^6.0.0",
+    "@bull-horizon/root": "^6.0.0",
     "fastify-cors": "6.0.3",
     "graphql": "^16.0.0"
   },

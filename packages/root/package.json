@@ -1,12 +1,12 @@
 {
-  "name": "@bull-monitor/root",
+  "name": "@bull-horizon/root",
   "version": "6.0.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git",
+    "url": "https://github.com/marconneves/bull-horizon.git",
     "directory": "packages/root"
   },
-  "description": "bull-monitor core",
+  "description": "bull-horizon core",
   "keywords": [
     "bull"
   ],

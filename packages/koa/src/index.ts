@@ -3,7 +3,7 @@ import {
   BullMonitorContext,
   typeDefs,
   resolvers,
-} from '@bull-monitor/root';
+} from '@bull-horizon/root';
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { koaMiddleware } from '@as-integrations/koa';

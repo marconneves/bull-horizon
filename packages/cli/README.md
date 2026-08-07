@@ -1,17 +1,17 @@
-# @bull-monitor/cli
+# @bull-horizon/cli
 
-Command line interface for [bull-monitor](https://github.com/s-r-x/bull-monitor)
+Command line interface for [bull-horizon](https://github.com/marconneves/bull-horizon)
 
 ## Installation
 
 ```sh
-npm i -g @bull-monitor/cli
+npm i -g @bull-horizon/cli
 ```
 
 ## Usage
 
 ```sh
-Usage: bull-monitor -q queue1 queue2
+Usage: bull-horizon -q queue1 queue2
 
 Options:
   --redis-uri <uri>            redis uri (default: "redis://localhost:6379")

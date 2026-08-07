@@ -9,7 +9,7 @@
 - `BullMonitorContext` (type) — formato do contexto GraphQL (`{ dataSources: { bull, metrics, policies } }`).
 - `BullMonitor.createContext()` (método público de instância) — monta os data sources por-requisição a partir do estado interno (`_queues`, `_queuesMap`, `_metricsCollector`).
 
-Cada adapter instancia seu próprio `new ApolloServer<BullMonitorContext>({ persistedQueries: false, typeDefs, resolvers, introspection: this.config.gqlIntrospection, plugins })`, chama `server.start()`, e passa `context: async () => this.createContext()` para a integração de middleware do framework. **As duas opções `persistedQueries: false` e `introspection: this.config.gqlIntrospection` são obrigatórias em todo adapter novo** — sem `introspection`, a opção pública de config do bull-monitor fica silenciosamente ignorada (achado do code review, gap que existiu temporariamente em `packages/fastify`).
+Cada adapter instancia seu próprio `new ApolloServer<BullMonitorContext>({ persistedQueries: false, typeDefs, resolvers, introspection: this.config.gqlIntrospection, plugins })`, chama `server.start()`, e passa `context: async () => this.createContext()` para a integração de middleware do framework. **As duas opções `persistedQueries: false` e `introspection: this.config.gqlIntrospection` são obrigatórias em todo adapter novo** — sem `introspection`, a opção pública de config do bull-horizon fica silenciosamente ignorada (achado do code review, gap que existiu temporariamente em `packages/fastify`).
 
 ## Escolha de integração por framework
 
@@ -35,11 +35,11 @@ Cada adapter instancia seu próprio `new ApolloServer<BullMonitorContext>({ pers
 
 Ver também a nota curta em `memorys/guidelines.md`. Passo a passo completo:
 1. `cd packages/root && npm install --legacy-peer-deps && npm run build` — sempre primeiro, todo adapter depende do `dist/` atualizado.
-2. Em cada adapter: `npm install --legacy-peer-deps` (isso resolve `@bull-monitor/root` do registry público, versão antiga — esperado).
-3. Sobrescrever com link local, **usando caminhos absolutos**: `rm -rf <adapter>/node_modules/@bull-monitor/root && ln -s <abs>/packages/root <abs>/packages/<adapter>/node_modules/@bull-monitor/root`.
+2. Em cada adapter: `npm install --legacy-peer-deps` (isso resolve `@bull-horizon/root` do registry público, versão antiga — esperado).
+3. Sobrescrever com link local, **usando caminhos absolutos**: `rm -rf <adapter>/node_modules/@bull-horizon/root && ln -s <abs>/packages/root <abs>/packages/<adapter>/node_modules/@bull-horizon/root`.
 4. Se `tsc` reclamar de `DocumentNode`/`Kind` estruturalmente incompatíveis (duas instâncias físicas de `graphql`): `rm -rf <adapter>/node_modules/graphql && ln -s <abs>/packages/root/node_modules/graphql <abs>/packages/<adapter>/node_modules/graphql`.
 5. **Cuidado**: qualquer `npm install` subsequente no adapter (inclusive para instalar uma peer dependency nova) sobrescreve o symlink do passo 3 de volta para a versão do registry — refazer o symlink depois.
-6. Alternativa mais "oficial" que resolve os dois symlinks de uma vez: `npx lerna bootstrap --scope=@bull-monitor/<adapter> --include-filtered-dependencies -- --legacy-peer-deps`, rodado **depois** do `npm install` (a ordem importa — o inverso não funciona).
+6. Alternativa mais "oficial" que resolve os dois symlinks de uma vez: `npx lerna bootstrap --scope=@bull-horizon/<adapter> --include-filtered-dependencies -- --legacy-peer-deps`, rodado **depois** do `npm install` (a ordem importa — o inverso não funciona).
 
 Nenhum desses symlinks foi commitado (artefatos de `node_modules`, cobertos por `.gitignore`).
 
