@@ -21,6 +21,8 @@ import { moveJobToFailed } from '@/network/mutations/move-job-to-failed';
 import { moveJobToFailedMock } from '@/demo-mocks/network/mutations/move-job-to-failed';
 import { promoteJob } from '@/network/mutations/promote-job';
 import { promoteJobMock } from '@/demo-mocks/network/mutations/promote-job';
+import { promoteJobs } from '@/network/mutations/promote-jobs';
+import { promoteJobsMock } from '@/demo-mocks/network/mutations/promote-jobs';
 import { retryJob } from '@/network/mutations/retry-job';
 import { retryJobMock } from '@/demo-mocks/network/mutations/retry-job';
 import { updateJobData } from '@/network/mutations/update-job-data';
@@ -77,6 +79,7 @@ const mutations = {
   moveJobToCompleted: m ? moveJobToCompletedMock : moveJobToCompleted,
   moveJobToFailed: m ? moveJobToFailedMock : moveJobToFailed,
   promoteJob: m ? promoteJobMock : promoteJob,
+  promoteJobs: m ? promoteJobsMock : promoteJobs,
   removeJob: m ? removeJobMock : removeJob,
   retryJob: m ? retryJobMock : retryJob,
   updateJobData: m ? updateJobDataMock : updateJobData,

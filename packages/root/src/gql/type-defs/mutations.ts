@@ -64,6 +64,10 @@ export const mutationsTypeDef = gql`
     """
     promoteJob(queue: ID!, id: ID!): Job
     """
+    calls https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobpromote on every passed job
+    """
+    promoteJobs(queue: ID!, jobs: [ID!]!): [Job]!
+    """
     https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobupdate
     """
     updateJobData(queue: ID!, id: ID!, data: JSON): Job

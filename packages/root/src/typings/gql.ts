@@ -89,6 +89,8 @@ export type Mutation = {
   discardJob?: Maybe<Job>;
   /** https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobpromote */
   promoteJob?: Maybe<Job>;
+  /** calls https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobpromote on every passed job */
+  promoteJobs: Array<Maybe<Job>>;
   /** https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobupdate */
   updateJobData?: Maybe<Job>;
   /** https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobretry */
@@ -167,6 +169,12 @@ export type MutationDiscardJobArgs = {
 export type MutationPromoteJobArgs = {
   queue: Scalars['ID'];
   id: Scalars['ID'];
+};
+
+
+export type MutationPromoteJobsArgs = {
+  queue: Scalars['ID'];
+  jobs: Array<Scalars['ID']>;
 };
 
 

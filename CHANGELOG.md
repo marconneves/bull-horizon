@@ -14,6 +14,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Features
 
 * expose `Query.metricsEnabled` in the GraphQL schema and hide the Metrics tab/icon in the dashboard UI when the metrics collector isn't configured, instead of showing a raw GraphQL error on click
+* add `Mutation.promoteJobs(queue, jobs)` to bulk-promote delayed jobs, and wire it into the dashboard's "selected jobs" toolbar (shown when the Delayed tab has jobs selected), instead of only allowing one-by-one promotion
 
 
 ## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)

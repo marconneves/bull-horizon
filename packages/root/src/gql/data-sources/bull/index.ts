@@ -16,6 +16,7 @@ import type {
   MutationMoveJobToCompletedArgs,
   MutationMoveJobToFailedArgs,
   MutationPromoteJobArgs,
+  MutationPromoteJobsArgs,
   MutationRemoveJobArgs,
   MutationRemoveJobsArgs,
   MutationRemoveJobsByPatternArgs,
@@ -211,6 +212,13 @@ export class BullDataSource {
     const job = await this.getJob(args.queue, args.id, true);
     await job?.promote();
     return job;
+  }
+  public async promoteJobs(args: MutationPromoteJobsArgs) {
+    const jobs = await Promise.all(
+      args.jobs.map((jobId) => this.getJob(args.queue, jobId, true))
+    );
+    await Promise.all(jobs.map((job) => job?.promote()));
+    return jobs;
   }
   public async discardJob(args: MutationDiscardJobArgs) {
     const job = await this.getJob(args.queue, args.id, true);

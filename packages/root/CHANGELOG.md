@@ -14,6 +14,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Features
 
 * add `Query.metricsEnabled` and `MetricsDataSource.isEnabled()` so consumers (the dashboard UI) can check whether the metrics collector is configured before querying `metrics`
+* add `Mutation.promoteJobs(queue, jobs: [ID!]!)` to promote a batch of delayed jobs in one call, mirroring the existing `retryJobs`/`removeJobs` bulk mutations
 
 
 ## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)
