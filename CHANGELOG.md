@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)
+
+
+### Features
+
+* add the Bull Horizon logo/favicon to the dashboard UI and rename the in-app header wordmark from "Bull monitor" to "Bull Horizon"
+* rewrite the project README with the new branding, package overview and quick start
+
+
 # [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
 
 
