@@ -1,0 +1,39 @@
+{
+  "prefix": "Opensource",
+  "ticketPatterns": [
+    "COD",
+    "VY",
+    "THA"
+  ],
+  "worktreeParent": "../.worktrees",
+  "baseRef": "origin/main",
+  "branchPrefix": "feat/",
+  "submoduleMode": "local",
+  "envFiles": [
+    ".claude/settings.local.json"
+  ],
+  "devProcesses": [
+    "next dev",
+    "pnpm.*dev",
+    "nest start",
+    "vite",
+    "uvicorn"
+  ],
+  "pruneDirs": [
+    "node_modules",
+    ".next",
+    ".vercel",
+    ".turbo",
+    ".nuxt",
+    ".svelte-kit",
+    "dist",
+    "build",
+    "coverage",
+    ".cache",
+    ".parcel-cache",
+    ".vite",
+    "__pycache__",
+    ".venv",
+    ".pytest_cache"
+  ]
+}
