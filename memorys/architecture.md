@@ -33,7 +33,7 @@
 
 - **Apollo Server v2/v3 em EOL desde 2023-10-22.** Todos os 4 adapters (express/koa/hapi/fastify) dependem de `apollo-server-<framework>` (v2/v3), pacotes descontinuados sem patches de segurança futuros. Migração recomendada: `@apollo/server` (Apollo Server 4+), que exige reescrever a camada de integração de middleware em cada adapter.
 - Este débito é apontado como a causa técnica mais provável por trás do arquivamento do repositório upstream (ver `memorys/business.md` → seção 4). **Priorizar antes de qualquer nova feature nos adapters.**
-- **[EM EXECUÇÃO — ver ADR-001 abaixo]** Migração `apollo-server-*` → `@apollo/server` v4 iniciada em 2026-08-07.
+- **✅ Resolvido em 2026-08-07 (v6.0.0, commit `843915b`)** — ver ADR-001 abaixo e o detalhe de implementação em `memorys/implementations/apollo-server-v4-migration.md`.
 
 ## 📐 ADR-001 — Migração Apollo Server v2/v3 → @apollo/server v4 (2026-08-07)
 
