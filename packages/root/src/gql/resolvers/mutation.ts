@@ -10,6 +10,7 @@ import type {
   MutationMoveJobToFailedArgs,
   MutationPauseQueueArgs,
   MutationPromoteJobArgs,
+  MutationPromoteJobsArgs,
   MutationRemoveJobArgs,
   MutationRemoveJobsArgs,
   MutationRemoveJobsByPatternArgs,
@@ -101,6 +102,14 @@ export const mutationResolver: TResolvers = {
     ) {
       policies.raiseIfQueueReadonly(args.queue);
       return bull.promoteJob(args);
+    },
+    promoteJobs(
+      _,
+      args: MutationPromoteJobsArgs,
+      { dataSources: { bull, policies } }
+    ) {
+      policies.raiseIfQueueReadonly(args.queue);
+      return bull.promoteJobs(args);
     },
     removeJob(
       _,

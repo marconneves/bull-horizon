@@ -17,5 +17,6 @@ export const rootQueryTypeDef = gql`
     ): [Job!]!
     job(queue: ID!, id: ID!): Job
     redisInfo: RedisInfo
+    metricsEnabled: Boolean!
   }
 `;

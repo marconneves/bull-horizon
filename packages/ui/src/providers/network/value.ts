@@ -8,6 +8,8 @@ import { getJobById } from '@/network/queries/get-job-by-id';
 import { getJobByIdMock } from '@/demo-mocks/network/queries/get-job-by-id';
 import { getRedisInfo } from '@/network/queries/get-redis-info';
 import { getRedisInfoMock } from '@/demo-mocks/network/queries/get-redis-info';
+import { getMetricsEnabled } from '@/network/queries/get-metrics-enabled';
+import { getMetricsEnabledMock } from '@/demo-mocks/network/queries/get-metrics-enabled';
 import { getQueues } from '@/network/queries/get-queues';
 import { createJobLog } from '@/network/mutations/create-job-log';
 import { createJobLogMock } from '@/demo-mocks/network/mutations/create-job-log';
@@ -19,6 +21,8 @@ import { moveJobToFailed } from '@/network/mutations/move-job-to-failed';
 import { moveJobToFailedMock } from '@/demo-mocks/network/mutations/move-job-to-failed';
 import { promoteJob } from '@/network/mutations/promote-job';
 import { promoteJobMock } from '@/demo-mocks/network/mutations/promote-job';
+import { promoteJobs } from '@/network/mutations/promote-jobs';
+import { promoteJobsMock } from '@/demo-mocks/network/mutations/promote-jobs';
 import { retryJob } from '@/network/mutations/retry-job';
 import { retryJobMock } from '@/demo-mocks/network/mutations/retry-job';
 import { updateJobData } from '@/network/mutations/update-job-data';
@@ -60,6 +64,7 @@ const { useMocks: m } = EnvConfig;
 const queries = {
   getJobsForExport: m ? getJobsForExportMock : getJobsForExport,
   getRedisInfo: m ? getRedisInfoMock : getRedisInfo,
+  getMetricsEnabled: m ? getMetricsEnabledMock : getMetricsEnabled,
   getJobData: m ? getJobDataMock : getJobData,
   getJobLogs: m ? getJobLogsMock : getJobLogs,
   getJobs: m ? getJobsMock : getJobs,
@@ -74,6 +79,7 @@ const mutations = {
   moveJobToCompleted: m ? moveJobToCompletedMock : moveJobToCompleted,
   moveJobToFailed: m ? moveJobToFailedMock : moveJobToFailed,
   promoteJob: m ? promoteJobMock : promoteJob,
+  promoteJobs: m ? promoteJobsMock : promoteJobs,
   removeJob: m ? removeJobMock : removeJob,
   retryJob: m ? retryJobMock : retryJob,
   updateJobData: m ? updateJobDataMock : updateJobData,

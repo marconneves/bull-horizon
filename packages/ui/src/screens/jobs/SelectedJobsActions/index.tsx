@@ -3,6 +3,7 @@ import Typography from '@mui/material/Typography';
 import makeStyles from '@mui/styles/makeStyles';
 import { useSelectedJobsStore } from '@/stores/selected-jobs';
 import ReplayIcon from '@mui/icons-material/Replay';
+import FastForwardIcon from '@mui/icons-material/FastForward';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import SaveIcon from '@mui/icons-material/Save';
@@ -52,6 +53,15 @@ export default function SelectedJobsActions() {
     toast: 'Retried',
     onSuccess: clearSelectedJobs,
   });
+  const promoteMutation = useAbstractMutation({
+    mutation: mutations.promoteJobs,
+    confirm: {
+      description: 'Promote selected jobs',
+    },
+    invalidateSharedQueries: true,
+    toast: 'Promoted',
+    onSuccess: clearSelectedJobs,
+  });
   return (
     <>
       <Typography
@@ -75,6 +85,22 @@ export default function SelectedJobsActions() {
             size="large"
           >
             <ReplayIcon />
+          </IconButton>
+        </Tooltip>
+      )}
+      {activeStatus === JobStatus.Delayed && (
+        <Tooltip title="Promote selected jobs">
+          <IconButton
+            disabled={readonly}
+            onClick={() =>
+              promoteMutation.mutate({
+                queue,
+                jobs: Array.from(selectedJobs),
+              })
+            }
+            size="large"
+          >
+            <FastForwardIcon />
           </IconButton>
         </Tooltip>
       )}

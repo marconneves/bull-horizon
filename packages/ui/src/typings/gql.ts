@@ -89,6 +89,8 @@ export type Mutation = {
   discardJob?: Maybe<Job>;
   /** https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobpromote */
   promoteJob?: Maybe<Job>;
+  /** calls https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobpromote on every passed job */
+  promoteJobs: Array<Maybe<Job>>;
   /** https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobupdate */
   updateJobData?: Maybe<Job>;
   /** https://github.com/OptimalBits/bull/blob/develop/REFERENCE.md#jobretry */
@@ -223,6 +225,7 @@ export type Query = {
   jobs: Array<Job>;
   job?: Maybe<Job>;
   redisInfo?: Maybe<RedisInfo>;
+  metricsEnabled: Scalars['Boolean'];
 };
 
 
@@ -422,6 +425,14 @@ export type PromoteJobMutationVariables = Exact<{
 
 export type PromoteJobMutation = { promoteJob?: Maybe<Pick<Job, 'id'>> };
 
+export type PromoteJobsMutationVariables = Exact<{
+  queue: Scalars['ID'];
+  jobs: Array<Scalars['ID']> | Scalars['ID'];
+}>;
+
+
+export type PromoteJobsMutation = { promoteJobs: Array<Maybe<Pick<Job, 'id'>>> };
+
 export type RemoveJobMutationVariables = Exact<{
   queue: Scalars['ID'];
   id: Scalars['ID'];
@@ -557,3 +568,8 @@ export type GetRedisInfoQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetRedisInfoQuery = { redisInfo?: Maybe<Pick<RedisInfo, 'redis_version' | 'redis_mode' | 'used_memory_human' | 'used_memory_peak_human' | 'total_system_memory_human' | 'connected_clients' | 'blocked_clients' | 'mem_fragmentation_ratio' | 'os' | 'uptime_in_seconds' | 'used_cpu_sys' | 'tcp_port'>> };
+
+export type GetMetricsEnabledQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMetricsEnabledQuery = { metricsEnabled: Scalars['Boolean'] };

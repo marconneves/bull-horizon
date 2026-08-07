@@ -1,6 +1,6 @@
 {
   "name": "@bull-horizon/root",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/marconneves/bull-horizon.git",

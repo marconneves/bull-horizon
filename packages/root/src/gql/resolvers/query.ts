@@ -10,6 +10,9 @@ export const queryResolver: TResolvers = {
     async redisInfo(_, __, { dataSources: { bull } }) {
       return await bull.getRedisInfo();
     },
+    metricsEnabled(_, __, { dataSources: { metrics } }) {
+      return metrics.isEnabled();
+    },
     async metrics(_, args: QueryMetricsArgs, { dataSources: { metrics } }) {
       return await metrics.getMetrics(
         args.queue,

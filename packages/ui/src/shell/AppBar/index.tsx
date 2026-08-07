@@ -21,7 +21,7 @@ import JobsScreenIcon from '@mui/icons-material/ViewList';
 import { useActiveScreenStore } from '@/stores/active-screen';
 import { LinksConfig } from '@/config/links';
 import { EnvConfig } from '@/config/env';
-import { useQueryClient } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { QueryKeysConfig } from '@/config/query-keys';
 import { useNetwork } from '@/hooks/use-network';
 
@@ -44,8 +44,13 @@ const useStyles = makeStyles((theme: Theme) => ({
 export default memo(function AppBar() {
   const queryClient = useQueryClient();
   const {
-    queries: { getRedisInfo },
+    queries: { getRedisInfo, getMetricsEnabled },
   } = useNetwork();
+  const { data: metricsEnabledData } = useQuery(
+    QueryKeysConfig.metricsEnabled,
+    getMetricsEnabled
+  );
+  const metricsEnabled = metricsEnabledData?.metricsEnabled ?? false;
 
   const onRedisHover = useCallback(() => {
     const oldData = queryClient.getQueryData(QueryKeysConfig.redisInfo);
@@ -108,11 +113,13 @@ export default memo(function AppBar() {
               <ShareIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title={screen === 'jobs' ? 'Metrics' : 'Jobs'}>
-            <IconButton color="inherit" onClick={toggleScreen} size="large">
-              {screen === 'jobs' ? <MetricsScreenIcon /> : <JobsScreenIcon />}
-            </IconButton>
-          </Tooltip>
+          {metricsEnabled && (
+            <Tooltip title={screen === 'jobs' ? 'Metrics' : 'Jobs'}>
+              <IconButton color="inherit" onClick={toggleScreen} size="large">
+                {screen === 'jobs' ? <MetricsScreenIcon /> : <JobsScreenIcon />}
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title="Settings">
             <IconButton
               onClick={openSettings}

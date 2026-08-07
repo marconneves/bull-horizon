@@ -4,6 +4,9 @@ import { MetricsErrorEnum as ErrorEnum } from './errors-enum';
 
 export class MetricsDataSource {
   constructor(private _internalCollector?: MetricsCollector) {}
+  public isEnabled(): boolean {
+    return !!this._internalCollector;
+  }
   public async getMetrics(queue: string, start?: number, end?: number) {
     return await this._collector.extract(queue, start, end);
   }

@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.2](https://github.com/marconneves/bull-horizon/compare/v6.0.1...v6.0.2) (2026-08-07)
+
+
+### Features
+
+* hide the Metrics tab/icon in the AppBar (and redirect away from a persisted "metrics" screen) when `Query.metricsEnabled` reports the collector isn't configured, instead of showing a raw GraphQL error
+* add a "Promote selected jobs" bulk action to the Delayed tab's selection toolbar, using the new `promoteJobs` mutation instead of requiring one-by-one promotion
+
+
 ## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)
 
 
