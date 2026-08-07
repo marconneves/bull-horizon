@@ -33,9 +33,10 @@ Ele nasce em branco (ou com este boilerplate essencial) em novos templates e **d
 ## 4. Contexto do Projeto Original (Upstream)
 
 - Repositório original: [`s-r-x/bull-monitor`](https://github.com/s-r-x/bull-monitor) (autor: Ilya Strus). **Arquivado pelo dono em 2023-12-07** (read-only desde então).
-- Este repositório local é a **continuação/fork sob a Codgital**, retomando do ponto onde o upstream parou (última release upstream: `v5.4.0`, 2023-08-27 — mesma versão presente aqui).
+- Este repositório local é a **continuação/fork sob a Codgital**, retomando do ponto onde o upstream parou (última release upstream: `v5.4.0`, 2023-08-27 — mesma versão em que o fork começou).
 - Motivo provável do abandono (sem declaração pública do maintainer): dependência de `apollo-server-express/koa/hapi/fastify` (Apollo Server v2/v3), que entrou em **EOL em 2023-10-22** — cerca de 6 semanas antes do arquivamento. Havia issue aberta pedindo migração para `@apollo/server` (`#70`, jun/2023) sem resposta do maintainer. Ficaram 4 issues abertas sem solução no momento do arquivamento (`#78`, `#79`, `#80` e mais), sugerindo perda de fôlego de manutenção somada ao problema de dependência quebrada.
 - **Implicação para a squad**: migrar de `apollo-server-*` para `@apollo/server` é a dívida técnica nº 1 herdada — deve ser tratada como prioridade arquitetural, não só como upgrade de rotina, para não repetir o motivo do abandono anterior.
+- **✅ Resolvido em 2026-08-07 (v6.0.0)**: `root`/`express`/`fastify`/`koa` migrados para `@apollo/server` v4. `packages/hapi` permanece deliberadamente em `apollo-server-hapi` v3 (débito consciente, não esquecido — ver ADR-001 em `memorys/architecture.md`), diferente do padrão de negligência do upstream.
 
 ---
 **Instrução para a Squad:** Sempre consulte e atualize este arquivo nas fases de Refinamento (Product Owner). As regras de domínio estritamente orientadas ao problema do usuário devem ser atualizadas nesta memória global de negócios para não se perder ao longo do desenvolvimento.

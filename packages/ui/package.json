@@ -1,6 +1,6 @@
 {
   "name": "@bull-monitor/ui",
-  "version": "5.4.0",
+  "version": "6.0.0",
   "license": "MIT",
   "author": "Ilya Strus <strax1990@gmail.com>",
   "description": "bull-monitor ui",
@@ -32,7 +32,7 @@
     "copy-to-clipboard": "^3.3.1",
     "dayjs": "^1.10.4",
     "file-saver": "^2.0.5",
-    "graphql": "^15.5.0",
+    "graphql": "^16.0.0",
     "graphql-request": "^3.4.0",
     "jotai": "^0.16.10",
     "jshint": "^2.12.0",

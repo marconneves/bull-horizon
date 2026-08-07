@@ -23,7 +23,7 @@ const baseUrl = '/some/nested/url';
       realm: 'bull-monitor',
     },
   });
-  await monitor.init();
+  await monitor.init({ app });
   app.register((instance, _opts, done) => {
     instance.addHook('preHandler', app.basicAuth);
     instance.register(monitor.plugin);
