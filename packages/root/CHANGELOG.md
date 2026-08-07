@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.1.0](https://github.com/marconneves/bull-horizon/compare/v6.0.2...v6.1.0) (2026-08-07)
+
+
+### Features
+
+* add `Queue.group` and `QueueConfig.group` — a cosmetic label consumers set on `BullAdapter`/`BullMQAdapter` to group related queues in the dashboard UI; purely a display label, doesn't affect any queue behavior
+
+
 ## [6.0.2](https://github.com/marconneves/bull-horizon/compare/v6.0.1...v6.0.2) (2026-08-07)
 
 
@@ -15,7 +23,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * add `Query.metricsEnabled` and `MetricsDataSource.isEnabled()` so consumers (the dashboard UI) can check whether the metrics collector is configured before querying `metrics`
 * add `Mutation.promoteJobs(queue, jobs: [ID!]!)` to promote a batch of delayed jobs in one call, mirroring the existing `retryJobs`/`removeJobs` bulk mutations
-* add `Queue.group` and `QueueConfig.group` — a cosmetic label consumers set on `BullAdapter`/`BullMQAdapter` to group related queues in the dashboard UI; purely a display label, doesn't affect any queue behavior
 
 
 ## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)

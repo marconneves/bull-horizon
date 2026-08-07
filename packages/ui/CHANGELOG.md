@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.1.0](https://github.com/marconneves/bull-horizon/compare/v6.0.2...v6.1.0) (2026-08-07)
+
+
+### Features
+
+* render queues sharing a `Queue.group` as a collapsible sidebar entry (closed by default) with a non-zero-only job-count summary; ungrouped queues render under a "No group" subheader
+* dark rebrand: new default "horizon" theme palette, IBM Plex Sans/Mono, AppBar restyled to a neutral surface with the wordmark carrying the accent, job status colors refined for the new background
+* replace the plain-text Job Data / Return Value / Opts dump with a collapsible JSON tree view; hovering a value in Job Data adds it to the job search filter with one click
+
+
 ## [6.0.2](https://github.com/marconneves/bull-horizon/compare/v6.0.1...v6.0.2) (2026-08-07)
 
 
