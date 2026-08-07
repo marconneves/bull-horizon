@@ -223,6 +223,7 @@ export type Query = {
   jobs: Array<Job>;
   job?: Maybe<Job>;
   redisInfo?: Maybe<RedisInfo>;
+  metricsEnabled: Scalars['Boolean'];
 };
 
 
@@ -557,3 +558,8 @@ export type GetRedisInfoQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetRedisInfoQuery = { redisInfo?: Maybe<Pick<RedisInfo, 'redis_version' | 'redis_mode' | 'used_memory_human' | 'used_memory_peak_human' | 'total_system_memory_human' | 'connected_clients' | 'blocked_clients' | 'mem_fragmentation_ratio' | 'os' | 'uptime_in_seconds' | 'used_cpu_sys' | 'tcp_port'>> };
+
+export type GetMetricsEnabledQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMetricsEnabledQuery = { metricsEnabled: Scalars['Boolean'] };

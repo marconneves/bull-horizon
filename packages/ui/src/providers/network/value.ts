@@ -8,6 +8,8 @@ import { getJobById } from '@/network/queries/get-job-by-id';
 import { getJobByIdMock } from '@/demo-mocks/network/queries/get-job-by-id';
 import { getRedisInfo } from '@/network/queries/get-redis-info';
 import { getRedisInfoMock } from '@/demo-mocks/network/queries/get-redis-info';
+import { getMetricsEnabled } from '@/network/queries/get-metrics-enabled';
+import { getMetricsEnabledMock } from '@/demo-mocks/network/queries/get-metrics-enabled';
 import { getQueues } from '@/network/queries/get-queues';
 import { createJobLog } from '@/network/mutations/create-job-log';
 import { createJobLogMock } from '@/demo-mocks/network/mutations/create-job-log';
@@ -60,6 +62,7 @@ const { useMocks: m } = EnvConfig;
 const queries = {
   getJobsForExport: m ? getJobsForExportMock : getJobsForExport,
   getRedisInfo: m ? getRedisInfoMock : getRedisInfo,
+  getMetricsEnabled: m ? getMetricsEnabledMock : getMetricsEnabled,
   getJobData: m ? getJobDataMock : getJobData,
   getJobLogs: m ? getJobLogsMock : getJobLogs,
   getJobs: m ? getJobsMock : getJobs,

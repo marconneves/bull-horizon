@@ -14,7 +14,8 @@ export class UI {
     <html lang="en">
     <head>
       <meta charset="utf-8" />
-      <title>Bull monitor</title>
+      <title>Bull Horizon</title>
+      <link rel="icon" type="image/png" href="${this.buildCdnUrl('/favicon.png')}" />
       <meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
       <link
         rel="stylesheet"

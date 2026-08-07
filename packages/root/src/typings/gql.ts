@@ -223,6 +223,7 @@ export type Query = {
   jobs: Array<Job>;
   job?: Maybe<Job>;
   redisInfo?: Maybe<RedisInfo>;
+  metricsEnabled: Scalars['Boolean'];
 };
 
 

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.2](https://github.com/marconneves/bull-horizon/compare/v6.0.1...v6.0.2) (2026-08-07)
+
+
+### Bug Fixes
+
+* fix `<title>` and add favicon to the production dashboard HTML template (`src/ui.ts`) — it still said "Bull monitor" with no favicon after the 6.0.1 rename, since that release only touched the Vite dev/demo `index.html`, not this CDN-loaded template
+
+
+### Features
+
+* add `Query.metricsEnabled` and `MetricsDataSource.isEnabled()` so consumers (the dashboard UI) can check whether the metrics collector is configured before querying `metrics`
+
+
 ## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)
 
 **Note:** Version bump only for package @bull-horizon/root

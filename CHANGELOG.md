@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.2](https://github.com/marconneves/bull-horizon/compare/v6.0.1...v6.0.2) (2026-08-07)
+
+
+### Bug Fixes
+
+* fix the page `<title>` and add a favicon to the actual dashboard HTML template served in production (`packages/root/src/ui.ts`) — the 6.0.1 branding fix only updated the Vite dev/demo `index.html`, not the CDN-loaded template real deployments use
+
+
+### Features
+
+* expose `Query.metricsEnabled` in the GraphQL schema and hide the Metrics tab/icon in the dashboard UI when the metrics collector isn't configured, instead of showing a raw GraphQL error on click
+
+
 ## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)
 
 
