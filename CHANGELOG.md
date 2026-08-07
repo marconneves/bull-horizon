@@ -3,6 +3,39 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)
+
+
+### Features
+
+* add the Bull Horizon logo/favicon to the dashboard UI and rename the in-app header wordmark from "Bull monitor" to "Bull Horizon"
+* rewrite the project README with the new branding, package overview and quick start
+
+
+# [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
+
+
+### Features
+
+* migrate apollo-server v2/v3 (EOL) to @apollo/server v4 in root, express, fastify and koa adapters
+
+
+### Features
+
+* rename npm scope from `@bull-monitor` to `@bull-horizon` across every package (first release under the new scope); rename the CLI binary from `bull-monitor` to `bull-horizon`
+
+
+### BREAKING CHANGES
+
+* drops support for Node < 14.16 (`packages/root` `engines.node`, up from `>=12`)
+* `packages/express`, `packages/fastify` and `packages/koa` now depend on `@apollo/server` instead of `apollo-server-{express,fastify,koa}`; any code importing types directly from the old `apollo-server-*` packages will break
+* `packages/hapi` intentionally stays on `apollo-server-hapi` v3 (`graphql ^15`) as documented technical debt — see ADR-001 in `memorys/architecture.md`
+* npm scope renamed: `@bull-monitor/*` → `@bull-horizon/*`. This is a first publish under the new scope, not an in-place update — the old `@bull-monitor/*` packages are not touched/deprecated by this release. The Redis key prefix (`bull_monitor::metrics::`) is intentionally kept unchanged for metrics continuity.
+* CLI binary renamed: `bull-monitor` → `bull-horizon`
+
+
+
+
 # [5.4.0](https://github.com/s-r-x/bull-monitor/compare/v5.3.0...v5.4.0) (2023-08-27)
 
 

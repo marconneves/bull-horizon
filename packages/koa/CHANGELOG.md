@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)
+
+**Note:** Version bump only for package @bull-horizon/koa
+
+
+# [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
+
+
+### Features
+
+* replace apollo-server-koa (EOL) with @apollo/server v4 + @as-integrations/koa; wire @koa/cors and koa-bodyparser explicitly to preserve previous defaults
+
+
+### BREAKING CHANGES
+
+* now depends on @apollo/server instead of apollo-server-koa; requires typescript >=4.7 and Node >=14.16 in consuming projects that type-check against this package
+* npm scope renamed: `@bull-monitor/koa` → `@bull-horizon/koa` (first publish under the new scope)
+
+
+
+
 # [5.4.0](https://github.com/s-r-x/bull-monitor/compare/v5.3.0...v5.4.0) (2023-08-27)
 
 **Note:** Version bump only for package @bull-monitor/koa

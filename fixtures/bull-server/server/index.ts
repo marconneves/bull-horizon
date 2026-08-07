@@ -1,6 +1,6 @@
-import { BullMonitorExpress } from '@bull-monitor/express';
-import { BullAdapter } from '@bull-monitor/root/bull-adapter';
-import { BullMQAdapter } from '@bull-monitor/root/bullmq-adapter';
+import { BullMonitorExpress } from '@bull-horizon/express';
+import { BullAdapter } from '@bull-horizon/root/bull-adapter';
+import { BullMQAdapter } from '@bull-horizon/root/bullmq-adapter';
 import express from 'express';
 import Queue from 'bull';
 import {

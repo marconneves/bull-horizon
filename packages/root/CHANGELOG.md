@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.0.1](https://github.com/marconneves/bull-horizon/compare/v6.0.0...v6.0.1) (2026-08-07)
+
+**Note:** Version bump only for package @bull-horizon/root
+
+
+# [6.0.0](https://github.com/marconneves/bull-horizon/compare/v5.4.0...v6.0.0) (2026-08-07)
+
+
+### Features
+
+* replace apollo-server-core (EOL) with @apollo/server v4; export typeDefs/resolvers and a createContext() helper for framework adapters to build their own ApolloServer instance
+* bump graphql to ^16, engines.node to >=14.16
+
+
+### BREAKING CHANGES
+
+* BullMonitor is no longer generic and no longer owns an ApolloServer instance (createServer()/startServer()/the `server` field were removed) — framework adapters now instantiate and own @apollo/server themselves, using the new createContext() method
+* npm scope renamed: `@bull-monitor/root` → `@bull-horizon/root` (first publish under the new scope). The Redis key prefix (`bull_monitor::metrics::`) is intentionally kept unchanged for metrics continuity.
+
+
+
+
 # [5.4.0](https://github.com/s-r-x/bull-monitor/compare/v5.3.0...v5.4.0) (2023-08-27)
 
 

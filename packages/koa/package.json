@@ -1,10 +1,10 @@
 {
-  "name": "@bull-monitor/koa",
-  "version": "5.4.0",
-  "description": "bull-monitor for koa",
+  "name": "@bull-horizon/koa",
+  "version": "6.0.1",
+  "description": "bull-horizon for koa",
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git",
+    "url": "https://github.com/marconneves/bull-horizon.git",
     "directory": "packages/koa"
   },
   "keywords": [
@@ -21,8 +21,12 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@bull-monitor/root": "^5.4.0",
-    "apollo-server-koa": "^3.6.3"
+    "@apollo/server": "^4.0.0",
+    "@as-integrations/koa": "^1.1.1",
+    "@bull-horizon/root": "^6.0.1",
+    "@koa/cors": "^5.0.0",
+    "graphql": "^16.0.0",
+    "koa-bodyparser": "^4.4.1"
   },
   "peerDependencies": {
     "koa": "2.x",
@@ -31,7 +35,10 @@
   "devDependencies": {
     "@types/koa": "^2.13.1",
     "@types/koa-router": "^7.4.2",
-    "typescript": "^4.2.4"
+    "@types/koa-bodyparser": "^4.3.13",
+    "@types/koa__cors": "^5.0.1",
+    "@types/node": "^18.19.0",
+    "typescript": "^4.7.4"
   },
   "gitHead": "56060c20da8134cce74efaf278dd63b81cdcab4f"
 }

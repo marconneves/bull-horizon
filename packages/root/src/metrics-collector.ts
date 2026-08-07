@@ -89,7 +89,7 @@ export class MetricsCollector {
       const metrics = await this._collect();
       await this._persist(metrics);
     } catch (e) {
-      console.error('[bull-monitor] metrics collector error: ', e);
+      console.error('[bull-horizon] metrics collector error: ', e);
     }
   };
   private async _collect(): Promise<TMetrics[]> {

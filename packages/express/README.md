@@ -1,18 +1,18 @@
-# @bull-monitor/express
+# @bull-horizon/express
 
-[Express](https://github.com/expressjs/express) adapter for [bull-monitor](https://github.com/s-r-x/bull-monitor)
+[Express](https://github.com/expressjs/express) adapter for [bull-horizon](https://github.com/marconneves/bull-horizon)
 
 ## Usage
 
 ```sh
-npm i @bull-monitor/express
+npm i @bull-horizon/express
 ```
 
 ```typescript
-import { BullMonitorExpress } from '@bull-monitor/express';
-import { BullAdapter } from '@bull-monitor/root/dist/bull-adapter';
+import { BullMonitorExpress } from '@bull-horizon/express';
+import { BullAdapter } from '@bull-horizon/root/dist/bull-adapter';
 // for BullMQ users
-// import { BullMQAdapter } from "@bull-monitor/root/dist/bullmq-adapter";
+// import { BullMQAdapter } from "@bull-horizon/root/dist/bullmq-adapter";
 import Express from 'express';
 import Queue from 'bull';
 

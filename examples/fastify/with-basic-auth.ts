@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import { BullMonitorFastify } from '@bull-monitor/fastify';
+import { BullMonitorFastify } from '@bull-horizon/fastify';
 import basicAuth from 'fastify-basic-auth';
 
 const port = 3000;
@@ -20,10 +20,10 @@ const baseUrl = '/some/nested/url';
       }
     },
     authenticate: {
-      realm: 'bull-monitor',
+      realm: 'bull-horizon',
     },
   });
-  await monitor.init();
+  await monitor.init({ app });
   app.register((instance, _opts, done) => {
     instance.addHook('preHandler', app.basicAuth);
     instance.register(monitor.plugin);

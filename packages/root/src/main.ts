@@ -3,19 +3,36 @@ import {
   MetricsDataSource,
   PoliciesDataSource,
 } from './gql/data-sources';
-import { typeDefs } from './gql/type-defs';
-import { resolvers } from './gql/resolvers';
 import { UI } from './ui';
 import { MetricsCollector } from './metrics-collector';
 import { Queue } from './queue';
 import { DEFAULT_METRICS_CONFIG, DEFAULT_ROOT_CONFIG } from './constants';
-import type {
-  ApolloServerBase,
-  Config as ApolloConfig,
-} from 'apollo-server-core';
 import type { Config, MetricsConfig } from './typings/config';
 
-export abstract class BullMonitor<TServer extends ApolloServerBase> {
+/**
+ * GraphQL context shape shared by every framework adapter.
+ *
+ * `@apollo/server` v4 removed the constructor-level `dataSources` option
+ * that Apollo Server v2/v3 provided. Framework adapters (express, fastify,
+ * koa, ...) now own the `ApolloServer` instance themselves and must build
+ * this context per-request by calling `createContext()` (see below) from
+ * the `context` function they pass to their middleware integration, e.g.:
+ *
+ * ```ts
+ * const server = new ApolloServer<BullMonitorContext>({ typeDefs, resolvers, plugins });
+ * await server.start();
+ * expressMiddleware(server, { context: async () => this.createContext() });
+ * ```
+ */
+export type BullMonitorContext = {
+  dataSources: {
+    bull: BullDataSource;
+    metrics: MetricsDataSource;
+    policies: PoliciesDataSource;
+  };
+};
+
+export abstract class BullMonitor {
   private _queues: Queue[] = [];
   private _queuesMap: Map<string, Queue> = new Map();
   private _ui: UI;
@@ -45,39 +62,33 @@ export abstract class BullMonitor<TServer extends ApolloServerBase> {
       this._metricsCollector.startCollecting();
     } else {
       console.warn(
-        'Metrics collector is not initialized. Please pass the metrics config while initializing bull-monitor: { metrics: { collectInterval: { hours: 1 } } }'
+        'Metrics collector is not initialized. Please pass the metrics config while initializing bull-horizon: { metrics: { collectInterval: { hours: 1 } } }'
       );
     }
   }
   public stopMetricsCollector() {
     this._metricsCollector?.stopCollecting();
   }
-
-  protected gqlBasePath = '/graphql';
-  protected config: Required<Config>;
-  protected server: TServer;
-  protected createServer(
-    Server: new (config: ApolloConfig) => TServer,
-    plugins?: ApolloConfig['plugins']
-  ) {
-    this.server = new Server({
-      persistedQueries: false,
-      typeDefs,
-      resolvers,
-      plugins,
-      introspection: this.config.gqlIntrospection,
-      dataSources: () => ({
+  /**
+   * Builds a fresh per-request GraphQL context bound to this instance's
+   * queues, config and metrics collector. Framework adapters must call
+   * this from the `context` function they hand to their `@apollo/server`
+   * middleware integration (see `BullMonitorContext` above for an example).
+   */
+  public createContext(): BullMonitorContext {
+    return {
+      dataSources: {
         bull: new BullDataSource(this._queues, this._queuesMap, {
           textSearchScanCount: this.config.textSearchScanCount,
         }),
         metrics: new MetricsDataSource(this._metricsCollector),
         policies: new PoliciesDataSource(this._queuesMap),
-      }),
-    });
+      },
+    };
   }
-  protected async startServer() {
-    return await this.server.start();
-  }
+
+  protected gqlBasePath = '/graphql';
+  protected config: Required<Config>;
   protected renderUi() {
     return this._ui.render();
   }
@@ -115,7 +126,7 @@ export abstract class BullMonitor<TServer extends ApolloServerBase> {
     });
     if (hasInvalid) {
       console.error(
-        'Since version 3.0.0 every queue should be wrapped in bull or bullmq adapter. Check out the bull-monitor docs for more info - https://github.com/s-r-x/bull-monitor'
+        'Since version 3.0.0 every queue should be wrapped in bull or bullmq adapter. Check out the bull-horizon docs for more info - https://github.com/marconneves/bull-horizon'
       );
     }
     return validated;

@@ -3,7 +3,7 @@ import BullQueue from 'bull';
 import { Queue as BullMqQueue } from 'bullmq';
 import Redis from 'ioredis';
 import Express from 'express';
-import { BullMonitorExpress } from '@bull-monitor/express';
+import { BullMonitorExpress } from '@bull-horizon/express';
 import { createCommand, Option } from 'commander';
 
 const program = createCommand();
@@ -42,7 +42,7 @@ const options = program.opts();
     queues: options.queue.map((name: string) => {
       if (options.bullmq) {
         const Adapter =
-          require('@bull-monitor/root/dist/bullmq-adapter').BullMQAdapter;
+          require('@bull-horizon/root/dist/bullmq-adapter').BullMQAdapter;
         return new Adapter(
           new BullMqQueue(name, {
             ...(options.prefix ? {prefix: options.prefix}: {}),
@@ -51,7 +51,7 @@ const options = program.opts();
         );
       } else {
         const Adapter =
-          require('@bull-monitor/root/dist/bull-adapter').BullAdapter;
+          require('@bull-horizon/root/dist/bull-adapter').BullAdapter;
         return new Adapter(new BullQueue(name, options.redisUri, {
           ...(options.prefix ? {prefix: options.prefix}: {})
         }));

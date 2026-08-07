@@ -1,20 +1,20 @@
 {
-  "name": "@bull-monitor/cli",
-  "version": "5.4.0",
-  "description": "cli for bull-monitor",
+  "name": "@bull-horizon/cli",
+  "version": "6.0.1",
+  "description": "cli for bull-horizon",
   "keywords": [
     "bull"
   ],
   "author": "Ilya Strus <strax1990@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git",
+    "url": "https://github.com/marconneves/bull-horizon.git",
     "directory": "packages/cli"
   },
   "license": "MIT",
   "types": "dist/index.d.ts",
   "bin": {
-    "bull-monitor": "dist/index.js"
+    "bull-horizon": "dist/index.js"
   },
   "scripts": {
     "build": "npm run clean && npm run compile",
@@ -24,8 +24,8 @@
   },
   "main": "dist/index.js",
   "dependencies": {
-    "@bull-monitor/express": "^5.4.0",
-    "@bull-monitor/root": "^5.4.0",
+    "@bull-horizon/express": "^6.0.1",
+    "@bull-horizon/root": "^6.0.1",
     "bull": "^4.0.0",
     "bullmq": "^1.76.0",
     "commander": "^8.3.0",

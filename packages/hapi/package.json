@@ -1,13 +1,13 @@
 {
-  "name": "@bull-monitor/hapi",
-  "version": "5.4.0",
-  "description": "bull-monitor for hapi",
+  "name": "@bull-horizon/hapi",
+  "version": "6.0.1",
+  "description": "bull-horizon for hapi",
   "keywords": [
     "bull"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git",
+    "url": "https://github.com/marconneves/bull-horizon.git",
     "directory": "packages/hapi"
   },
   "author": "Ilya Strus <strax1990@gmail.com>",
@@ -21,7 +21,7 @@
   },
   "main": "dist/index.js",
   "dependencies": {
-    "@bull-monitor/root": "^5.4.0",
+    "@bull-horizon/root": "^6.0.1",
     "apollo-server-hapi": "^3.6.3"
   },
   "peerDependencies": {

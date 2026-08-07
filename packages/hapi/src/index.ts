@@ -1,4 +1,12 @@
-import { BullMonitor } from '@bull-monitor/root';
+// NOTA (ADR-001, memorys/architecture.md): este pacote é débito técnico
+// consciente. A Apollo descontinuou suporte first-party a Hapi no
+// `@apollo/server` v4, então este adapter permanece em `apollo-server-hapi`
+// v3 (`graphql ^15`) enquanto express/fastify/koa/root migram para
+// `@apollo/server` v4 (`graphql ^16`). O ajuste abaixo (construir o
+// `ApolloServer` localmente via `createContext()`) é só para acompanhar a
+// remoção de `createServer()`/`server` da classe base `BullMonitor` em
+// `@bull-horizon/root` — não é o início de uma migração para v4.
+import { BullMonitor, typeDefs, resolvers } from '@bull-horizon/root';
 import {
   ApolloServer,
   ApolloServerPluginStopHapiServer,
@@ -9,16 +17,23 @@ export type InitParams = {
   auth?: string;
   hapiServer?: HapiServer;
 };
-export class BullMonitorHapi extends BullMonitor<ApolloServer> {
+export class BullMonitorHapi extends BullMonitor {
   plugin: Plugin<any>;
+  private server: ApolloServer;
   async init({ auth, hapiServer }: InitParams = {}) {
-    this.createServer(
-      ApolloServer,
-      hapiServer && [ApolloServerPluginStopHapiServer({ hapiServer })]
-    );
+    this.server = new ApolloServer({
+      persistedQueries: false,
+      typeDefs,
+      resolvers,
+      introspection: this.config.gqlIntrospection,
+      plugins: hapiServer && [
+        ApolloServerPluginStopHapiServer({ hapiServer }),
+      ],
+      context: async () => this.createContext(),
+    });
     await this.server.start();
     this.plugin = {
-      name: 'bull-monitor',
+      name: 'bull-horizon',
       register: async (app) => {
         app.route({
           method: 'GET',

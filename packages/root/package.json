@@ -1,12 +1,12 @@
 {
-  "name": "@bull-monitor/root",
-  "version": "5.4.0",
+  "name": "@bull-horizon/root",
+  "version": "6.0.1",
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git",
+    "url": "https://github.com/marconneves/bull-horizon.git",
     "directory": "packages/root"
   },
-  "description": "bull-monitor core",
+  "description": "bull-horizon core",
   "keywords": [
     "bull"
   ],
@@ -14,7 +14,7 @@
   "license": "MIT",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=12"
+    "node": ">=14.16"
   },
   "scripts": {
     "build": "npm run clean && npm run compile",
@@ -24,8 +24,9 @@
   },
   "main": "dist/index.js",
   "dependencies": {
-    "graphql": "^15.5.0",
+    "graphql": "^16.0.0",
     "graphql-scalars": "^1.9.0",
+    "graphql-tag": "^2.12.6",
     "jsonata": "^1.8.5",
     "lodash": "^4.17.21",
     "redis-info": "^3.0.8",
@@ -38,7 +39,6 @@
     "@types/bull": "^3.15.0",
     "@types/lodash": "^4.14.169",
     "@types/redis-info": "^3.0.0",
-    "apollo-server-core": "^3.6.3",
     "bull": "^3.27.0",
     "bullmq": "^1.57.2",
     "typescript": "^4.5.3"

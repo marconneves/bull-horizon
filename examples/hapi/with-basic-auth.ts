@@ -1,4 +1,4 @@
-import { BullMonitorHapi } from '@bull-monitor/hapi';
+import { BullMonitorHapi } from '@bull-horizon/hapi';
 import Hapi from '@hapi/hapi';
 import Basic from '@hapi/basic';
 
@@ -11,7 +11,7 @@ const baseUrl = '/some/nested/url';
   });
   await server.start();
   await server.register(Basic);
-  server.auth.strategy('bull-monitor', 'basic', {
+  server.auth.strategy('bull-horizon', 'basic', {
     validate: (_req: any, name: string, pass: string) => {
       return { isValid: name === 'admin' && pass === 'pass', credentials: {} };
     },
@@ -21,7 +21,7 @@ const baseUrl = '/some/nested/url';
     baseUrl,
   });
   await monitor.init({
-    auth: 'bull-monitor',
+    auth: 'bull-horizon',
   });
   await server.register(monitor.plugin);
   console.log(`http://localhost:${port}${baseUrl}`);

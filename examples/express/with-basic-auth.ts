@@ -1,4 +1,4 @@
-import { BullMonitorExpress } from '@bull-monitor/express';
+import { BullMonitorExpress } from '@bull-horizon/express';
 import Express from 'express';
 import basicAuth from 'express-basic-auth';
 

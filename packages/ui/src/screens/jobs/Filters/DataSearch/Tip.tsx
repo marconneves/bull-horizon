@@ -14,7 +14,7 @@ const DataSearchTip = ({ className }: TProps) => {
       . Check out the{' '}
       <a
         target="__blank"
-        href="https://github.com/s-r-x/bull-monitor/blob/main/search-examples.md"
+        href="https://github.com/marconneves/bull-horizon/blob/main/search-examples.md"
       >
         examples
       </a>

@@ -10,9 +10,9 @@
     "sourceMap": false,
     "lib": ["ESNext"],
     "paths": {
-      "@bull-monitor/root": ["../../../packages/root/src"],
-      "@bull-monitor/root/*": ["../../../packages/root/src/*"],
-      "@bull-monitor/express": ["../../../packages/express/src"]
+      "@bull-horizon/root": ["../../../packages/root/src"],
+      "@bull-horizon/root/*": ["../../../packages/root/src/*"],
+      "@bull-horizon/express": ["../../../packages/express/src"]
     }
   },
   "exclude": ["node_modules"]

@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
-import { BullMonitorModule } from './bull-monitor/bull-monitor.module';
+import { BullMonitorModule } from './bull-horizon/bull-horizon.module';
 import { PersonModule } from './person/person.module';
 
 @Module({

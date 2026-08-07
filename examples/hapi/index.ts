@@ -1,4 +1,4 @@
-import { BullMonitorHapi } from '@bull-monitor/hapi';
+import { BullMonitorHapi } from '@bull-horizon/hapi';
 import Hapi from '@hapi/hapi';
 
 const port = 3000;

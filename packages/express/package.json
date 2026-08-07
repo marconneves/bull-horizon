@@ -1,14 +1,14 @@
 {
-  "name": "@bull-monitor/express",
-  "version": "5.4.0",
-  "description": "bull-monitor for express",
+  "name": "@bull-horizon/express",
+  "version": "6.0.1",
+  "description": "bull-horizon for express",
   "keywords": [
     "bull"
   ],
   "author": "Ilya Strus <strax1990@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/s-r-x/bull-monitor.git",
+    "url": "https://github.com/marconneves/bull-horizon.git",
     "directory": "packages/express"
   },
   "license": "MIT",
@@ -21,16 +21,21 @@
   },
   "main": "dist/index.js",
   "dependencies": {
-    "@bull-monitor/root": "^5.4.0",
-    "apollo-server-express": "^3.6.3"
+    "@apollo/server": "^4.0.0",
+    "@as-integrations/express4": "^1.1.0",
+    "@bull-horizon/root": "^6.0.1",
+    "cors": "^2.8.5",
+    "graphql": "^16.0.0"
   },
   "peerDependencies": {
     "express": "4.x"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.13",
     "@types/express": "^4.17.11",
+    "@types/node": "^18.19.0",
     "express": "^4.17.1",
-    "typescript": "^4.2.4"
+    "typescript": "^4.7.4"
   },
   "gitHead": "56060c20da8134cce74efaf278dd63b81cdcab4f"
 }
