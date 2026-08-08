@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.1.0](https://github.com/marconneves/bull-horizon/compare/v6.0.2...v6.1.0) (2026-08-07)
+
+
+### Features
+
+* add `Queue.group`, a cosmetic label set via `QueueConfig.group` on `BullAdapter`/`BullMQAdapter`, and render queues that share a group as a collapsible entry in the dashboard sidebar (chevron + indented children, closed by default), with a per-group job-count summary that only shows non-zero statuses; queues without a group render under a "No group" subheader, unchanged otherwise
+* dark rebrand: new default "horizon" theme palette (muted instrument-panel amber on warm-graphite dark surfaces), IBM Plex Sans/Mono replacing Roboto, AppBar restyled from a solid brand-color fill to a neutral surface with the wordmark carrying the accent
+* replace the plain-text Job Data / Return Value / Opts dump with a collapsible, syntax-colored JSON tree view; hovering a value in Job Data adds a `data.<path> = <value>` clause to the job search (jsonata) with one click, combining with `and` when a filter is already present
+
+
 ## [6.0.2](https://github.com/marconneves/bull-horizon/compare/v6.0.1...v6.0.2) (2026-08-07)
 
 

@@ -20,6 +20,12 @@ export interface JobLogs {
 }
 export type QueueConfig = {
   readonly?: boolean;
+  /**
+   * Purely cosmetic label used by the dashboard to group related queues
+   * (e.g. the queues of a single business flow) under a single collapsible
+   * entry in the sidebar. Queues without a group render as before.
+   */
+  group?: string;
 };
 
 export abstract class Job {
@@ -54,6 +60,9 @@ export abstract class Queue {
   constructor(_queue: any, protected _config?: QueueConfig) {}
   public get readonly(): boolean {
     return this._config?.readonly ?? false;
+  }
+  public get group(): Maybe<string> {
+    return this._config?.group;
   }
   public abstract get provider(): QueueProvider;
   public abstract get client(): Promise<RedisClient>;

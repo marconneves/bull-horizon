@@ -1,6 +1,6 @@
 {
   "name": "@bull-horizon/fastify",
-  "version": "6.0.2",
+  "version": "6.1.0",
   "description": "bull-horizon for fastify",
   "keywords": [
     "bull"
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@apollo/server": "^4.0.0",
-    "@bull-horizon/root": "^6.0.2",
+    "@bull-horizon/root": "^6.1.0",
     "fastify-cors": "6.0.3",
     "graphql": "^16.0.0"
   },

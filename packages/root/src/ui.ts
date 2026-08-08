@@ -19,7 +19,7 @@ export class UI {
       <meta name="viewport" content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
       />
       <link rel="stylesheet" href="${this.buildCdnUrl('/style.css')}"/>
       <script type="module" src="${this.buildCdnUrl('/main.js')}"></script>

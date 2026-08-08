@@ -14,12 +14,22 @@ const jobStatuses = without(
   JobStatus.Stuck
 ) as JobStatus[];
 
+// Demo-only: shows off queue grouping without needing real business flows.
+const DEMO_GROUPS: Record<number, string> = {
+  0: 'Ingest & Processing',
+  1: 'Ingest & Processing',
+  2: 'Ingest & Processing',
+  3: 'Typesense Indexing',
+  4: 'Typesense Indexing',
+};
+
 const generateData = () => {
   const queues = range(QUEUES_AMOUNT).map((n) => ({
     id: uuidv4(),
     name: `queue:${n}`,
     isPaused: false,
     keyPrefix: 'bull',
+    group: DEMO_GROUPS[n] ?? null,
   }));
   const jobs = range(JOBS_AMOUNT).map((n) => {
     const status = sample(jobStatuses) as JobStatus;
@@ -29,8 +39,11 @@ const generateData = () => {
       status === JobStatus.Completed || status === JobStatus.Failed;
     const isFailedOrCompletedOrActive =
       isFailedOrCompleted || status === JobStatus.Active;
+    // Bull allows a custom (often long, UUID-like) jobId — mix a few in so
+    // the demo also exercises the ID column's truncation/tooltip, not just
+    // short auto-incremented ids.
     return {
-      id: String(random(0, 1000000)),
+      id: n % 11 === 0 ? uuidv4() : String(random(0, 1000000)),
       queue: sample(queues)?.id,
       status,
       progress: '0',

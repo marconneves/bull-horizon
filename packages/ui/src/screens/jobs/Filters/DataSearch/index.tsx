@@ -7,8 +7,9 @@ import { useDataSearchState } from './hooks';
 
 type TProps = {
   className?: string;
+  startAdornment?: React.ReactNode;
 };
-const DataSearch = ({ className }: TProps) => {
+const DataSearch = ({ className, startAdornment }: TProps) => {
   const { search, onChange, onClear } = useDataSearchState();
 
   return (
@@ -22,6 +23,7 @@ const DataSearch = ({ className }: TProps) => {
       autoComplete="off"
       size="small"
       InputProps={{
+        startAdornment,
         endAdornment: (
           <Tooltip title="Clear">
             <IconButton onClick={onClear} size="small">

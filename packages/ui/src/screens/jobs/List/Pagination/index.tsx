@@ -6,6 +6,7 @@ import { PaginationConfig } from '@/config/pagination';
 import makeStyles from '@mui/styles/makeStyles';
 import { useAtom } from 'jotai';
 import { activePageAtom } from '@/atoms/workspaces';
+import { LIST_CARD_RADIUS } from '../constants';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -13,11 +14,8 @@ const useStyles = makeStyles((theme) => ({
     bottom: 0,
     backgroundColor: theme.palette.background.paper,
     zIndex: 2,
-    borderTop: `1px solid ${
-      theme.palette.mode === 'dark' ? '#515151' : '#e0e0e0'
-    }`,
-    borderBottomRightRadius: '4px',
-    borderBottomLeftRadius: '4px',
+    border: `1px solid ${theme.palette.divider}`,
+    borderRadius: LIST_CARD_RADIUS,
   },
 }));
 

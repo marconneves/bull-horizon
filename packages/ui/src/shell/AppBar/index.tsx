@@ -5,6 +5,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import Toolbar from '@mui/material/Toolbar';
 import makeStyles from '@mui/styles/makeStyles';
+import { useTheme } from '@mui/material/styles';
 import type { Theme } from '@mui/material/styles';
 import { useDrawerState } from '@/stores/drawer';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -28,6 +29,10 @@ import { useNetwork } from '@/hooks/use-network';
 const useStyles = makeStyles((theme: Theme) => ({
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
+    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    boxShadow: 'none',
   },
   menuButton: {
     marginRight: theme.spacing(0.5),
@@ -59,6 +64,7 @@ export default memo(function AppBar() {
     }
   }, []);
   const classes = useStyles();
+  const theme = useTheme();
   const toggleDrawer = useDrawerState((state) => state.toggle);
   const openSettings = useSettingsModalStore((state) => state.open);
   const openRedisInfo = useRedisInfoModalStore((state) => state.open);
@@ -78,7 +84,7 @@ export default memo(function AppBar() {
         >
           <MenuIcon />
         </IconButton>
-        <Logo fill="white" width="130" />
+        <Logo fill={theme.palette.text.primary} width="130" />
         <Box className={classes.right} marginLeft="auto">
           {EnvConfig.demo && (
             <Tooltip title="Github repository">
