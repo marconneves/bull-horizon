@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.2.0](https://github.com/marconneves/bull-horizon/compare/v6.1.0...v6.2.0) (2026-08-08)
+
+
+### Features
+
+* redesign the jobs list as a per-job card (id/status/actions on top, a metadata line below, an optional progress bar, then the existing Job Data/Return Value/Stacktrace panels) instead of a dense `<Table>`
+* rename the Timestamp/Delay/Time columns to Created/Runs at/Duration, each with a hover tooltip explaining what it shows
+* show "Unnamed" for jobs created without a name (Bull's internal `__default__` placeholder) instead of the raw string; truncate long job ids with an ellipsis + tooltip instead of breaking the row layout
+* tint `JobStatusChip` at default size (job cards) while keeping a solid fill at `size="small"` (the sidebar's per-queue counters); Filters status pills are neutral gray except the currently active one, which now picks up the theme's accent color
+
+
 ## [6.1.0](https://github.com/marconneves/bull-horizon/compare/v6.0.2...v6.1.0) (2026-08-07)
 
 

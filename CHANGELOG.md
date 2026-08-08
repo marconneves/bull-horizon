@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [6.2.0](https://github.com/marconneves/bull-horizon/compare/v6.1.0...v6.2.0) (2026-08-08)
+
+
+### Features
+
+* redesign the dashboard's jobs list as a per-job card instead of a dense table — a clearer id/status/actions row, a metadata line (Created/Runs at/Duration/Attempts, each hidden when not meaningful), and a progress bar with a safe text fallback when `Job.progress` isn't a plain 0-100 number
+* rename the jobs list's Timestamp/Delay/Time columns to Created/Runs at/Duration to remove the ambiguity of two date-looking columns and one duration column all reading similarly
+* show "Unnamed" instead of Bull's internal `__default__` placeholder for jobs created without a name, and truncate long job ids (e.g. custom UUIDs) with a tooltip instead of breaking the layout
+
+
 ## [6.1.0](https://github.com/marconneves/bull-horizon/compare/v6.0.2...v6.1.0) (2026-08-07)
 
 

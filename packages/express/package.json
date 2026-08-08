@@ -1,6 +1,6 @@
 {
   "name": "@bull-horizon/express",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "bull-horizon for express",
   "keywords": [
     "bull"
@@ -23,7 +23,7 @@
   "dependencies": {
     "@apollo/server": "^4.0.0",
     "@as-integrations/express4": "^1.1.0",
-    "@bull-horizon/root": "^6.1.0",
+    "@bull-horizon/root": "^6.2.0",
     "cors": "^2.8.5",
     "graphql": "^16.0.0"
   },
