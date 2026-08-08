@@ -10,7 +10,7 @@ Ele nasce em branco (ou com este boilerplate essencial) em novos templates e **d
 
 - **bull-horizon**: dashboard/UI padrão para monitorar filas [Bull](https://github.com/OptimalBits/bull) e [BullMQ](https://github.com/taskforcesh/bullmq) (bibliotecas de job queue para Node.js sobre Redis).
 - **Queue**: uma fila Bull/BullMQ monitorada; o produto suporta múltiplas queues simultaneamente.
-- **Job**: unidade de trabalho dentro de uma queue. Possui `JobStatus`: `waiting`, `active`, `completed`, `failed`, `delayed`, `paused`, `prioritized`, `unknown`.
+- **Job**: unidade de trabalho dentro de uma queue. Possui `JobStatus`: `waiting`, `active`, `completed`, `failed`, `delayed`, `paused`, `prioritized`, `unknown`. Quando criado sem nome explícito, o Bull atribui internamente o nome literal `__default__` — a UI trata isso como "sem nome" (não é um nome de job real que valha exibir ao usuário).
 - **Workspace**: agrupamento lógico de queues/servidores monitorados na UI (ver `packages/ui/src/shell/WorkspacePicker`).
 - **Metrics Collector**: processo agendado (via `toad-scheduler`) que coleta métricas históricas das queues; pode ser iniciado/parado via API pública (`startMetricsCollector` / `stopMetricsCollector`).
 - **Adapter**: pacote que integra o core (`@bull-horizon/root`) a um framework HTTP específico (Express, Koa, Hapi, Fastify) como middleware GraphQL.
