@@ -3,46 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# 7.0.0 (2026-08-08)
-
-
-### Bug Fixes
-
-* production dashboard title/favicon and hide Metrics tab when disabled ([d9b0f4b](https://github.com/marconneves/bull-horizon/commit/d9b0f4b35a6c1bc94b16dd0dc623eb29324980ba))
-* table viewport overflow on medium size devices ([5a3b327](https://github.com/marconneves/bull-horizon/commit/5a3b32755c24f0e7a1e31324b6869fca81c3913a))
-
-
-### Features
-
-* add Bull Horizon logo/favicon and rewrite project README ([25d1f3e](https://github.com/marconneves/bull-horizon/commit/25d1f3e0b5519b8e7d15b63cfd9bef6829efb502))
-* add support for prioritized jobs ([1092d9a](https://github.com/marconneves/bull-horizon/commit/1092d9a60c55d356f9afbc9a870185710a79444b))
-* **cli:** add optional redis prefix option for bull/bullmq ([a5cf3b4](https://github.com/marconneves/bull-horizon/commit/a5cf3b4dcf85b1d14d95a56e9c77401a3ead7a39))
-* **cli:** bullmq support ([8bff4b9](https://github.com/marconneves/bull-horizon/commit/8bff4b9f6e2f42df5443fb07fe05f188e18dc554))
-* bump apollo server to the latest version ([21e39e7](https://github.com/marconneves/bull-horizon/commit/21e39e7b464f2f41006565ee282fb4fe23298a4e))
-* cli ([49f7f28](https://github.com/marconneves/bull-horizon/commit/49f7f2843be79dccbb99faf5944105c006a28428))
-* pass readonly param in queue adapter constructor instead ([46ea2cc](https://github.com/marconneves/bull-horizon/commit/46ea2cc26b63e138088e919755e8bbe17576ecb4))
-
-
-* feat!: migrate apollo-server v2/v3 (EOL) to @apollo/server v4 ([843915b](https://github.com/marconneves/bull-horizon/commit/843915bf4952ec5c3e964ebd4f5ee09f4a8c1379))
-
-
-### BREAKING CHANGES
-
-* drops support for Node < 14.16 (packages/root
-engines.node). express/fastify/koa now depend on @apollo/server instead
-of apollo-server-{express,fastify,koa}; consuming projects that
-type-check against these packages need TypeScript >= 4.7.
-
-Co-Authored-By: Codi <codi@bot.codgital.com>
-* app should be passed to monitor.init method when using
-fastify adapter
-* replace "[new BullAdapter(queue), { readonly: true  }]"
-with "new BullAdapter(queue, { readonly: true })"
-
-
-
-
-
 ## [6.1.0](https://github.com/marconneves/bull-horizon/compare/v6.0.2...v6.1.0) (2026-08-07)
 
 **Note:** Version bump only for package @bull-horizon/cli
