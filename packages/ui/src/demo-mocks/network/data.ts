@@ -39,8 +39,11 @@ const generateData = () => {
       status === JobStatus.Completed || status === JobStatus.Failed;
     const isFailedOrCompletedOrActive =
       isFailedOrCompleted || status === JobStatus.Active;
+    // Bull allows a custom (often long, UUID-like) jobId — mix a few in so
+    // the demo also exercises the ID column's truncation/tooltip, not just
+    // short auto-incremented ids.
     return {
-      id: String(random(0, 1000000)),
+      id: n % 11 === 0 ? uuidv4() : String(random(0, 1000000)),
       queue: sample(queues)?.id,
       status,
       progress: '0',
