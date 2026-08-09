@@ -1,6 +1,6 @@
 {
   "name": "@bull-horizon/koa",
-  "version": "6.2.1",
+  "version": "6.3.0",
   "description": "bull-horizon for koa",
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
   "dependencies": {
     "@apollo/server": "^4.0.0",
     "@as-integrations/koa": "^1.1.1",
-    "@bull-horizon/root": "^6.2.1",
+    "@bull-horizon/root": "^6.3.0",
     "@koa/cors": "^5.0.0",
     "graphql": "^16.0.0",
     "koa-bodyparser": "^4.4.1"

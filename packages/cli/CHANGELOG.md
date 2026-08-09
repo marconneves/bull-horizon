@@ -1,5 +1,12 @@
 # Change Log
 
+## 6.3.0
+
+### Patch Changes
+
+- @bull-horizon/express@6.3.0
+- @bull-horizon/root@6.3.0
+
 ## 6.2.1
 
 ### Patch Changes
