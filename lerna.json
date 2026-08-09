@@ -2,16 +2,5 @@
   "packages": [
     "packages/*"
   ],
-  "version": "6.2.0",
-  "command": {
-    "version": {
-      "allowBranch": "main",
-      "ignoreChanges": [
-        "**/__tests__/**",
-        "**/*.md",
-        "**/*.spec.*"
-      ],
-      "message": "Release %s"
-    }
-  }
+  "version": "independent"
 }

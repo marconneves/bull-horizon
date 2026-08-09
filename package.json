@@ -8,15 +8,23 @@
   },
   "homepage": "https://marconneves.github.io/bull-horizon",
   "main": "index.js",
+  "private": true,
   "keywords": [],
   "author": "",
   "license": "MIT",
   "scripts": {
     "predeploy": "make ui.build-demo",
-    "deploy": "gh-pages -d packages/ui/build"
+    "deploy": "gh-pages -d packages/ui/build",
+    "build": "npx lerna run build",
+    "changeset": "changeset",
+    "changeset:status": "changeset status --verbose",
+    "version-packages": "changeset version",
+    "release": "npm run build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.1",
     "@types/jest": "^26.0.22",
+    "@types/node": "^14.14.41",
     "@typescript-eslint/eslint-plugin": "^4.31.0",
     "@typescript-eslint/parser": "^4.31.0",
     "eslint": "^7.32.0",

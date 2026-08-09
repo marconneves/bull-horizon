@@ -14,15 +14,32 @@ lint.fix:
 check-types:
 	cd packages/$(pkg) && npx tsc -noEmit -p tsconfig.json
 add-dep:
-	npx lerna add $(dep) --scope=@bull-monitor/$(pkg)
-version:
-	npx lerna version $(ver) --force-publish --conventional-commits --create-release github
+	npx lerna add $(dep) --scope=@bull-horizon/$(pkg)
+add-dev-dep:
+	npx lerna add $(dep) --scope=@bull-horizon/$(pkg) --dev
 deploy-demo:
 	npm run deploy
+
+# --- Release (Changesets) -----------------------------------------------------
+# Fluxo: changeset -> version -> release. Detalhes em docs/RELEASING.md
+changeset:
+	npx changeset
+changeset.status:
+	npx changeset status --verbose
+version:
+	@$(MAKE) guard.main
+	npx changeset version
 publish:
-	npx lerna publish from-package --yes
-add-dev-dep:
-	npx lerna add $(dep) --scope=@bull-monitor/$(pkg) --dev
+	@$(MAKE) guard.main
+	npx lerna run build
+	npx changeset publish
+release: publish
+guard.main:
+	@branch=$$(git rev-parse --abbrev-ref HEAD); \
+	if [ "$$branch" != "main" ]; then \
+		echo "❌ Release só é permitido a partir da branch main (atual: $$branch)"; \
+		exit 1; \
+	fi
 ui.dev:
 	$(ui_npm_prefix) run dev
 ui.dev-with-mocks:
@@ -54,7 +71,7 @@ lerna.link:
 lerna.build:
 	npx lerna run build
 lerna.bootstrap:
-	npx lerna bootstrap
+	npx lerna bootstrap -- --legacy-peer-deps --no-save
 example.express:
 	npm --prefix ./examples/express start
 example.express-with-basic-auth:

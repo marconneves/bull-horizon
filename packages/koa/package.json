@@ -12,6 +12,9 @@
   ],
   "author": "Ilya Strus <strax1990@gmail.com>",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "types": "dist/index.d.ts",
   "main": "dist/index.js",
   "scripts": {

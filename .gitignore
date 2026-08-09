@@ -10,3 +10,8 @@ examples/nest/dist
 fixtures/bull-server/server/index.js
 ./docs
 lerna-debug.log
+
+# Locks por pacote sao gerados pelo `lerna bootstrap` e nao devem ser versionados:
+# fixavam versoes divergentes de graphql/@types/express entre pacotes e quebravam o build.
+# O lock autoritativo do monorepo e o da raiz. Ver docs/RELEASING.md.
+packages/*/package-lock.json

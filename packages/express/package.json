@@ -12,6 +12,9 @@
     "directory": "packages/express"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "npm run clean && npm run compile",

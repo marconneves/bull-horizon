@@ -2,6 +2,9 @@
   "name": "@bull-horizon/ui",
   "version": "6.2.0",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "Ilya Strus <strax1990@gmail.com>",
   "description": "bull-horizon ui",
   "keywords": [

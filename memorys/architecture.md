@@ -7,14 +7,14 @@
 ## Requisitos Não Funcionais, Stack e Infra (O que sustenta o app)
 
 - **Linguagem**: TypeScript (`strictNullChecks: true`, `target: ES2020`, `module: commonjs`). Compilação via `tsc` por pacote (`build`/`compile`/`dev --watch`).
-- **Monorepo**: gerenciado por **Lerna 4** (`packages/*`), versão sincronizada entre todos os pacotes (atual: `6.1.0`, bump minor em 2026-08-07 pelas features de queue groups/dark rebrand/JSON tree — ver `packages/ui/CHANGELOG.md`; major anterior `6.0.0` foi pela migração `@apollo/server` v4, ADR-001). Convenção de release usa **Conventional Commits** para gerar `CHANGELOG.md`.
+- **Monorepo**: workspaces declarados em `lerna.json` (`packages/*`). **Lerna 4 ficou restrito a orquestração de tarefas** (`lerna run build`, `lerna add`, `lerna bootstrap`) — versionamento e publicação migraram para **Changesets** (ver ADR-002). Versão sincronizada entre todos os 7 pacotes (atual: `6.2.0` no repo; registry npm ainda em `6.1.0` — a `6.2.0` foi versionada em `b451bf6` e nunca publicada).
 - **Lint/Format**: ESLint (`@typescript-eslint/recommended` + `plugin:prettier/recommended`) e Prettier (`singleQuote`, `semi`, `trailingComma: es5`, `arrowParens: always`). Regras relaxadas: `no-explicit-any`, `no-empty-function`, `no-non-null-assertion`, `ban-ts-comment` desligadas; `no-unused-vars` como warning (ignora prefixo `_`).
 - **Testes**: Jest 26 + `ts-jest`, `testEnvironment: node`. Fixture de integração em `fixtures/bull-server/docker-compose.yml` (Redis + servidor Bull para testes locais).
-- **CI/CD**: **NENHUM detectado** — sem `.github/workflows`, `.circleci` ou `.travis.yml`. Release é manual (lerna version + publish) e deploy da demo UI é via script `predeploy`/`deploy` usando `gh-pages` (publica `packages/ui/build` no GitHub Pages).
-- **`lerna.json` restringe `lerna version` à branch `main`** (`command.version.allowBranch: "main"`) — bump de versão + geração de `CHANGELOG.md` só rodam depois do merge na main, nunca numa feature branch. Em tasks trabalhadas fora da main, o ciclo do Ops (skill `delivery`) deve se limitar a build check + commit com Conventional Commits; versionamento/changelog ficam para um ciclo separado após o merge.
+- **CI/CD**: **NENHUM detectado** — sem `.github/workflows`, `.circleci` ou `.travis.yml`. Release é manual e local (`make version` → `make publish`, ambos via Changesets) e deploy da demo UI é via script `predeploy`/`deploy` usando `gh-pages` (publica `packages/ui/build` no GitHub Pages). Guia completo em `docs/RELEASING.md`.
+- **Release restrito à branch `main`** — antes garantido por `lerna.json` (`command.version.allowBranch`), agora pelo target `guard.main` do `Makefile`, que aborta `make version` e `make publish` fora da main. Em tasks trabalhadas fora da main, o ciclo do Ops (skill `delivery`) deve se limitar a build check + commit com Conventional Commits **+ criação do changeset** (`make changeset`); versionamento/publicação ficam para um ciclo separado após o merge.
 - **Node engine**: `>=14.16` (declarado em `packages/root`, bump em 2026-08-07 — piso mínimo do `@apollo/server` v4).
 - **Escopo npm**: `@bull-horizon/*` (renomeado de `@bull-monitor/*` em 2026-08-07, primeira publicação sob o novo escopo — ver `memorys/business.md` § Contexto do Projeto Original). Binário do CLI: `bull-horizon` (era `bull-monitor`). Prefixo de chaves Redis (`bull_monitor::metrics::`) mantido igual por decisão consciente, para não quebrar continuidade de métricas de quem migrar do pacote antigo.
-- **Comandos de referência para skills** (`delivery`, `security-audit`, `infrastructure`): gerenciador de pacotes `npm` + orquestração `lerna` (raiz). Build por pacote: `npm run build` (dentro de `packages/<pkg>`) ou `lerna run build`. Testes: `npx jest` (root) usando `jest.config.js` + `ts-jest`. Lint: `npx eslint . --ext .ts,.tsx`. Auditoria de dependências: `npm audit` (não há `pip`/`cargo`/`bundle` neste projeto — stack é 100% Node/TS).
+- **Comandos de referência para skills** (`delivery`, `security-audit`, `infrastructure`): gerenciador de pacotes `npm` + orquestração `lerna` (raiz). Build por pacote: `npm run build` (dentro de `packages/<pkg>`) ou `lerna run build`. Testes: `npx jest` (root) usando `jest.config.js` + `ts-jest`. Lint: `npx eslint . --ext .ts,.tsx`. Auditoria de dependências: `npm audit` (não há `pip`/`cargo`/`bundle` neste projeto — stack é 100% Node/TS). **Release**: `make changeset` (declarar mudança) → `make version` (aplicar bump) → `make publish` (build + publish). A skill `delivery` NÃO deve mais invocar `lerna version`/`lerna publish`.
 
 ## Fluxos de Dados e Decisão de Arquitetura Sistêmica (Como interage)
 
@@ -36,6 +36,12 @@
 - **Apollo Server v2/v3 em EOL desde 2023-10-22.** Todos os 4 adapters (express/koa/hapi/fastify) dependem de `apollo-server-<framework>` (v2/v3), pacotes descontinuados sem patches de segurança futuros. Migração recomendada: `@apollo/server` (Apollo Server 4+), que exige reescrever a camada de integração de middleware em cada adapter.
 - Este débito é apontado como a causa técnica mais provável por trás do arquivamento do repositório upstream (ver `memorys/business.md` → seção 4). **Priorizar antes de qualquer nova feature nos adapters.**
 - **✅ Resolvido em 2026-08-07 (v6.0.0, commit `843915b`)** — ver ADR-001 abaixo e o detalhe de implementação em `memorys/implementations/apollo-server-v4-migration.md`.
+
+## ⚠️ Débito Técnico de Build/Tooling (aberto)
+
+- **`@graphql-codegen/cli@^1` incompatível com `graphql@^16`** (`packages/root`, `packages/ui`): o codegen v1 declara peer `graphql@^14 || ^15`, mas os pacotes subiram para `^16` na migração Apollo v4. Efeito colateral: `npm install` por pacote aborta com `ERESOLVE`, e o `make lerna.bootstrap` precisa rodar com `--legacy-peer-deps` (já configurado no `Makefile`). Correção definitiva: subir para `@graphql-codegen/cli@^5` — é devDependency de geração de tipos, não entra no bundle publicado. **Task ainda não aberta.**
+- **`@types/node` precisa ficar pinado**: `^14.14.41` no `package.json` da raiz e `^18.19.0` em `packages/cli`. Sem os pins, o npm resolve a v26 e o TypeScript 4.x quebra ao parsear os `.d.ts` (`TS1109`/`TS1005`). Os pins tornam explícito o que antes era só um acaso dos lockfiles — não remover sem antes subir o TypeScript para 5.x.
+- **`packages/*/package-lock.json` removidos do versionamento (2026-08-09)**. Estavam obsoletos (declaravam `@bull-monitor/root@^5.4.0`) e fixavam versões divergentes de deps compartilhadas entre pacotes irmãos — `graphql@16.3.0` em `fastify` vs `16.14.2` em `root`; `@types/express@4.17.13` em `cli` vs `4.17.25` em `express`. Como cada pacote compila contra os tipos do próprio `node_modules`, isso gerava erros de **identidade de tipos** entre pacotes e quebrava `lerna run build` (logo, quebrava o publish). Lock autoritativo passa a ser só o da raiz; `packages/*/package-lock.json` está no `.gitignore`.
 
 ## 📐 ADR-001 — Migração Apollo Server v2/v3 → @apollo/server v4 (2026-08-07)
 
@@ -60,6 +66,29 @@
 **Risco de segurança identificado**: troca do ponto de montagem HTTP (`applyMiddleware`/`getMiddleware`/`createHandler` → `expressMiddleware`/integrações equivalentes) pode alterar a ordem em que middleware de auth do app consumidor intercepta a rota GraphQL. Ver `memorys/guidelines.md` para a regra de Security review obrigatória nesta migração.
 
 **Consequência**: após esta migração, o monorepo terá **dois majors de `graphql` coexistindo intencionalmente** (`^16` em root/express/fastify/koa/ui, `^15` em hapi) — não é regressão, é o preço aceito de manter o adapter Hapi vivo sem integração oficial.
+
+## 📐 ADR-002 — Versionamento e publicação via Changesets (2026-08-09)
+
+**Contexto**: o release era feito com `lerna version --conventional-commits` + `lerna publish from-package` (Lerna 4). O changelog era derivado automaticamente das mensagens de commit, o que produzia entradas de baixo valor para quem consome os pacotes (`**Note:** Version bump only for package X`) e acoplava a qualidade do CHANGELOG à disciplina de commit. Lerna 4 também está defasado (o projeto passou para a Nx e o fluxo `version/publish` deixou de ser o caminho recomendado da comunidade).
+
+**Decisão**: adotar **Changesets** (`@changesets/cli` ^2.31) como única ferramenta de versionamento e publicação. Lerna permanece **exclusivamente** como orquestrador de tarefas (`lerna run build`, `lerna add`, `lerna bootstrap`) e como declarador de workspaces — `@manypkg/get-packages` (usado internamente pelo Changesets) detecta `lerna.json` → `packages/*` nativamente, então **não foi necessário migrar para npm workspaces**.
+
+**Configuração adotada** (`.changeset/config.json`):
+- `fixed: [["@bull-horizon/*"]]` — todos os 7 pacotes sobem juntos, preservando o comportamento do lerna fixed mode. **Isto é obrigatório, não estético**: `packages/root/src/ui.ts` monta a URL do bundle da UI no jsDelivr usando a própria versão (`@bull-horizon/ui@<versão>/build/main.js`). Versões divergentes entre `root` e `ui` quebram o carregamento do dashboard em produção.
+- `access: "public"` + `publishConfig.access: "public"` nos 7 `packages/*/package.json` — pacotes escopados são privados por padrão no npm; sem isso o publish falha com `E402`.
+- `changelog: "@changesets/cli/changelog"` (formato simples, sem token). A alternativa `@changesets/changelog-github` exige `GITHUB_TOKEN` no momento do `version` — descartada por não haver CI.
+- `baseBranch: "main"`. Como `lerna.json` deixou de ter `command.version.allowBranch`, o guard de branch passou para o target `guard.main` do `Makefile`.
+
+**Mudanças de superfície**:
+- `Makefile`: `make changeset` / `make changeset.status` / `make version` / `make publish` (build + publish). `make version` não roda mais `lerna version`.
+- `package.json` (raiz): marcado como `private: true` (era publicável por acidente) + scripts `changeset`, `version-packages`, `release`.
+- `lerna.json`: reduzido a `packages` + `version: "independent"` (o número fixo virou responsabilidade do Changesets).
+- `packages/*/CHANGELOG.md`: removido o preâmbulo do lerna (`All notable changes...`), que ficava encalhado no meio do arquivo depois da primeira entrada do Changesets.
+- `CHANGELOG.md` da raiz: **congelado** no formato antigo. Changesets escreve apenas por pacote.
+
+**Consequência operacional**: o Ops passa a exigir um `.changeset/*.md` commitado junto com o código da feature. Sem changeset, a mudança não entra em nenhum release. Fluxo completo documentado em `docs/RELEASING.md`.
+
+**Não fazer**: não remover `fixed` sem nova decisão de arquitetura (quebra o acoplamento root↔ui); não publicar sem `lerna run build` (o `dist/` dos pacotes de servidor e o `build/` da UI são gitignored mas entram no tarball npm — publish sem build gera pacote vazio e o npm não permite sobrescrever a versão).
 
 ## 🛡️ Modelo de Ameaças (Security Specialist)
 

@@ -56,6 +56,14 @@ import Queue from 'bull';
 
 See the [Express package README](https://github.com/marconneves/bull-horizon/tree/main/packages/express#usage) for the full set of options (readonly queues, metrics collection, GraphQL introspection toggle, and more).
 
+## Contributing
+
+All `@bull-horizon/*` packages share a single version and are released together with
+[Changesets](https://github.com/changesets/changesets). If your change should ship to npm, run
+`make changeset` and commit the generated `.changeset/*.md` file alongside your code.
+
+See [docs/RELEASING.md](./docs/RELEASING.md) for the full versioning and publishing guide.
+
 ## License
 
 MIT
