@@ -1,6 +1,6 @@
 {
   "name": "@bull-horizon/hapi",
-  "version": "6.2.0",
+  "version": "6.2.1",
   "description": "bull-horizon for hapi",
   "keywords": [
     "bull"
@@ -24,7 +24,7 @@
   },
   "main": "dist/index.js",
   "dependencies": {
-    "@bull-horizon/root": "^6.2.0",
+    "@bull-horizon/root": "^6.2.1",
     "apollo-server-hapi": "^3.6.3"
   },
   "peerDependencies": {
