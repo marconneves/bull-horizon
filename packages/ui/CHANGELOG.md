@@ -1,5 +1,11 @@
 # Change Log
 
+## 6.3.1
+
+### Patch Changes
+
+- 8d48f39: fix: atualizar layout e filters
+
 ## 6.3.0
 
 ### Minor Changes
