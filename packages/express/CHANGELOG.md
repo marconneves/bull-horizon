@@ -1,5 +1,13 @@
 # Change Log
 
+## 6.3.1
+
+### Patch Changes
+
+- 8d48f39: fix: atualizar layout e filters
+- Updated dependencies [8d48f39]
+  - @bull-horizon/root@6.3.1
+
 ## 6.3.0
 
 ### Patch Changes
