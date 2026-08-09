@@ -238,6 +238,8 @@ const Job = ({
               defaultExpanded={prefs.expandJobReturnValue}
               header="Return Value"
               icon={<AssignmentReturnIcon fontSize="small" />}
+              filterBasePath="returnvalue"
+              onFilterAdded={addDataSearchFilter}
             >
               {job.returnValue}
             </AccordionJsonView>

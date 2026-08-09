@@ -8,6 +8,7 @@ type TState = {
   expandJobData: boolean;
   expandJobReturnValue: boolean;
   expandJobStackTrace: boolean;
+  visualJobFilter: boolean;
 
   changeConfirmDangerousActions: (value: boolean) => void;
   toggleConfirmDangerousActions: () => void;
@@ -15,6 +16,7 @@ type TState = {
   toggleExpandJobData: () => void;
   toggleExpandJobReturnValue: () => void;
   toggleExpandJobStackTrace: () => void;
+  toggleVisualJobFilter: () => void;
 };
 export const usePreferencesStore = createStore<TState>(
   persist(
@@ -24,6 +26,9 @@ export const usePreferencesStore = createStore<TState>(
       expandJobData: false,
       expandJobReturnValue: false,
       expandJobStackTrace: false,
+      // The visual builder is the search's initial mode; the `<>` button still
+      // switches to the raw jsonata expression at any time.
+      visualJobFilter: true,
 
       changeConfirmDangerousActions: (confirmDangerousActions) =>
         set({ confirmDangerousActions }),
@@ -41,6 +46,8 @@ export const usePreferencesStore = createStore<TState>(
         set((state) => ({ expandJobReturnValue: !state.expandJobReturnValue })),
       toggleExpandJobStackTrace: () =>
         set((state) => ({ expandJobStackTrace: !state.expandJobStackTrace })),
+      toggleVisualJobFilter: () =>
+        set((state) => ({ visualJobFilter: !state.visualJobFilter })),
     }),
     {
       name: `${StorageConfig.persistNs}prefs`,

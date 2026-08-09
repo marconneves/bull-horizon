@@ -73,14 +73,19 @@ const useStyles = makeStyles((theme) => ({
   pillCountActive: {
     backgroundColor: alpha(theme.palette.primary.main, 0.22),
   },
-  textFields: {
+  // Job ID e Order ficam numa linha propria acima da busca: sao controles de
+  // altura fixa, enquanto o bloco de busca cresce conforme o construtor de
+  // filtros ganha linhas. Embaixo, eles mudariam de lugar a cada linha nova.
+  controls: {
     display: 'flex',
     flexWrap: 'wrap',
-    alignItems: 'flex-start',
-    '& > *': {
-      marginRight: theme.spacing(1.5),
-      marginTop: theme.spacing(0.5),
-    },
+    alignItems: 'center',
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(1.5),
+  },
+  searchRow: {
+    display: 'flex',
+    width: '100%',
   },
   jobIdField: {
     '& input': {
@@ -92,7 +97,7 @@ const useStyles = makeStyles((theme) => ({
   },
   dataSearchField: {
     flex: 1,
-    minWidth: '300px',
+    minWidth: '240px',
   },
   dataSearchTip: {
     marginBottom: theme.spacing(1),
@@ -124,8 +129,7 @@ export default function JobsFilters() {
           </div>
         ))}
       </div>
-      <DataSearchTip className={cls.dataSearchTip} />
-      <div className={cls.textFields}>
+      <div className={cls.controls}>
         <TextField
           className={cls.jobIdField}
           value={jobId}
@@ -150,6 +154,9 @@ export default function JobsFilters() {
           <MenuItem value={OrderEnum.Desc}>DESC</MenuItem>
           <MenuItem value={OrderEnum.Asc}>ASC</MenuItem>
         </TextField>
+      </div>
+      <DataSearchTip className={cls.dataSearchTip} />
+      <div className={cls.searchRow}>
         <DataSearch
           className={cls.dataSearchField}
           startAdornment={

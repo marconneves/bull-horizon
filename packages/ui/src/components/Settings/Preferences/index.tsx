@@ -10,6 +10,8 @@ export default function Preferences() {
     toggleConfirmDangerousActions,
     groupQueuesByPrefix,
     toggleGroupQueuesByPrefix,
+    visualJobFilter,
+    toggleVisualJobFilter,
     expandJobData,
     expandJobStackTrace,
     expandJobReturnValue,
@@ -40,6 +42,17 @@ export default function Preferences() {
               />
             }
             label="Group queues by prefix"
+          />
+        </FormControl>
+        <FormControl margin="dense">
+          <FormControlLabel
+            control={
+              <Switch
+                checked={visualJobFilter}
+                onChange={toggleVisualJobFilter}
+              />
+            }
+            label="Start job search in visual filter mode"
           />
         </FormControl>
       </div>

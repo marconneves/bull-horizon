@@ -39,6 +39,7 @@
     "graphql-request": "^3.4.0",
     "jotai": "^0.16.10",
     "jshint": "^2.12.0",
+    "jsonata": "^1.8.5",
     "jsonlint-mod": "^1.7.6",
     "lodash": "^4.17.21",
     "material-ui-confirm": "^3.0.2",

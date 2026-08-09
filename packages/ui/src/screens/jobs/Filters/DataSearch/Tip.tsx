@@ -11,14 +11,9 @@ const DataSearchTip = ({ className }: TProps) => {
       <a target="__blank" href="https://docs.jsonata.org/overview.html">
         jsonata
       </a>
-      . Check out the{' '}
-      <a
-        target="__blank"
-        href="https://github.com/marconneves/bull-horizon/blob/main/search-examples.md"
-      >
-        examples
-      </a>
-      .
+      . Query the job itself — <code>data</code>, <code>opts</code>,{' '}
+      <code>returnvalue</code>, <code>name</code> — or hit{' '}
+      <code>&lt;&gt;</code> to build the filter visually.
     </>
   );
   return (
