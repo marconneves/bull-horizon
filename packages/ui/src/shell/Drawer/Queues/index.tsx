@@ -11,6 +11,7 @@ import {
   activeStatusAtom,
 } from '@/atoms/workspaces';
 import { useGroupedQueues, useMaybeGroupQueuesByPrefix } from './hooks';
+import { useActiveScreenStore } from '@/stores/active-screen';
 import { useUpdateAtom } from 'jotai/utils';
 import type { GetQueuesQuery, JobStatus } from '@/typings/gql';
 import type { Maybe } from '@/typings/utils';
@@ -31,6 +32,18 @@ export default function DrawerQueuesList({ queues }: TProps) {
       changeActiveQueueLabel(label);
       if (status) {
         changeActiveStatus(status);
+      }
+      // Overview and Metrics history are cross-queue: picking a queue while one
+      // of them is open changed the selection but left the screen looking
+      // identical, which reads as "clicking a queue does nothing". Per-queue
+      // screens (jobs, metrics) keep their context and just swap the queue.
+      //
+      // Read through `getState()` rather than a subscription so this callback
+      // keeps a stable identity — it is handed to every queue row, and a new
+      // identity on every screen change re-renders the entire list.
+      const { screen, changeScreen } = useActiveScreenStore.getState();
+      if (screen === 'overview' || screen === 'history') {
+        changeScreen('jobs');
       }
       closeDrawer();
     },

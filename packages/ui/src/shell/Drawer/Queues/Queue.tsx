@@ -41,7 +41,9 @@ const DrawerQueue = (props: TProps) => {
       }
       props.onSelect(id, workspaceLabel, status);
     },
-    [id, workspaceLabel]
+    // `props.onSelect` belongs here: without it this memo pins whichever
+    // parent callback existed on first render, silently ignoring later ones.
+    [id, workspaceLabel, props.onSelect]
   );
   const countArray = useJobsCountArray(props.queue.jobsCounts);
   return (

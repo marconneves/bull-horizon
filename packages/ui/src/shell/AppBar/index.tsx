@@ -17,12 +17,9 @@ import { useRedisInfoModalStore } from '@/stores/redis-info-modal';
 import RedisLogo from '@/components/RedisLogo';
 import Logo from '@/components/Logo';
 import { useShareActiveWorkspace } from '@/hooks/use-share';
-import MetricsScreenIcon from '@mui/icons-material/Timeline';
-import JobsScreenIcon from '@mui/icons-material/ViewList';
-import { useActiveScreenStore } from '@/stores/active-screen';
 import { LinksConfig } from '@/config/links';
 import { EnvConfig } from '@/config/env';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { QueryKeysConfig } from '@/config/query-keys';
 import { useNetwork } from '@/hooks/use-network';
 
@@ -49,13 +46,8 @@ const useStyles = makeStyles((theme: Theme) => ({
 export default memo(function AppBar() {
   const queryClient = useQueryClient();
   const {
-    queries: { getRedisInfo, getMetricsEnabled },
+    queries: { getRedisInfo },
   } = useNetwork();
-  const { data: metricsEnabledData } = useQuery(
-    QueryKeysConfig.metricsEnabled,
-    getMetricsEnabled
-  );
-  const metricsEnabled = metricsEnabledData?.metricsEnabled ?? false;
 
   const onRedisHover = useCallback(() => {
     const oldData = queryClient.getQueryData(QueryKeysConfig.redisInfo);
@@ -69,14 +61,6 @@ export default memo(function AppBar() {
   const openSettings = useSettingsModalStore((state) => state.open);
   const openRedisInfo = useRedisInfoModalStore((state) => state.open);
   const shareWorkspace = useShareActiveWorkspace();
-  const { screen, changeScreen } = useActiveScreenStore();
-  // The drawer owns navigation to the cross-queue screens (Overview, Metrics
-  // history); this button stays a straight jobs <-> per-queue-metrics swap
-  // for the queue currently open.
-  const toggleQueueScreen = useCallback(
-    () => changeScreen(screen === 'metrics' ? 'jobs' : 'metrics'),
-    [screen]
-  );
 
   return (
     <BaseAppBar position="fixed" className={classes.appBar}>
@@ -126,21 +110,6 @@ export default memo(function AppBar() {
               <ShareIcon />
             </IconButton>
           </Tooltip>
-          {metricsEnabled && (
-            <Tooltip title={screen === 'metrics' ? 'Jobs' : 'Queue metrics'}>
-              <IconButton
-                color="inherit"
-                onClick={toggleQueueScreen}
-                size="large"
-              >
-                {screen === 'metrics' ? (
-                  <JobsScreenIcon />
-                ) : (
-                  <MetricsScreenIcon />
-                )}
-              </IconButton>
-            </Tooltip>
-          )}
           <Tooltip title="Settings">
             <IconButton
               onClick={openSettings}

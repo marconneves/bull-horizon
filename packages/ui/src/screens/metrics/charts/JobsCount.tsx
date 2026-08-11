@@ -1,10 +1,11 @@
 import React, { memo } from 'react';
-import Paper from '@mui/material/Paper';
 import * as Chart from 'recharts';
+import { useTheme } from '@mui/material/styles';
 import { JobStatus } from '@/typings/gql';
 import { useJobStatusesPalette } from '@/components/JobStatusChip/hooks';
+import ChartCard from '../../shared/ChartCard';
+import { chartTooltipProps } from '../../shared/chart-tooltip';
 import type { TChartProps } from '../typings';
-import { useChartStyles } from './styles';
 import { tickXFormatter, tooltipLabelFormatter } from './utils';
 
 const statuses = Object.values(JobStatus).filter(
@@ -12,41 +13,48 @@ const statuses = Object.values(JobStatus).filter(
 );
 
 const JobsCountChart = ({ metrics }: TChartProps) => {
-  const cls = useChartStyles();
+  const theme = useTheme();
   const palette = useJobStatusesPalette();
   return (
-    <Paper className={cls.root}>
+    <ChartCard
+      title="Jobs by status"
+      hint="How deep the queue was, not how fast it ran"
+    >
       <Chart.ResponsiveContainer width="100%" height="100%">
         <Chart.LineChart
           data={metrics}
-          margin={{
-            top: 5,
-            right: 30,
-            left: 0,
-            bottom: 5,
-          }}
+          margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
         >
+          <Chart.CartesianGrid
+            strokeDasharray="3 3"
+            vertical={false}
+            stroke={theme.palette.divider}
+          />
           <Chart.XAxis
             interval="preserveStartEnd"
-            tick={{
-              fontSize: 14,
-            }}
+            tick={{ fontSize: 12 }}
             dataKey="timestamp"
             tickLine={false}
-            dy={7}
+            axisLine={false}
+            minTickGap={48}
+            dy={6}
             tickFormatter={tickXFormatter}
           />
           <Chart.YAxis
-            tick={{
-              fontSize: 14,
-            }}
+            tick={{ fontSize: 12 }}
             tickLine={false}
+            axisLine={false}
+            width={48}
+            allowDecimals={false}
           />
           <Chart.Tooltip
-            labelClassName={cls.tooltipLabel}
+            {...chartTooltipProps(theme)}
             labelFormatter={tooltipLabelFormatter}
           />
-          <Chart.Legend />
+          <Chart.Legend
+            iconType="plainline"
+            wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+          />
           {statuses.map((status) => (
             <Chart.Line
               key={status}
@@ -54,13 +62,14 @@ const JobsCountChart = ({ metrics }: TChartProps) => {
               isAnimationActive={false}
               name={status}
               type="monotone"
+              dot={false}
               stroke={palette[status]}
               dataKey={`counts.${status}`}
             />
           ))}
         </Chart.LineChart>
       </Chart.ResponsiveContainer>
-    </Paper>
+    </ChartCard>
   );
 };
 

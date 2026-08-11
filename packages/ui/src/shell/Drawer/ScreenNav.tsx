@@ -6,6 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Divider from '@mui/material/Divider';
 import OverviewIcon from '@mui/icons-material/GridView';
 import HistoryIcon from '@mui/icons-material/ShowChart';
+import QueueMetricsIcon from '@mui/icons-material/Timeline';
 import makeStyles from '@mui/styles/makeStyles';
 import { useActiveScreenStore } from '@/stores/active-screen';
 import { useDrawerState } from '@/stores/drawer';
@@ -40,6 +41,15 @@ const ENTRIES: TEntry[] = [
     screen: 'history',
     label: 'Metrics history',
     icon: <HistoryIcon />,
+    needsMetrics: true,
+  },
+  // Depth-over-time and processing time for the queue that is currently open.
+  // Used to hide behind an AppBar toggle, which left navigation split between
+  // the sidebar and an icon most people never found.
+  {
+    screen: 'metrics',
+    label: 'Queue metrics',
+    icon: <QueueMetricsIcon />,
     needsMetrics: true,
   },
 ];

@@ -12,8 +12,8 @@ import { useQueueData } from '@/hooks/use-queue-data';
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    marginBottom: theme.spacing(1),
-    padding: theme.spacing(1),
+    padding: theme.spacing(0.5),
+    border: `1px solid ${theme.palette.divider}`,
     '& > *': {
       margin: theme.spacing(0.5),
     },
@@ -49,7 +49,7 @@ const MetricsActions = () => {
   });
   const cls = useStyles();
   return (
-    <Paper className={cls.root}>
+    <Paper elevation={0} className={cls.root}>
       <Button
         disabled={readonly}
         onClick={() => clearMetricsMutation.mutate({ queue })}

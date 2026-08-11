@@ -5,7 +5,7 @@ import Tooltip from '@mui/material/Tooltip';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import clsx from 'clsx';
 import JsonNode from './JsonNode';
-import type { TPathSegment } from './JsonNode';
+import type { TPathSegment, TExpandSignal } from './JsonNode';
 import { JsonataPathService } from '@/services/jsonata-path';
 
 const useStyles = makeStyles((theme) => ({
@@ -58,6 +58,7 @@ type TProps = {
   // (`returnvalue = "done"`).
   filterBasePath?: string;
   onFilterAdded?: (expression: string) => void;
+  expandSignal?: TExpandSignal;
 };
 
 const JsonTreeView = ({
@@ -65,6 +66,7 @@ const JsonTreeView = ({
   className,
   filterBasePath,
   onFilterAdded,
+  expandSignal,
 }: TProps) => {
   const cls = useStyles();
   const parsed = useMemo(() => {
@@ -123,6 +125,7 @@ const JsonTreeView = ({
         path={[]}
         depth={0}
         onAddFilter={filterBasePath ? handleAddFilter : undefined}
+        expandSignal={expandSignal}
       />
     </div>
   );

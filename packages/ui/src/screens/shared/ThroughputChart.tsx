@@ -3,7 +3,8 @@ import * as Chart from 'recharts';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import makeStyles from '@mui/styles/makeStyles';
-import { alpha } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
+import { chartTooltipProps } from './chart-tooltip';
 import { useJobStatusesPalette } from '@/components/JobStatusChip/hooks';
 import { JobStatus } from '@/typings/gql';
 import day from 'dayjs';
@@ -48,12 +49,17 @@ const useStyles = makeStyles((theme) => ({
   },
   totalValue: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'baseline',
     gap: theme.spacing(1),
     fontSize: 26,
     fontWeight: 600,
     lineHeight: 1.2,
     fontVariantNumeric: 'tabular-nums',
+  },
+  share: {
+    fontSize: 14,
+    fontWeight: 500,
+    color: theme.palette.text.secondary,
   },
   dot: {
     width: 8,
@@ -111,6 +117,7 @@ function ThroughputChart({
   emptyLabel = 'No throughput recorded in this window.',
 }: TProps) {
   const cls = useStyles();
+  const theme = useTheme();
   const palette = useJobStatusesPalette();
   const completedColor = palette[JobStatus.Completed];
   const failedColor = palette[JobStatus.Failed];
@@ -165,6 +172,15 @@ function ThroughputChart({
                 style={{ backgroundColor: failedColor }}
               />
               {totalFailed.toLocaleString()}
+              {totalCompleted + totalFailed > 0 && (
+                <span className={cls.share}>
+                  {(
+                    (totalFailed / (totalCompleted + totalFailed)) *
+                    100
+                  ).toFixed(1)}
+                  %
+                </span>
+              )}
             </span>
             <Typography variant="caption" color="textSecondary">
               Failed
@@ -177,7 +193,7 @@ function ThroughputChart({
       ) : (
         <div className={cls.chart}>
           <Chart.ResponsiveContainer width="100%" height="100%">
-            <Chart.AreaChart
+            <Chart.ComposedChart
               data={series}
               margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
             >
@@ -204,7 +220,7 @@ function ThroughputChart({
               <Chart.CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke={alpha(completedColor, 0.12)}
+                stroke={alpha(theme.palette.text.primary, 0.1)}
               />
               <Chart.XAxis
                 dataKey="timestamp"
@@ -216,6 +232,13 @@ function ThroughputChart({
                 minTickGap={48}
                 dy={6}
               />
+              {/*
+                One shared axis on purpose. Giving failures their own scale
+                makes their shape readable but their magnitude incomparable —
+                a 1.4/min failure line would tower as high as a 90/min
+                completed line. The failure share in the header carries the
+                comparison instead.
+              */}
               <Chart.YAxis
                 tick={{ fontSize: 12 }}
                 tickLine={false}
@@ -224,11 +247,11 @@ function ThroughputChart({
                 tickFormatter={formatCompact}
               />
               <Chart.Tooltip
+                {...chartTooltipProps(theme)}
                 labelFormatter={(label: number) =>
                   day(label).format('YYYY-MM-DD HH:mm')
                 }
                 formatter={(value: number) => `${formatCompact(value)}/min`}
-                contentStyle={{ fontSize: 13 }}
               />
               <Chart.Area
                 type="monotone"
@@ -248,7 +271,7 @@ function ThroughputChart({
                 dot={false}
                 isAnimationActive={false}
               />
-            </Chart.AreaChart>
+            </Chart.ComposedChart>
           </Chart.ResponsiveContainer>
         </div>
       )}
