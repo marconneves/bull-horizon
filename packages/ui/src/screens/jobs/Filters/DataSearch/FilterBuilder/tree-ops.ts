@@ -16,7 +16,11 @@ const mapChildren = (
 });
 
 export const TreeOps = {
-  update(root: TFilterGroup, id: string, patch: Partial<TFilterNode>): TFilterGroup {
+  update(
+    root: TFilterGroup,
+    id: string,
+    patch: Partial<TFilterNode>
+  ): TFilterGroup {
     // The root isn't anyone's child — flipping its connector lands here.
     if (root.id === id) return { ...root, ...patch } as TFilterGroup;
     return mapChildren(root, (child) =>
@@ -25,7 +29,9 @@ export const TreeOps = {
   },
 
   remove(root: TFilterGroup, id: string): TFilterGroup {
-    const pruned = mapChildren(root, (child) => (child.id === id ? null : child));
+    const pruned = mapChildren(root, (child) =>
+      child.id === id ? null : child
+    );
     // A group left without children has no reason to exist.
     return mapChildren(pruned, (child) =>
       child.kind === 'group' && !child.children.length ? null : child

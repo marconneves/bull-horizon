@@ -8,7 +8,10 @@ import CodeIcon from '@mui/icons-material/Code';
 import makeStyles from '@mui/styles/makeStyles';
 import clsx from 'clsx';
 import { useDataSearchState } from './hooks';
-import { useFieldSuggestions, useFilterBuilderState } from './FilterBuilder/hooks';
+import {
+  useFieldSuggestions,
+  useFilterBuilderState,
+} from './FilterBuilder/hooks';
 import FilterBuilder from './FilterBuilder';
 import { usePreferencesStore } from '@/stores/preferences';
 
@@ -70,7 +73,10 @@ const DataSearch = ({ className, startAdornment }: TProps) => {
       {/* span because Tooltip doesn't fire on a disabled button */}
       <span>
         <IconButton size="small" onClick={toggle} disabled={!canBuild}>
-          <CodeIcon fontSize="small" color={isBuilder ? 'primary' : undefined} />
+          <CodeIcon
+            fontSize="small"
+            color={isBuilder ? 'primary' : undefined}
+          />
         </IconButton>
       </span>
     </Tooltip>
@@ -88,7 +94,11 @@ const DataSearch = ({ className, startAdornment }: TProps) => {
             </IconButton>
           </Tooltip>
         </div>
-        <FilterBuilder tree={tree} suggestions={suggestions} onChange={setTree} />
+        <FilterBuilder
+          tree={tree}
+          suggestions={suggestions}
+          onChange={setTree}
+        />
       </div>
     );
   }

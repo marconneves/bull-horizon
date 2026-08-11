@@ -95,7 +95,9 @@ const JsonTreeView = ({
   }, [filterBasePath, onFilterAdded, children]);
 
   if (!parsed.ok || typeof parsed.value !== 'object' || parsed.value === null) {
-    const raw = <pre className={clsx([cls.root, cls.pre, className])}>{children}</pre>;
+    const raw = (
+      <pre className={clsx([cls.root, cls.pre, className])}>{children}</pre>
+    );
     if (!filterBasePath || !onFilterAdded || !children.trim()) return raw;
     return (
       <div className={cls.rawWrapper}>

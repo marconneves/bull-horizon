@@ -214,7 +214,9 @@ const FilterGroup = ({
                 <Tooltip title="Add filter">
                   <IconButton
                     size="small"
-                    onClick={() => onChange(TreeOps.addCondition(root, group.id))}
+                    onClick={() =>
+                      onChange(TreeOps.addCondition(root, group.id))
+                    }
                   >
                     <AddIcon fontSize="small" />
                   </IconButton>

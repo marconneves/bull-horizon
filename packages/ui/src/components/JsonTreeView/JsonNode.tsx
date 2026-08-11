@@ -75,7 +75,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function formatScalar(value: TPrimitive): { text: string; cls: 'string' | 'scalar' | 'nullish' } {
+function formatScalar(value: TPrimitive): {
+  text: string;
+  cls: 'string' | 'scalar' | 'nullish';
+} {
   if (value === null) return { text: 'null', cls: 'nullish' };
   if (typeof value === 'string') return { text: `"${value}"`, cls: 'string' };
   return { text: String(value), cls: 'scalar' };
@@ -86,7 +89,10 @@ type TProps = {
   value: unknown;
   path: TPathSegment[];
   depth: number;
-  onAddFilter?: (path: TPathSegment[], value: string | number | boolean) => void;
+  onAddFilter?: (
+    path: TPathSegment[],
+    value: string | number | boolean
+  ) => void;
 };
 
 const JsonNode = ({ keyLabel, value, path, depth, onAddFilter }: TProps) => {

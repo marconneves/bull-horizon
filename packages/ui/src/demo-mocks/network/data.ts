@@ -118,11 +118,7 @@ const generateData = () => {
         2
       ),
       stacktrace: [],
-      data: JSON.stringify(
-        DEMO_PAYLOADS[n % DEMO_PAYLOADS.length](n),
-        null,
-        2
-      ),
+      data: JSON.stringify(DEMO_PAYLOADS[n % DEMO_PAYLOADS.length](n), null, 2),
       logs: {
         count: 0,
         logs: ['some log'] as string[],

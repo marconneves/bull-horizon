@@ -50,11 +50,13 @@ export default function DrawerQueuesList({ queues }: TProps) {
     return (
       <List>
         {groups.map((group) => (
-          <QueueGroup key={group.name} group={group} renderQueue={renderQueue} />
+          <QueueGroup
+            key={group.name}
+            group={group}
+            renderQueue={renderQueue}
+          />
         ))}
-        {ungrouped.length > 0 && (
-          <ListSubheader>No group</ListSubheader>
-        )}
+        {ungrouped.length > 0 && <ListSubheader>No group</ListSubheader>}
         {ungrouped.map(renderQueue)}
       </List>
     );
