@@ -58,24 +58,31 @@ See the [Express package README](https://github.com/marconneves/bull-horizon/tre
 
 ## Metrics and throughput
 
-With `metrics` enabled, Bull Horizon records how many jobs completed and failed
-in each collection window, per queue. This is counted from queue events, so it
-works identically on Bull and BullMQ and does not depend on `removeOnComplete`
-leaving jobs behind:
+**Collection is off by default — you have to turn it on.** Nothing is recorded
+until you pass a `metrics` config:
 
 ```typescript
 const monitor = new BullMonitorExpress({
   queues: [...],
-  metrics: { collectInterval: { minutes: 1 } }, // default
+  metrics: {}, // enough to enable it; every field below has a default
 });
 ```
 
-That feeds three views in the dashboard: a throughput chart above each queue's
-job list, an **Overview** grid of every queue's status breakdown, and a
-**Metrics history** screen aggregating all queues.
+| | Without `metrics` | With `metrics` |
+|---|---|---|
+| Job counts in the sidebar and **Overview** | ✅ read live from redis | ✅ |
+| Throughput chart above the job list | — | ✅ |
+| **Metrics history** screen | hidden | ✅ |
+| Prometheus endpoint | gauges only (queue depth, paused) | + throughput counters and processing time |
+
+Once enabled, Bull Horizon records how many jobs completed and failed in each
+collection window, per queue. It counts queue *events*, so it works identically
+on Bull and BullMQ and does not depend on `removeOnComplete` leaving finished
+jobs behind for it to count.
 
 Throughput is only recorded while the monitor process is running — history is
-not backfilled, and a restart leaves a gap.
+not backfilled, and a restart leaves a gap in the series. It is an
+observability signal, not accounting.
 
 ### Retention
 
