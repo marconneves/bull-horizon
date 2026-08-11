@@ -31,11 +31,49 @@ type Config = {
   textSearchScanCount?: number;
 };
 export class BullDataSource {
+  /**
+   * Per-request memoization. This data source is built fresh by
+   * `createContext()` on every request, so the caches live exactly as long as
+   * one GraphQL operation.
+   *
+   * The *promise* is cached, not the resolved value — GraphQL resolves the
+   * fields of a type concurrently, so caching after the await would still let
+   * `jobsCounts`, `failedCount` and friends each open their own Redis
+   * round-trip before the first one came back.
+   */
+  private _jobCountsCache: Map<string, Promise<JobCounts>> = new Map();
+  private _isPausedCache: Map<string, Promise<boolean>> = new Map();
+  private _countCache: Map<string, Promise<number>> = new Map();
+
   constructor(
     private _queues: Queue[],
     private _queuesMap: Map<string, Queue>,
     private _config: Config
   ) {}
+
+  // per-request cached reads
+  public getCachedJobCounts(queue: Queue): Promise<JobCounts> {
+    return this._memo(this._jobCountsCache, queue.id, () =>
+      queue.getJobCounts()
+    );
+  }
+  public getCachedIsPaused(queue: Queue): Promise<boolean> {
+    return this._memo(this._isPausedCache, queue.id, () => queue.isPaused());
+  }
+  public getCachedCount(queue: Queue): Promise<number> {
+    return this._memo(this._countCache, queue.id, () => queue.count());
+  }
+  private _memo<T>(
+    cache: Map<string, Promise<T>>,
+    key: string,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const hit = cache.get(key);
+    if (hit) return hit;
+    const promise = fn();
+    cache.set(key, promise);
+    return promise;
+  }
 
   // queries
   public getQueueById(id: string, throwIfNotFound?: boolean) {

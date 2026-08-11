@@ -6,6 +6,7 @@ import type {
   JobLogs,
   QueueConfig,
   GlobalJobCompletionCb,
+  GlobalJobFailureCb,
 } from './queue';
 import { JobStatus } from './queue';
 import type { Queue as BullQueue, Job as BullJob } from 'bull';
@@ -111,6 +112,7 @@ export class BullJobAdapter extends Job {
 export class BullAdapter extends Queue {
   private _id: string;
   private _globalJobCompletionCb?: GlobalJobCompletionCb;
+  private _globalJobFailureCb?: GlobalJobFailureCb;
 
   constructor(private _queue: BullQueue, config?: QueueConfig) {
     super(_queue, config);
@@ -146,6 +148,19 @@ export class BullAdapter extends Queue {
     this._globalJobCompletionCb = callback;
     if (callback) {
       this._queue.on('global:completed', callback);
+    }
+  }
+
+  public set onGlobalJobFailure(callback: GlobalJobFailureCb) {
+    const oldCb = this._globalJobFailureCb;
+    if (oldCb) {
+      this._queue.off('global:failed', oldCb);
+    }
+    this._globalJobFailureCb = callback;
+    if (callback) {
+      // bull emits `global:failed` as (jobId, err) — the extra arg is
+      // harmless, the callback only cares about the id.
+      this._queue.on('global:failed', callback);
     }
   }
 

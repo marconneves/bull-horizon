@@ -3,6 +3,7 @@ import {
   BullMonitorContext,
   typeDefs,
   resolvers,
+  PROMETHEUS_CONTENT_TYPE,
 } from '@bull-horizon/root';
 import { ApolloServer } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -32,6 +33,13 @@ export class BullMonitorExpress extends BullMonitor {
       res.type('html');
       res.send(this.renderUi());
     });
+
+    if (this.isPrometheusEnabled) {
+      router.get(this.prometheusConfig.path, async (_req, res) => {
+        res.type(PROMETHEUS_CONTENT_TYPE);
+        res.send(await this.renderPrometheus());
+      });
+    }
 
     const server = new ApolloServer<BullMonitorContext>({
       persistedQueries: false,

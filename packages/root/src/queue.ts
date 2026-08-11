@@ -14,6 +14,7 @@ export type RedisClient = Redis | Cluster;
 export type JobId = string;
 export type JobOptions = any;
 export type GlobalJobCompletionCb = (jobId: JobId) => void;
+export type GlobalJobFailureCb = (jobId: JobId) => void;
 export interface JobLogs {
   logs: string[];
   count: number;
@@ -73,6 +74,15 @@ export abstract class Queue {
   public abstract set onGlobalJobCompletion(
     callback: GlobalJobCompletionCb | null
   );
+
+  /**
+   * Counterpart of `onGlobalJobCompletion` for failures. The metrics
+   * collector needs both to build a throughput series (completed/failed per
+   * window) that works identically on Bull and BullMQ — neither library
+   * exposes a per-minute metrics API we can rely on across the versions this
+   * project supports.
+   */
+  public abstract set onGlobalJobFailure(callback: GlobalJobFailureCb | null);
 
   public abstract toKey(queueType: string): string;
   public abstract count(): Promise<number>;

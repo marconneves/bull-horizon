@@ -56,6 +56,8 @@ import { clearAllMetrics } from '@/network/mutations/clear-all-metrics';
 import { getQueueMetricsMock } from '@/demo-mocks/network/queries/get-queue-metrics';
 import { clearAllMetricsMock } from '@/demo-mocks/network/mutations/clear-all-metrics';
 import { clearMetricsMock } from '@/demo-mocks/network/mutations/clear-metrics';
+import { getMetricsSummary } from '@/network/queries/get-metrics-summary';
+import { getMetricsSummaryMock } from '@/demo-mocks/network/queries/get-metrics-summary';
 
 import { EnvConfig } from '@/config/env';
 
@@ -71,6 +73,7 @@ const queries = {
   getJobById: m ? getJobByIdMock : getJobById,
   getQueues: m ? getQueuesMock : getQueues,
   getQueueMetrics: m ? getQueueMetricsMock : getQueueMetrics,
+  getMetricsSummary: m ? getMetricsSummaryMock : getMetricsSummary,
 };
 const mutations = {
   createJob: m ? createJobMock : createJob,

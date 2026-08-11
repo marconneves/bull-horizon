@@ -69,7 +69,14 @@ export default memo(function AppBar() {
   const openSettings = useSettingsModalStore((state) => state.open);
   const openRedisInfo = useRedisInfoModalStore((state) => state.open);
   const shareWorkspace = useShareActiveWorkspace();
-  const { screen, toggleScreen } = useActiveScreenStore();
+  const { screen, changeScreen } = useActiveScreenStore();
+  // The drawer owns navigation to the cross-queue screens (Overview, Metrics
+  // history); this button stays a straight jobs <-> per-queue-metrics swap
+  // for the queue currently open.
+  const toggleQueueScreen = useCallback(
+    () => changeScreen(screen === 'metrics' ? 'jobs' : 'metrics'),
+    [screen]
+  );
 
   return (
     <BaseAppBar position="fixed" className={classes.appBar}>
@@ -120,9 +127,17 @@ export default memo(function AppBar() {
             </IconButton>
           </Tooltip>
           {metricsEnabled && (
-            <Tooltip title={screen === 'jobs' ? 'Metrics' : 'Jobs'}>
-              <IconButton color="inherit" onClick={toggleScreen} size="large">
-                {screen === 'jobs' ? <MetricsScreenIcon /> : <JobsScreenIcon />}
+            <Tooltip title={screen === 'metrics' ? 'Jobs' : 'Queue metrics'}>
+              <IconButton
+                color="inherit"
+                onClick={toggleQueueScreen}
+                size="large"
+              >
+                {screen === 'metrics' ? (
+                  <JobsScreenIcon />
+                ) : (
+                  <MetricsScreenIcon />
+                )}
               </IconButton>
             </Tooltip>
           )}

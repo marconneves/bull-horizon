@@ -228,6 +228,7 @@ export type Query = {
   queues?: Maybe<Array<Queue>>;
   queue?: Maybe<Queue>;
   metrics?: Maybe<Array<QueueMetrics>>;
+  metricsSummary: MetricsSummary;
   jobs: Array<Job>;
   job?: Maybe<Job>;
   redisInfo?: Maybe<RedisInfo>;
@@ -244,6 +245,13 @@ export type QueryMetricsArgs = {
   queue: Scalars['ID'];
   start?: Maybe<Scalars['Int']>;
   end?: Maybe<Scalars['Int']>;
+  since?: Maybe<Scalars['Float']>;
+  maxPoints?: Maybe<Scalars['Int']>;
+};
+
+export type QueryMetricsSummaryArgs = {
+  since?: Maybe<Scalars['Float']>;
+  maxPoints?: Maybe<Scalars['Int']>;
 };
 
 
@@ -309,6 +317,29 @@ export type QueueMetrics = {
   processingTime?: Maybe<Scalars['Float']>;
   processingTimeMin?: Maybe<Scalars['Float']>;
   processingTimeMax?: Maybe<Scalars['Float']>;
+  completed?: Maybe<Scalars['Int']>;
+  failed?: Maybe<Scalars['Int']>;
+  windowMs?: Maybe<Scalars['Float']>;
+};
+
+export type ThroughputPoint = {
+  timestamp: Scalars['Float'];
+  completed: Scalars['Int'];
+  failed: Scalars['Int'];
+};
+
+export type QueueThroughputSummary = {
+  queue: Scalars['ID'];
+  name: Scalars['String'];
+  completed: Scalars['Int'];
+  failed: Scalars['Int'];
+};
+
+export type MetricsSummary = {
+  points: Array<ThroughputPoint>;
+  totalCompleted: Scalars['Int'];
+  totalFailed: Scalars['Int'];
+  queues: Array<QueueThroughputSummary>;
 };
 
 export enum QueueProvider {

@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch makes the in-flight run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `@graphql-codegen/cli@1` declares a peer of `graphql@^14 || ^15` while
+      # the packages moved to `^16` in the apollo v4 migration. It is a
+      # devDependency used to generate types, so the resolution conflict is
+      # ignored rather than solved here — see the open debt item in
+      # memorys/architecture.md.
+      - name: Install root dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Lint
+        run: npx eslint . --ext .ts,.tsx
+
+      - name: Test
+        run: npx jest
+
+      # There are no npm workspaces here (see memorys/guidelines.md): without
+      # bootstrap, each adapter resolves `@bull-horizon/root` from the npm
+      # registry instead of the local package, and the build validates the
+      # wrong code. Bootstrap symlinks the local packages together.
+      - name: Bootstrap packages
+        run: npx lerna bootstrap -- --legacy-peer-deps --no-save
+
+      # Built in dependency order: the adapters compile against
+      # `@bull-horizon/root`'s emitted `dist/`, not its sources.
+      - name: Build all packages
+        run: npx lerna run build

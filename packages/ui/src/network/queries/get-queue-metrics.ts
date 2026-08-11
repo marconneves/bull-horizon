@@ -10,12 +10,27 @@ export const getQueueMetrics = (
 ): Promise<GetQueueMetricsQuery> =>
   gqlClient.request(
     gql`
-      query GetQueueMetrics($queue: ID!, $start: Int, $end: Int) {
-        metrics(queue: $queue, start: $start, end: $end) {
+      query GetQueueMetrics(
+        $queue: ID!
+        $start: Int
+        $end: Int
+        $since: Float
+        $maxPoints: Int
+      ) {
+        metrics(
+          queue: $queue
+          start: $start
+          end: $end
+          since: $since
+          maxPoints: $maxPoints
+        ) {
           timestamp
           processingTime
           processingTimeMin
           processingTimeMax
+          completed
+          failed
+          windowMs
           counts {
             waiting
             active

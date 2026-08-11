@@ -21,7 +21,9 @@ export const useCount = (): number => {
     return 0;
   }
   if (status in jobsCounts) {
-    return jobsCounts[status];
+    // `prioritized` is nullable in the schema (providers that don't support it
+    // report nothing), so the key existing doesn't guarantee a number.
+    return jobsCounts[status] ?? 0;
   }
   return 0;
 };

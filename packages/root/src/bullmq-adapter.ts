@@ -14,6 +14,7 @@ import type {
   JobCounts,
   JobLogs,
   GlobalJobCompletionCb,
+  GlobalJobFailureCb,
   QueueConfig,
 } from './queue';
 
@@ -117,6 +118,7 @@ type InternalGlobalJobCompletionCb = (value: any) => void;
 export class BullMQAdapter extends Queue {
   private _queueEvents?: QueueEvents;
   private _globalJobCompletionCb?: InternalGlobalJobCompletionCb;
+  private _globalJobFailureCb?: InternalGlobalJobCompletionCb;
   private _id: string;
 
   constructor(private _queue: BullMQQueue, config?: QueueConfig) {
@@ -167,6 +169,22 @@ export class BullMQAdapter extends Queue {
       this.queueEvents.on('completed', normalizedCallback);
     } else {
       this._globalJobCompletionCb = undefined;
+    }
+  }
+
+  public set onGlobalJobFailure(callback: GlobalJobFailureCb) {
+    const oldCb = this._globalJobFailureCb;
+    if (oldCb) {
+      this.queueEvents.off('failed', oldCb);
+    }
+    if (callback) {
+      const normalizedCallback = (value: any) => {
+        callback(value.jobId);
+      };
+      this._globalJobFailureCb = normalizedCallback;
+      this.queueEvents.on('failed', normalizedCallback);
+    } else {
+      this._globalJobFailureCb = undefined;
     }
   }
 

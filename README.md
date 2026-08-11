@@ -56,6 +56,52 @@ import Queue from 'bull';
 
 See the [Express package README](https://github.com/marconneves/bull-horizon/tree/main/packages/express#usage) for the full set of options (readonly queues, metrics collection, GraphQL introspection toggle, and more).
 
+## Metrics and throughput
+
+With `metrics` enabled, Bull Horizon records how many jobs completed and failed
+in each collection window, per queue. This is counted from queue events, so it
+works identically on Bull and BullMQ and does not depend on `removeOnComplete`
+leaving jobs behind:
+
+```typescript
+const monitor = new BullMonitorExpress({
+  queues: [...],
+  metrics: {
+    collectInterval: { minutes: 1 }, // default
+    maxMetrics: 4320,                // default — 3 days at the interval above
+  },
+});
+```
+
+That feeds three views in the dashboard: a throughput chart above each queue's
+job list, an **Overview** grid of every queue's status breakdown, and a
+**Metrics history** screen aggregating all queues.
+
+Throughput is only recorded while the monitor process is running — history is
+not backfilled, and a restart leaves a gap.
+
+## Prometheus / Grafana
+
+An optional Prometheus/OpenMetrics endpoint can be exposed for scraping by
+Prometheus, Grafana Alloy or Grafana Cloud:
+
+```typescript
+const monitor = new BullMonitorExpress({
+  queues: [...],
+  metrics: { collectInterval: { minutes: 1 } },
+  prometheus: true, // or { enabled: true, path: '/metrics' }
+});
+```
+
+```sh
+bull-horizon -q my-queue --metrics --prometheus
+```
+
+It is **off by default**: the route has no authentication of its own (like the
+rest of the dashboard) and publishes queue names as label values. See
+[`examples/grafana`](./examples/grafana) for the exported metrics, scrape
+configuration and an importable dashboard.
+
 ## Contributing
 
 All `@bull-horizon/*` packages share a single version and are released together with
