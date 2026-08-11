@@ -2,10 +2,10 @@ import { StorageConfig } from '@/config/storage';
 import createStore from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type TScreen = 'jobs' | 'metrics' | 'overview' | 'history';
+export type TScreen = 'jobs' | 'overview' | 'history';
 
 /** Screens that only make sense when the metrics collector is running. */
-export const METRICS_SCREENS: TScreen[] = ['metrics', 'history'];
+export const METRICS_SCREENS: TScreen[] = ['history'];
 
 type TState = {
   screen: TScreen;

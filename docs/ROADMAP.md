@@ -4,6 +4,7 @@
 **Data:** 2026-08-11
 **Status:** waves 0–3 implementadas na task `docs/todo/003-overview-throughput-prometheus/` (2026-08-11).
 Restam: **E6/P3** (teto de scan da busca), **E6/P4** (code-splitting da UI), **E7** (bump bull/bullmq + majors de tooling) e **E8** (auth nativa).
+A tela de métricas por fila foi removida a pedido do usuário (ver D3b na task) — os dados seguem no schema e no Prometheus.
 
 ---
 

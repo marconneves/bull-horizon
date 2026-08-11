@@ -4,6 +4,9 @@ import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
 import makeStyles from '@mui/styles/makeStyles';
 import { useQuery } from 'react-query';
+import { useUpdateAtom } from 'jotai/utils';
+import { activeQueueAtom, activeQueueLabelAtom } from '@/atoms/workspaces';
+import { useActiveScreenStore } from '@/stores/active-screen';
 import { useNetwork } from '@/hooks/use-network';
 import { QueryKeysConfig } from '@/config/query-keys';
 import { getPollingInterval } from '@/stores/network-settings';
@@ -13,6 +16,7 @@ import { JobStatus } from '@/typings/gql';
 import ThroughputChart from '../shared/ThroughputChart';
 import TimeRangePicker from '../shared/TimeRangePicker';
 import { useTimeRange } from '../shared/time-range';
+import Actions from './Actions';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -37,6 +41,17 @@ const useStyles = makeStyles((theme) => ({
     borderBottom: `1px solid ${theme.palette.divider}`,
     '&:last-child': {
       borderBottom: 'none',
+    },
+  },
+  clickable: {
+    cursor: 'pointer',
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
+    marginLeft: theme.spacing(-1),
+    marginRight: theme.spacing(-1),
+    borderRadius: 4,
+    '&:hover': {
+      backgroundColor: theme.palette.action.hover,
     },
   },
   head: {
@@ -85,6 +100,16 @@ function HistoryScreen() {
   } = useNetwork();
   const { range, ranges, changeRange, since } = useTimeRange();
   const refetchInterval = getPollingInterval();
+  const changeActiveQueue = useUpdateAtom(activeQueueAtom);
+  const changeActiveQueueLabel = useUpdateAtom(activeQueueLabelAtom);
+  const changeScreen = useActiveScreenStore((state) => state.changeScreen);
+  // Same drill-down the overview cards have: spotting the queue that broke and
+  // then having to find it again in the sidebar is a dead end.
+  const openQueue = (id: string, name: string) => {
+    changeActiveQueue(id);
+    changeActiveQueueLabel(name);
+    changeScreen('jobs');
+  };
 
   const { status, refetch, data, error } = useQuery(
     [QueryKeysConfig.metricsSummary, { since, maxPoints: range.maxPoints }],
@@ -113,11 +138,14 @@ function HistoryScreen() {
           totalCompleted={summary?.totalCompleted ?? 0}
           totalFailed={summary?.totalFailed ?? 0}
           action={
-            <TimeRangePicker
-              value={range}
-              ranges={ranges}
-              onChange={changeRange}
-            />
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Actions />
+              <TimeRangePicker
+                value={range}
+                ranges={ranges}
+                onChange={changeRange}
+              />
+            </span>
           }
           emptyLabel="No jobs finished in this window. Throughput is recorded while the monitor process is running — history from before it started is not backfilled."
         />
@@ -136,7 +164,19 @@ function HistoryScreen() {
               const runs = queue.completed + queue.failed;
               const failRate = runs ? (queue.failed / runs) * 100 : 0;
               return (
-                <div className={cls.row} key={queue.queue}>
+                <div
+                  className={`${cls.row} ${cls.clickable}`}
+                  key={queue.queue}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openQueue(queue.queue, queue.name)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      openQueue(queue.queue, queue.name);
+                    }
+                  }}
+                >
                   <span className={cls.name} title={queue.name}>
                     {queue.name}
                   </span>

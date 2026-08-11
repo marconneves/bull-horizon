@@ -4,7 +4,6 @@ import { QueryKeysConfig } from '@/config/query-keys';
 import React from 'react';
 import { useQuery } from 'react-query';
 import JobsScreen from './jobs';
-import MetricsScreen from './metrics';
 import OverviewScreen from './overview';
 import HistoryScreen from './history';
 
@@ -30,14 +29,14 @@ const ScreensSwitch = () => {
   switch (screen) {
     case 'jobs':
       return <JobsScreen />;
-    case 'metrics':
-      return <MetricsScreen />;
     case 'overview':
       return <OverviewScreen />;
     case 'history':
       return <HistoryScreen />;
     default:
-      return null;
+      // Covers a screen persisted by an older build that no longer exists
+      // (the per-queue metrics screen) — otherwise it renders blank forever.
+      return <JobsScreen />;
   }
 };
 

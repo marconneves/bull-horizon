@@ -67,6 +67,19 @@ na árvore de dependências de terceiros, e o formato texto é trivial.
 
 **Default desligado** — rota sem auth que publica nome de fila como label.
 
+### D3b — Tela de métricas por fila: restilizada e depois REMOVIDA
+A tab antiga (profundidade no tempo + tempo de processamento) foi movida da AppBar
+para a sidebar e restilizada no padrão dos cards novos. O usuário revisou ao vivo
+e pediu a remoção — *"do jeito que tá não me serve"*.
+
+Removido: `screens/metrics/` inteiro, a entrada da sidebar, `'metrics'` do union
+`TScreen` e `ChartCard` (ficou órfão). **Preservados**: os botões
+`Clear`/`Clear all`, movidos para `screens/history/` — eram a única UI das
+mutations `clearMetrics`/`clearAllMetrics`; e os dados, que seguem no schema e no
+Prometheus. `screens/switch.tsx` ganhou fallback para `jobs` no `default`, senão
+um `screen: 'metrics'` persistido em localStorage renderizaria tela branca para
+sempre.
+
 ### D4 — Code-splitting da UI (P4) NÃO implementado
 `packages/root/src/ui.ts` monta uma URL única de bundle no jsDelivr. Habilitar
 splitting exige acertar o `base` do Vite para a URL do CDN, e o resultado só é
@@ -112,7 +125,14 @@ produção, com dev local funcionando.
 - [x] T021 [P1] [US002] `screens/shared/ThroughputChart.tsx` + `TimeRangePicker` + `time-range.ts` (janelas derivadas de `Query.metricsInfo`: 60m/6h/24h/7d/30d/90d com a retenção default).
 - [x] T022 [P1] [US002] `screens/jobs/Throughput/`: card colapsável no topo da lista; colapsado **não** faz polling.
 - [x] T023 [P1] [US002] `screens/history/`: gráfico agregado + tabela "By queue" com barra de runs e % de falha.
-- [x] T024 [P2] `stores/active-screen.ts`: 4 telas (`toggleScreen` virou `changeScreen`); `shell/Drawer/ScreenNav.tsx`; AppBar vira swap jobs↔métricas-da-fila.
+- [x] T024 [P2] `stores/active-screen.ts`: `toggleScreen` virou `changeScreen`; `shell/Drawer/ScreenNav.tsx` agrupa a nav por escopo (Active queue / All queues) com `Jobs` explícito; o toggle da AppBar foi removido.
+- [x] T024b [P1] Tooltip dos gráficos temado via `screens/shared/chart-tooltip.ts` (o recharts nasce branco; havia um `color: 'black'` chumbado no gráfico antigo).
+- [x] T024c [P1] `% de falha` ao lado do total no card de throughput. Eixo duplo foi testado e **descartado** pelo usuário: torna a forma legível mas a magnitude incomparável.
+- [x] T024d [P1] Bug: escolher fila na sidebar a partir de `overview`/`history` não saía da tela. Corrigido + stale closure em `Drawer/Queues/Queue.tsx` (memoizava o handler sem `props.onSelect` nas deps).
+- [x] T024e [P1] Bug: sem entrada `Jobs` na sidebar, uma tela por fila era beco sem saída.
+- [x] T024f [P2] `components/AccordionJsonView`: botões de expandir-tudo e copiar. Expandir também abre o card; copiar re-serializa (JSON formatado) e cai para `execCommand` porque `navigator.clipboard` não existe em http de LAN (`services/clipboard.ts`).
+- [x] T024g [P2] Linhas da tabela "By queue" viraram drill-down para a fila, como os cards do Overview.
+- [x] T024h [P1] Tela de métricas por fila removida a pedido do usuário (ver D3b).
 - [x] T025 [P2] Mocks do demo (`get-metrics-summary`, `get-queue-metrics`) gerando série realista e aplicando o mesmo downsampling do servidor.
 
 ### Infra (E7)
