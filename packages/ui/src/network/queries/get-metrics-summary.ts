@@ -18,6 +18,7 @@ export const getMetricsSummary = (
             timestamp
             completed
             failed
+            windowMs
           }
           queues {
             queue

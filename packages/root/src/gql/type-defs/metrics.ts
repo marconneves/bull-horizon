@@ -22,10 +22,27 @@ export const metricsTypeDef = gql`
     """
     windowMs: Float
   }
+  type MetricsInfo {
+    """
+    Resolution of the freshest tier, in milliseconds.
+    """
+    collectIntervalMs: Float!
+    """
+    Widest window that has data, across every retention tier. Older points are
+    rolled up into coarser buckets rather than dropped, so this is much larger
+    than the raw tier alone.
+    """
+    retentionMs: Float!
+  }
   type ThroughputPoint {
     timestamp: Float!
     completed: Int!
     failed: Int!
+    """
+    Width of the bucket the counters cover. Older points come from coarser
+    retention tiers, so consumers must divide by this to compare them.
+    """
+    windowMs: Float!
   }
   type QueueThroughputSummary {
     queue: ID!

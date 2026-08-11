@@ -7,10 +7,19 @@ import type {
 } from '../queue';
 import type { MetricsConfig } from '../typings/config';
 
+const HOUR_MS = 3600000;
+
 const CONFIG: Required<MetricsConfig> = {
   redisPrefix: 'test::metrics::',
   collectInterval: { minutes: 1 },
   maxMetrics: 4320,
+  retention: {
+    raw: 4320,
+    rollups: [
+      { everyMs: HOUR_MS, keep: 720 },
+      { everyMs: 12 * HOUR_MS, keep: 180 },
+    ],
+  },
   blacklist: [],
 };
 
@@ -29,6 +38,42 @@ class FakeRedis {
     const from = start < 0 ? Math.max(list.length + start, 0) : start;
     const to = end < 0 ? list.length + end : end;
     return list.slice(from, to + 1);
+  }
+  async rpush(key: string, value: string): Promise<number> {
+    const list = this.lists.get(key) ?? [];
+    list.push(value);
+    this.lists.set(key, list);
+    return list.length;
+  }
+  async lpop(key: string): Promise<string | undefined> {
+    return (this.lists.get(key) ?? []).shift();
+  }
+  async lset(key: string, index: number, value: string): Promise<'OK'> {
+    const list = this.lists.get(key) ?? [];
+    list[index < 0 ? list.length + index : index] = value;
+    this.lists.set(key, list);
+    return 'OK';
+  }
+  async del(key: string): Promise<number> {
+    return this.lists.delete(key) ? 1 : 0;
+  }
+  pipeline() {
+    const ops: Array<() => Promise<unknown>> = [];
+    const chain = {
+      del: (key: string) => {
+        ops.push(() => this.del(key));
+        return chain;
+      },
+      lpop: (key: string) => {
+        ops.push(() => this.lpop(key));
+        return chain;
+      },
+      exec: async () => {
+        for (const op of ops) await op();
+        return [];
+      },
+    };
+    return chain;
   }
 }
 
@@ -191,17 +236,33 @@ describe('MetricsCollector.extractSince', () => {
     expect(metrics[0].timestamp).toBe(now - 60000);
   });
 
-  it('caps the tail read at maxMetrics for very wide windows', async () => {
+  it('caps the tail read at the tier size for very wide windows', async () => {
     const queue = fakeQueue('q1');
-    const { collector, redis } = buildCollector([queue], { maxMetrics: 10 });
+    // No rollups, so a very wide window still resolves to the raw tier and the
+    // clamp under test is the raw one.
+    const { collector, redis } = buildCollector([queue], {
+      retention: { raw: 10, rollups: [] },
+    });
     seed(redis, 'q1', []);
 
-    // A window far wider than the retention: the estimate must clamp to the
-    // list length instead of asking redis for a slice it cannot have.
     await collector.extractSince('q1', 1);
 
     const [[, start]] = redis.lrangeCalls;
     expect(start).toBe(-10);
+  });
+
+  it('still honours the legacy `maxMetrics` as the raw tier size', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue], {
+      maxMetrics: 7,
+      retention: { rollups: [] },
+    });
+    seed(redis, 'q1', []);
+
+    await collector.extractSince('q1', 1);
+
+    const [[, start]] = redis.lrangeCalls;
+    expect(start).toBe(-7);
   });
 
   it('treats a falsy `since` as "the whole series", still honouring maxPoints', async () => {
@@ -320,5 +381,184 @@ describe('MetricsCollector.getSummary', () => {
 
     expect(summary.points).toHaveLength(1);
     expect(summary.points[0]).toMatchObject({ completed: 10, failed: 2 });
+  });
+});
+
+describe('MetricsCollector tiered retention', () => {
+  const tierKey = (queueId: string, everyMs: number) =>
+    `${CONFIG.redisPrefix}${queueId}::r${everyMs}`;
+  const readTier = (redis: FakeRedis, queueId: string, everyMs: number) =>
+    (redis.lists.get(tierKey(queueId, everyMs)) ?? []).map(
+      (raw) => JSON.parse(raw) as TMetrics
+    );
+
+  it('writes each fresh point into the raw list and every rollup tier', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue]);
+    collector.startCollecting();
+
+    queue.emitCompleted('1');
+    await (collector as any)._persist(await (collector as any)._collect());
+
+    expect(redis.lists.get(CONFIG.redisPrefix + 'q1')).toHaveLength(1);
+    expect(readTier(redis, 'q1', HOUR_MS)).toHaveLength(1);
+    expect(readTier(redis, 'q1', 12 * HOUR_MS)).toHaveLength(1);
+
+    collector.stopCollecting();
+  });
+
+  it('merges consecutive points into the open bucket instead of appending', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue]);
+    collector.startCollecting();
+
+    for (const _ of [1, 2, 3]) {
+      queue.emitCompleted('c');
+      queue.emitFailed('f');
+      await (collector as any)._persist(await (collector as any)._collect());
+    }
+
+    const hourly = readTier(redis, 'q1', HOUR_MS);
+    // Three ticks inside the same hour = one bucket carrying all three.
+    expect(hourly).toHaveLength(1);
+    expect(hourly[0].completed).toBe(3);
+    expect(hourly[0].failed).toBe(3);
+
+    collector.stopCollecting();
+  });
+
+  it('stamps rollup buckets with the bucket start, not the point timestamp', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue]);
+    collector.startCollecting();
+
+    await (collector as any)._persist(await (collector as any)._collect());
+
+    const [bucket] = readTier(redis, 'q1', HOUR_MS);
+    expect(bucket.timestamp % HOUR_MS).toBe(0);
+
+    collector.stopCollecting();
+  });
+
+  it('weights processing time by job count when merging, not by bucket count', async () => {
+    const queue = fakeQueue('q1');
+    const { collector } = buildCollector([queue]);
+    const merged = (collector as any)._mergePoints(
+      {
+        timestamp: 0,
+        queue: 'q1',
+        counts: {},
+        completed: 1000,
+        processingTime: 100,
+      },
+      {
+        timestamp: 0,
+        queue: 'q1',
+        counts: {},
+        completed: 1,
+        processingTime: 10000,
+      }
+    );
+    // A plain average of averages would give 5050; weighting by the 1000 vs 1
+    // jobs behind each figure keeps it near 100.
+    expect(merged.processingTime).toBeCloseTo(109.89, 1);
+  });
+
+  it('keeps min/max across a merge rather than the newest point', async () => {
+    const queue = fakeQueue('q1');
+    const { collector } = buildCollector([queue]);
+    const merged = (collector as any)._mergePoints(
+      {
+        timestamp: 0,
+        queue: 'q1',
+        counts: {},
+        processingTimeMin: 5,
+        processingTimeMax: 900,
+      },
+      {
+        timestamp: 0,
+        queue: 'q1',
+        counts: {},
+        processingTimeMin: 40,
+        processingTimeMax: 120,
+      }
+    );
+    expect(merged.processingTimeMin).toBe(5);
+    expect(merged.processingTimeMax).toBe(900);
+  });
+
+  it('trims a rollup tier to its configured size', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue], {
+      // One-millisecond buckets so every tick lands in its own.
+      retention: { raw: 4320, rollups: [{ everyMs: 1, keep: 2 }] },
+    });
+    collector.startCollecting();
+
+    for (const _ of [1, 2, 3, 4]) {
+      await (collector as any)._persist(await (collector as any)._collect());
+    }
+
+    expect(readTier(redis, 'q1', 1).length).toBeLessThanOrEqual(2);
+
+    collector.stopCollecting();
+  });
+
+  it('reads the raw tier for a window the raw tier covers', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue]);
+    const now = Date.now();
+    seed(redis, 'q1', [{ timestamp: now - 60000 }]);
+
+    await collector.extractSince('q1', now - 60 * 60000);
+
+    expect(redis.lrangeCalls[0][0]).toBe(CONFIG.redisPrefix + 'q1');
+  });
+
+  it('reads the hourly tier for a window past the raw span', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue]);
+    const now = Date.now();
+
+    // 10 days: beyond the 3-day raw span, inside the 30-day hourly span.
+    await collector.extractSince('q1', now - 10 * 24 * HOUR_MS);
+
+    expect(redis.lrangeCalls[0][0]).toBe(tierKey('q1', HOUR_MS));
+  });
+
+  it('reads the coarsest tier for a window past every tier', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue]);
+    const now = Date.now();
+
+    // A year, against 90 days of retention: answer with what exists rather
+    // than an empty series.
+    await collector.extractSince('q1', now - 365 * 24 * HOUR_MS);
+
+    expect(redis.lrangeCalls[0][0]).toBe(tierKey('q1', 12 * HOUR_MS));
+  });
+
+  it('reports the widest tier span as the retention', async () => {
+    const queue = fakeQueue('q1');
+    const { collector } = buildCollector([queue]);
+
+    expect(collector.info).toEqual({
+      collectIntervalMs: 60000,
+      retentionMs: 180 * 12 * HOUR_MS, // 90 days
+    });
+  });
+
+  it('clears every tier, not just the raw list', async () => {
+    const queue = fakeQueue('q1');
+    const { collector, redis } = buildCollector([queue]);
+    collector.startCollecting();
+    await (collector as any)._persist(await (collector as any)._collect());
+    collector.stopCollecting();
+
+    await collector.clear('q1');
+
+    expect(redis.lists.get(CONFIG.redisPrefix + 'q1')).toBeUndefined();
+    expect(redis.lists.get(tierKey('q1', HOUR_MS))).toBeUndefined();
+    expect(redis.lists.get(tierKey('q1', 12 * HOUR_MS))).toBeUndefined();
   });
 });

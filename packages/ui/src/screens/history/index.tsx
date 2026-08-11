@@ -83,7 +83,7 @@ function HistoryScreen() {
   const {
     queries: { getMetricsSummary },
   } = useNetwork();
-  const { range, changeRange, since } = useTimeRange();
+  const { range, ranges, changeRange, since } = useTimeRange();
   const refetchInterval = getPollingInterval();
 
   const { status, refetch, data, error } = useQuery(
@@ -112,7 +112,13 @@ function HistoryScreen() {
           points={summary?.points ?? []}
           totalCompleted={summary?.totalCompleted ?? 0}
           totalFailed={summary?.totalFailed ?? 0}
-          action={<TimeRangePicker value={range} onChange={changeRange} />}
+          action={
+            <TimeRangePicker
+              value={range}
+              ranges={ranges}
+              onChange={changeRange}
+            />
+          }
           emptyLabel="No jobs finished in this window. Throughput is recorded while the monitor process is running — history from before it started is not backfilled."
         />
         {!!summary?.queues.length && (

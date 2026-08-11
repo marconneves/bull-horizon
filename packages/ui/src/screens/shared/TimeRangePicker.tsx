@@ -2,7 +2,6 @@ import React from 'react';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import makeStyles from '@mui/styles/makeStyles';
-import { TIME_RANGES } from './time-range';
 import type { TTimeRange } from './time-range';
 
 const useStyles = makeStyles((theme) => ({
@@ -24,10 +23,12 @@ const useStyles = makeStyles((theme) => ({
 
 type TProps = {
   value: TTimeRange;
+  /** Only the ranges the server can actually answer for. */
+  ranges: TTimeRange[];
   onChange: (range: TTimeRange) => void;
 };
 
-export default function TimeRangePicker({ value, onChange }: TProps) {
+export default function TimeRangePicker({ value, ranges, onChange }: TProps) {
   const cls = useStyles();
   return (
     <ToggleButtonGroup
@@ -39,11 +40,11 @@ export default function TimeRangePicker({ value, onChange }: TProps) {
         // `null` when the active button is clicked again — keep the current
         // range instead of leaving the chart without one.
         if (!label) return;
-        const next = TIME_RANGES.find((range) => range.label === label);
+        const next = ranges.find((range) => range.label === label);
         if (next) onChange(next);
       }}
     >
-      {TIME_RANGES.map((range) => (
+      {ranges.map((range) => (
         <ToggleButton
           key={range.label}
           value={range.label}

@@ -14,6 +14,9 @@ export const queryResolver: TResolvers = {
     metricsEnabled(_, __, { dataSources: { metrics } }) {
       return metrics.isEnabled();
     },
+    metricsInfo(_, __, { dataSources: { metrics } }) {
+      return metrics.isEnabled() ? metrics.getInfo() : null;
+    },
     async metrics(_, args: QueryMetricsArgs, { dataSources: { metrics } }) {
       return await metrics.getMetrics(
         args.queue,

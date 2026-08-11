@@ -31,12 +31,25 @@ publishes queue names as label values. One endpoint covers Prometheus, Grafana
 Alloy and Grafana Cloud, since all three scrape the same format — see
 `examples/grafana` for scrape configs and an importable dashboard.
 
+**Retention is now tiered**, so detail decays with age instead of history being
+truncated: 3 days minute-by-minute, 30 days hourly, 90 days in 12-hour buckets.
+Points are folded into the coarser tiers as they are written, which is what makes
+the long window affordable — 90 days stored raw at one-minute resolution would be
+~36MB of Redis per queue, against ~1.5MB for all three tiers. Every tier is
+configurable in both resolution and depth via `metrics.retention`, and reads pick
+the finest tier that covers the requested window.
+
+The dashboard's range selector is derived from what the server reports
+(`Query.metricsInfo`) rather than hardcoded, so changing retention changes the
+available windows. Charts plot a rate per minute rather than a raw counter —
+without that, a 12-hour bucket and a one-minute bucket on the same axis make the
+older end of the series tower over the recent one.
+
 **Changed defaults:** `metrics.collectInterval` is now `{ minutes: 1 }` (was
-`{ hours: 1 }`) and `metrics.maxMetrics` is now `4320` (was `100`) — three days
-of history at the new resolution, roughly 1MB of Redis per queue. An hourly
-interval cannot express throughput. Existing series are kept and simply carry no
-throughput data for points collected before this release. Set both explicitly to
-keep the old behaviour.
+`{ hours: 1 }`) and the raw tier keeps 4320 points (was `maxMetrics: 100`). An
+hourly interval cannot express throughput. `maxMetrics` still works as an alias
+for `retention.raw`. Existing series are kept and simply carry no throughput data
+for points collected before this release.
 
 Also: `Query.metrics` accepts `since`/`maxPoints` and reads a bounded tail of the
 series instead of the whole list on every poll; the `Queue` type's per-status

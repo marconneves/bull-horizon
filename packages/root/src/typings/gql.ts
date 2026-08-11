@@ -233,6 +233,7 @@ export type Query = {
   job?: Maybe<Job>;
   redisInfo?: Maybe<RedisInfo>;
   metricsEnabled: Scalars['Boolean'];
+  metricsInfo?: Maybe<MetricsInfo>;
 };
 
 
@@ -322,10 +323,16 @@ export type QueueMetrics = {
   windowMs?: Maybe<Scalars['Float']>;
 };
 
+export type MetricsInfo = {
+  collectIntervalMs: Scalars['Float'];
+  retentionMs: Scalars['Float'];
+};
+
 export type ThroughputPoint = {
   timestamp: Scalars['Float'];
   completed: Scalars['Int'];
   failed: Scalars['Int'];
+  windowMs: Scalars['Float'];
 };
 
 export type QueueThroughputSummary = {

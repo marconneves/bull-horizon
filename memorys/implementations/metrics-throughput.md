@@ -37,16 +37,68 @@ processo — é o que o exportador Prometheus publica como `_total` (counter).
 vivo e conectado. Restart = buraco na série. É métrica de observabilidade, não
 contabilidade.
 
+## Retenção em camadas (rollup na escrita)
+
+O detalhe decai com a idade em vez do histórico ser truncado. A cada tick o
+ponto fresco é dobrado em **todas** as camadas:
+
+| Janela | Resolução | Default |
+|---|---|---|
+| últimos 3 dias | `collectInterval` (1 min) | 4320 pontos |
+| últimos 30 dias | 1 hora | 720 buckets |
+| últimos 90 dias | 12 horas | 180 buckets |
+
+**Por que rollup e não só aumentar `maxMetrics`:** 90 dias a 1 minuto são ~130k
+pontos = **~36MB de Redis por fila** (medido: 291 bytes/ponto). Com as camadas,
+os mesmos 90 dias custam ~5.2k pontos ≈ **1.5MB/fila**. O limite nunca foi a
+estatística, foi memória.
+
+Camadas são configuráveis em resolução **e** profundidade (`retention.rollups`),
+não hardcoded. `maxMetrics` segue funcionando como alias de `retention.raw`.
+
+- **Chaves**: a série bruta mantém exatamente a chave que sempre teve
+  (`bull_monitor::metrics::<queueId>`) — deployments existentes não perdem nada.
+  Camadas ficam em `...::r<everyMs>`.
+- **Merge do bucket aberto** é read-modify-write no tail (`LINDEX -1` + `LSET`),
+  não acumulação em memória: um restart não pode perder bucket pela metade.
+- **Regras de merge**: contadores somam; `counts` são gauges (o mais novo vence);
+  `processingTime` é média **ponderada pelo número de jobs** de cada lado — média
+  de médias deixaria uma janela de 2 jobs pesar igual a uma de 2000; min/max são
+  min-dos-mins e max-dos-maxes.
+- **`clear`/`clearAll` apagam todas as camadas** — senão "limpar métricas"
+  deixaria meses de rollup para trás.
+- **Leitura escolhe a camada mais fina que cobre a janela** (`_tierFor`). Janela
+  além de todas as camadas → a mais grossa, para responder com o que existe em
+  vez de série vazia.
+
+## Contadores só fazem sentido normalizados
+
+`ThroughputPoint.windowMs` e `TMetrics.windowMs` são **obrigatórios** para o
+consumidor: um ponto da camada de 12h e um da bruta são ambos "um ponto", e
+comparar as contagens cruas não significa nada. Por isso o gráfico da UI plota
+**taxa por minuto** (`completed / (windowMs/60000)`), não contagem — senão o eixo
+Y muda de significado conforme a janela selecionada e a parte antiga da série
+domina a recente. Os totais grandes no topo do card seguem sendo contagem real da
+janela.
+
 ## Defaults de coleta (mudados na 003)
 
 | Config | Antes | Depois | Motivo |
 |---|---|---|---|
 | `collectInterval` | `{ hours: 1 }` | `{ minutes: 1 }` | 1h só desenha degraus de tamanho de fila |
-| `maxMetrics` | `100` | `4320` | 3 dias na nova resolução, ~1MB de Redis por fila |
+| `maxMetrics` | `100` | `4320` (raw) | 3 dias na nova resolução |
+| retenção total | ~4 dias | **90 dias** | via rollup, a ~1.5MB/fila |
 
-A chave do Redis (`bull_monitor::metrics::`) **não** foi versionada de propósito:
-pontos antigos apenas não têm `completed`/`failed`, e a UI os trata como nulos.
+A chave do Redis da série bruta **não** foi versionada de propósito: pontos
+antigos apenas não têm `completed`/`failed`, e a UI os trata como nulos.
 Versionar descartaria o histórico de quem já coletava.
+
+## A UI não hardcoda janelas
+
+`Query.metricsInfo` devolve `collectIntervalMs` + `retentionMs` (o span da camada
+mais larga). O seletor de tempo (`screens/shared/time-range.ts`) monta a lista de
+janelas a partir disso — oferecer `90d` sobre uma retenção de 3 dias seria um
+gráfico vazio com rótulo confiante. Ao mudar `retention`, a UI acompanha sozinha.
 
 ## Leitura: `extract` vs `extractSince`
 

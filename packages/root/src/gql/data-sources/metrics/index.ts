@@ -1,7 +1,7 @@
 import { MetricsCollector } from '../../../metrics-collector';
 import { BullMonitorError } from '../../../errors';
 import { MetricsErrorEnum as ErrorEnum } from './errors-enum';
-import type { TMetricsSummary } from '../../../metrics-collector';
+import type { TMetricsSummary, TMetricsInfo } from '../../../metrics-collector';
 
 export class MetricsDataSource {
   constructor(private _internalCollector?: MetricsCollector) {}
@@ -22,6 +22,13 @@ export class MetricsDataSource {
       return await this._collector.extractSince(queue, since, maxPoints);
     }
     return await this._collector.extract(queue, start, end);
+  }
+  /**
+   * Lets the dashboard offer exactly the time ranges the server can back,
+   * instead of hardcoding a guess about how much history exists.
+   */
+  public getInfo(): TMetricsInfo {
+    return this._collector.info;
   }
   public async getSummary(
     since?: number,

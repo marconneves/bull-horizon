@@ -66,10 +66,7 @@ leaving jobs behind:
 ```typescript
 const monitor = new BullMonitorExpress({
   queues: [...],
-  metrics: {
-    collectInterval: { minutes: 1 }, // default
-    maxMetrics: 4320,                // default — 3 days at the interval above
-  },
+  metrics: { collectInterval: { minutes: 1 } }, // default
 });
 ```
 
@@ -79,6 +76,41 @@ job list, an **Overview** grid of every queue's status breakdown, and a
 
 Throughput is only recorded while the monitor process is running — history is
 not backfilled, and a restart leaves a gap.
+
+### Retention
+
+Detail decays with age instead of history being truncated. Points are folded
+into coarser buckets as they are written, so 90 days of history costs ~1.5MB of
+Redis per queue rather than the ~36MB it would take stored raw:
+
+| Window | Resolution | Default |
+|---|---|---|
+| last 3 days | `collectInterval` (1 min) | 4320 points |
+| last 30 days | hourly | 720 buckets |
+| last 90 days | 12-hourly | 180 buckets |
+
+Every tier is configurable, in both resolution and depth:
+
+```typescript
+metrics: {
+  collectInterval: { minutes: 1 },
+  retention: {
+    raw: 4320,                                  // 3 days at one minute
+    rollups: [
+      { everyMs: 3_600_000, keep: 720 },        // 30 days hourly
+      { everyMs: 43_200_000, keep: 180 },       // 90 days, 12h buckets
+      { everyMs: 86_400_000, keep: 365 },       // + 1 year daily, if you want it
+    ],
+  },
+}
+```
+
+Reads pick the finest tier that covers the requested window, so the dashboard's
+range selector only offers windows the server can actually answer for. Charts
+plot a **rate per minute** rather than a raw counter, which is what makes a
+12-hour bucket comparable to a one-minute one.
+
+`maxMetrics` still works as an alias for `retention.raw`.
 
 ## Prometheus / Grafana
 

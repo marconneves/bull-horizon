@@ -12,6 +12,8 @@ export type TThroughputPoint = {
   timestamp: number;
   completed: number;
   failed: number;
+  /** Width of the bucket the counters cover. */
+  windowMs?: number | null;
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -77,6 +79,17 @@ const useStyles = makeStyles((theme) => ({
 
 const formatTick = (timestamp: number) => day(timestamp).format('MMM D HH:mm');
 
+/** 1200 -> "1.2k". A raw count is wider than the axis gutter. */
+const formatCompact = (value: number): string => {
+  const abs = Math.abs(value);
+  if (abs >= 1e9) return `${+(value / 1e9).toFixed(1)}B`;
+  if (abs >= 1e6) return `${+(value / 1e6).toFixed(1)}M`;
+  if (abs >= 1e3) return `${+(value / 1e3).toFixed(1)}k`;
+  return String(+value.toFixed(abs < 10 ? 1 : 0));
+};
+
+const MINUTE_MS = 60000;
+
 let gradientSeq = 0;
 
 type TProps = {
@@ -104,6 +117,26 @@ function ThroughputChart({
   // React 17 has no `useId`; the gradient just needs to be unique per mounted
   // chart so two charts on the same screen don't share one <defs> entry.
   const gradientId = React.useMemo(() => `t${++gradientSeq}`, []);
+
+  /**
+   * Plotted as a rate, not a raw counter. Points come from whichever retention
+   * tier covers the window, so a 12-hour bucket and a one-minute bucket both
+   * arrive as "a point" — charting their raw counts would make the coarse end
+   * tower over the fine end and the Y axis would silently change meaning with
+   * the selected range. Dividing by the bucket width fixes both.
+   */
+  const series = React.useMemo(
+    () =>
+      points.map((point) => {
+        const minutes = Math.max((point.windowMs ?? MINUTE_MS) / MINUTE_MS, 1);
+        return {
+          timestamp: point.timestamp,
+          completedRate: point.completed / minutes,
+          failedRate: point.failed / minutes,
+        };
+      }),
+    [points]
+  );
 
   return (
     <Paper className={cls.root} elevation={0}>
@@ -145,7 +178,7 @@ function ThroughputChart({
         <div className={cls.chart}>
           <Chart.ResponsiveContainer width="100%" height="100%">
             <Chart.AreaChart
-              data={points}
+              data={series}
               margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
             >
               <defs>
@@ -187,18 +220,19 @@ function ThroughputChart({
                 tick={{ fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
-                width={44}
-                allowDecimals={false}
+                width={48}
+                tickFormatter={formatCompact}
               />
               <Chart.Tooltip
                 labelFormatter={(label: number) =>
                   day(label).format('YYYY-MM-DD HH:mm')
                 }
+                formatter={(value: number) => `${formatCompact(value)}/min`}
                 contentStyle={{ fontSize: 13 }}
               />
               <Chart.Area
                 type="monotone"
-                dataKey="completed"
+                dataKey="completedRate"
                 name="Completed"
                 stroke={completedColor}
                 strokeWidth={2}
@@ -207,7 +241,7 @@ function ThroughputChart({
               />
               <Chart.Line
                 type="monotone"
-                dataKey="failed"
+                dataKey="failedRate"
                 name="Failed"
                 stroke={failedColor}
                 strokeWidth={2}

@@ -9,4 +9,5 @@ export const QueryKeysConfig = {
   metricsSummary: 'metrics-summary',
   throughput: 'throughput',
   metricsEnabled: 'metrics-enabled',
+  metricsInfo: 'metrics-info',
 };

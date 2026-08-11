@@ -14,8 +14,8 @@ Restam: **E6/P3** (teto de scan da busca), **E6/P4** (code-splitting da UI), **E
 | Dívida nº 1 herdada (Apollo EOL) | ✅ resolvida na v6.0.0 (`root`/`express`/`fastify`/`koa`) |
 | `packages/hapi` | ⚠️ deliberadamente em `apollo-server-hapi` v3 (EOL) + `graphql ^15` — ADR-001 |
 | Versionamento | ✅ Changesets (ADR-002), release manual via `make version` / `make publish` |
-| CI/CD | ❌ inexistente — lint/test/build só rodam na mão |
-| Métricas | ⚠️ existem, mas são **snapshots de contagem** a cada **1 hora**, máx **100 pontos** |
+| CI/CD | ✅ `.github/workflows/ci.yml` — lint + jest + bootstrap + build em PR e na main |
+| Métricas | ✅ throughput por eventos, 1 min de resolução, **90 dias** de retenção via rollup (3d @1min → 30d @1h → 90d @12h), configurável |
 | Auth/authz | ❌ inexistente — GraphQL montado sem controle de acesso (issues upstream #57/#58) |
 | UI | React 17 + MUI v5 + Vite 2, bundle **único** servido do jsDelivr |
 | Deps de fila | drift: `root` = `bull ^3.27` / `bullmq ^1.57`; `cli` = `bull ^4.0` / `bullmq ^1.76` |

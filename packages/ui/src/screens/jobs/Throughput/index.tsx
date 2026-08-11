@@ -54,7 +54,7 @@ function Throughput({ enabled }: TProps) {
   const {
     queries: { getQueueMetrics },
   } = useNetwork();
-  const { range, changeRange, since } = useTimeRange();
+  const { range, ranges, changeRange, since } = useTimeRange();
   const refetchInterval = getPollingInterval();
   const { isOpen, toggle } = useThroughputPanelStore();
 
@@ -76,6 +76,7 @@ function Throughput({ enabled }: TProps) {
         timestamp: metric.timestamp,
         completed: metric.completed ?? 0,
         failed: metric.failed ?? 0,
+        windowMs: metric.windowMs,
       })),
     [data]
   );
@@ -110,11 +111,17 @@ function Throughput({ enabled }: TProps) {
       <Collapse in={isOpen} unmountOnExit>
         <div className={cls.padded}>
           <ThroughputChart
-            title="Throughput (jobs / window)"
+            title="Throughput (jobs / min)"
             points={points}
             totalCompleted={totals.completed}
             totalFailed={totals.failed}
-            action={<TimeRangePicker value={range} onChange={changeRange} />}
+            action={
+              <TimeRangePicker
+                value={range}
+                ranges={ranges}
+                onChange={changeRange}
+              />
+            }
           />
         </div>
       </Collapse>

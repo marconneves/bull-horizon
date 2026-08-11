@@ -226,6 +226,7 @@ export type Query = {
   job?: Maybe<Job>;
   redisInfo?: Maybe<RedisInfo>;
   metricsEnabled: Scalars['Boolean'];
+  metricsInfo?: Maybe<MetricsInfo>;
 };
 
 
@@ -307,10 +308,16 @@ export type QueueMetrics = {
   windowMs?: Maybe<Scalars['Float']>;
 };
 
+export type MetricsInfo = {
+  collectIntervalMs: Scalars['Float'];
+  retentionMs: Scalars['Float'];
+};
+
 export type ThroughputPoint = {
   timestamp: Scalars['Float'];
   completed: Scalars['Int'];
   failed: Scalars['Int'];
+  windowMs: Scalars['Float'];
 };
 
 export type QueueThroughputSummary = {
@@ -600,6 +607,11 @@ export type GetMetricsEnabledQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetMetricsEnabledQuery = { metricsEnabled: Scalars['Boolean'] };
 
+export type GetMetricsInfoQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetMetricsInfoQuery = { metricsEnabled: Scalars['Boolean'], metricsInfo?: Maybe<Pick<MetricsInfo, 'collectIntervalMs' | 'retentionMs'>> };
+
 export type GetMetricsSummaryQueryVariables = Exact<{
   since?: Maybe<Scalars['Float']>;
   maxPoints?: Maybe<Scalars['Int']>;
@@ -608,5 +620,5 @@ export type GetMetricsSummaryQueryVariables = Exact<{
 
 export type GetMetricsSummaryQuery = { metricsSummary: (
     Pick<MetricsSummary, 'totalCompleted' | 'totalFailed'>
-    & { points: Array<Pick<ThroughputPoint, 'timestamp' | 'completed' | 'failed'>>, queues: Array<Pick<QueueThroughputSummary, 'queue' | 'name' | 'completed' | 'failed'>> }
+    & { points: Array<Pick<ThroughputPoint, 'timestamp' | 'completed' | 'failed' | 'windowMs'>>, queues: Array<Pick<QueueThroughputSummary, 'queue' | 'name' | 'completed' | 'failed'>> }
   ) };

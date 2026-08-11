@@ -27,15 +27,35 @@ Solução: contar eventos no `MetricsCollector`, que já interceptava
 Reinício = buraco na série. Documentado no README e na UI (mensagem de estado
 vazio), não escondido.
 
-### D2 — Defaults de coleta alterados
-`collectInterval` `{ hours: 1 }` → `{ minutes: 1 }`; `maxMetrics` `100` → `4320`
-(3 dias na nova resolução, ~1MB de Redis por fila). Um intervalo de 1h só
-consegue desenhar um gráfico em degraus de tamanho de fila — não sustenta
-"trabalhos/min".
+### D2 — Retenção em camadas (rollup na escrita)
+`collectInterval` `{ hours: 1 }` → `{ minutes: 1 }`. Retenção total passou de
+~4 dias para **90 dias**, com detalhe decaindo por idade: 3 dias a 1 min, 30 dias
+a 1h, 90 dias em buckets de 12h.
 
-Chave do Redis **não** foi versionada: pontos antigos apenas não têm
-`completed`/`failed` e a UI os trata como nulos. Preferido a descartar o
-histórico de quem já coleta.
+**Custo medido** (291 bytes/ponto): 90 dias a 1 minuto seriam ~130k pontos =
+**36MB de Redis por fila** (719MB com 20 filas). Com rollup, os mesmos 90 dias
+custam ~5.2k pontos ≈ **1.5MB/fila**. O limitante nunca foi estatística, foi
+memória — e rollup é a resposta padrão.
+
+Camadas são **configuráveis em resolução e profundidade** (`retention.rollups`),
+não hardcoded. `maxMetrics` mantido como alias de `retention.raw`.
+
+Chave do Redis da série bruta **não** foi versionada: pontos antigos apenas não
+têm `completed`/`failed` e a UI os trata como nulos. Camadas ficam em chaves
+novas (`::r<everyMs>`).
+
+### D2b — A UI não hardcoda janelas
+Primeira versão desta task fixou o seletor em `60m/24h/3d`, o que era bug de
+desenho, não decisão: `maxMetrics` já era configurável, então quem aumentasse a
+retenção não veria a diferença. Agora `Query.metricsInfo` reporta
+`collectIntervalMs`/`retentionMs` e a UI monta as janelas disponíveis a partir
+disso.
+
+### D2c — Gráficos plotam taxa, não contagem
+Pontos vêm da camada que cobre a janela, então um bucket de 12h e um de 1min
+chegam ambos como "um ponto". Plotar contagem crua faria a ponta antiga dominar
+a recente e o eixo Y mudaria de significado a cada janela. `windowMs` virou
+obrigatório em `ThroughputPoint` para permitir a normalização.
 
 ### D3 — Prometheus (pull), não Alloy/OTLP
 Alloy e Grafana Cloud **raspam** o formato Prometheus — não são destinos
@@ -60,7 +80,11 @@ produção, com dev local funcionando.
 - [x] T001 [P1] [US002] `queue.ts`: tipo `GlobalJobFailureCb` + setter abstrato `onGlobalJobFailure`.
 - [x] T002 [P1] [US002] `bull-adapter.ts`: `global:failed`. `bullmq-adapter.ts`: `QueueEvents` `failed`.
 - [x] T003 [P1] [US002] `metrics-collector.ts`: contadores por janela (`_completedGauge`/`_failedGauge`) + acumulados (`_totalCompleted`/`_totalFailed`) para o Prometheus; campos `completed`/`failed`/`windowMs` no ponto persistido.
-- [x] T004 [P1] [US002] `constants.ts`: novos defaults de `collectInterval`/`maxMetrics` (D2).
+- [x] T004 [P1] [US002] `constants.ts`: novos defaults de `collectInterval` + `DEFAULT_METRICS_RETENTION` (D2).
+- [x] T004b [P1] [US002] `_rollUp`: dobra cada ponto fresco em todas as camadas via read-modify-write no tail; `_mergePoints` com soma de contadores, gauge mais novo e `processingTime` ponderado por nº de jobs.
+- [x] T004c [P1] [US002] `_tierFor`: leitura escolhe a camada mais fina que cobre a janela; `clear`/`clearAll` apagam todas as camadas; `info` reporta o span mais largo.
+- [x] T004d [P1] [US002] `Query.metricsInfo` + seletor de janelas da UI derivado dele (D2b).
+- [x] T004e [P1] [US002] `windowMs` em `ThroughputPoint`; gráfico plota taxa/min com eixo compacto (D2c).
 - [x] T005 [P1] [US002] `extractSince(queue, since, maxPoints)`: leitura por janela via slice de cauda + downsampling server-side.
 - [x] T006 [P1] [US002] `getSummary(since, maxPoints)`: agregação cross-queue no servidor.
 
@@ -85,7 +109,7 @@ produção, com dev local funcionando.
 
 ### UI (E2/E3/E4)
 - [x] T020 [P1] [US001] `screens/overview/`: grid de cards por fila, barra empilhada de status, filtro por status, clique navega para a fila naquele status.
-- [x] T021 [P1] [US002] `screens/shared/ThroughputChart.tsx` + `TimeRangePicker` + `time-range.ts` (janelas 60m/24h/3d — limitadas ao que a retenção default sustenta).
+- [x] T021 [P1] [US002] `screens/shared/ThroughputChart.tsx` + `TimeRangePicker` + `time-range.ts` (janelas derivadas de `Query.metricsInfo`: 60m/6h/24h/7d/30d/90d com a retenção default).
 - [x] T022 [P1] [US002] `screens/jobs/Throughput/`: card colapsável no topo da lista; colapsado **não** faz polling.
 - [x] T023 [P1] [US002] `screens/history/`: gráfico agregado + tabela "By queue" com barra de runs e % de falha.
 - [x] T024 [P2] `stores/active-screen.ts`: 4 telas (`toggleScreen` virou `changeScreen`); `shell/Drawer/ScreenNav.tsx`; AppBar vira swap jobs↔métricas-da-fila.
@@ -98,7 +122,7 @@ produção, com dev local funcionando.
 - [x] T029 [P3] `eslint --fix` no repo (drift de formatação pré-existente, que tornaria o CI vermelho no dia 1).
 
 ### QA
-- [x] T030 [P1] 20 testes novos (`prometheus.test.ts`, `metrics-collector.test.ts`) — o repo não tinha teste nenhum. Um deles encontrou bug real: `extractSince` truncava a janela em silêncio quando os pontos estavam mais densos que o `collectInterval` configurado (intervalo aumentado depois da série ser escrita). Corrigido com alargamento exponencial da leitura.
+- [x] T030 [P1] 32 testes novos (`prometheus.test.ts`, `metrics-collector.test.ts`) — o repo não tinha teste nenhum. Um deles encontrou bug real: `extractSince` truncava a janela em silêncio quando os pontos estavam mais densos que o `collectInterval` configurado (intervalo aumentado depois da série ser escrita). Corrigido com alargamento exponencial da leitura. A cobertura de rollup também pegou duas inconsistências no mock do demo: séries com larguras de bucket misturadas e o rateio por fila divergindo do total.
 - [x] T031 [P1] `tsc --noEmit` limpo em root/express/koa/fastify/hapi/cli; UI de volta ao único erro pré-existente (`Pagination/hooks.ts`).
 - [x] T032 [P1] `eslint` limpo no repo inteiro; `jest` 20/20.
 - [x] T033 [P2] Verificação visual via `dev-with-mocks` + Playwright headless: Overview, filtro por status, Metrics history e throughput na tela de jobs. Zero erro de console.
