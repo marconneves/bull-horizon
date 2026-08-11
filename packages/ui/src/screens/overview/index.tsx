@@ -9,8 +9,10 @@ import { useQueuesQuery } from '@/hooks/use-queues-query';
 import { useJobStatusesPalette } from '@/components/JobStatusChip/hooks';
 import type { JobStatus } from '@/typings/gql';
 import QueueCard from './QueueCard';
+import GroupSection from './GroupSection';
 import { BAR_STATUSES } from './StatusBar';
 import type { TCounts } from './StatusBar';
+import { useGroupedQueues } from '@/shell/Drawer/Queues/hooks';
 
 const useStyles = makeStyles((theme) => ({
   filters: {
@@ -67,6 +69,11 @@ const useStyles = makeStyles((theme) => ({
     gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
     gap: theme.spacing(1.5),
   },
+  sections: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(3),
+  },
 }));
 
 const ALL = 'all' as const;
@@ -111,6 +118,12 @@ function OverviewScreen() {
     (jobStatus) => (totals[jobStatus] ?? 0) > 0
   );
 
+  // Same grouping the sidebar uses, so the two views can never disagree about
+  // what belongs where. Groups are built from the *visible* queues, so a status
+  // filter empties a section out of existence instead of leaving a bare header.
+  const { groups, ungrouped } = useGroupedQueues(visibleQueues);
+  const focusedStatus = filter === ALL ? null : filter;
+
   return (
     <NetworkRequest error={error} refetch={refetch} status={status}>
       {isempty(queues) ? (
@@ -152,15 +165,36 @@ function OverviewScreen() {
             <Alert severity="info">
               No queue currently has jobs in this status.
             </Alert>
-          ) : (
+          ) : groups.length === 0 ? (
+            // Nothing is grouped: a single "No group" header would be a label
+            // for the entire screen, which says nothing.
             <div className={cls.grid}>
               {visibleQueues.map((queue) => (
                 <QueueCard
                   key={queue.id}
                   queue={queue}
-                  focusedStatus={filter === ALL ? null : filter}
+                  focusedStatus={focusedStatus}
                 />
               ))}
+            </div>
+          ) : (
+            <div className={cls.sections}>
+              {groups.map((group) => (
+                <GroupSection
+                  key={group.name}
+                  name={group.name}
+                  queues={group.queues}
+                  focusedStatus={focusedStatus}
+                />
+              ))}
+              {ungrouped.length > 0 && (
+                <GroupSection
+                  name="No group"
+                  queues={ungrouped}
+                  focusedStatus={focusedStatus}
+                  isUngrouped
+                />
+              )}
             </div>
           )}
         </>

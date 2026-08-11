@@ -67,9 +67,11 @@ type TProps = {
   queue: TQueue;
   /** When set, clicking the card lands on this status tab. */
   focusedStatus?: JobStatus | null;
+  /** Set when a group section header already carries the group name. */
+  hideGroup?: boolean;
 };
 
-function QueueCard({ queue, focusedStatus }: TProps) {
+function QueueCard({ queue, focusedStatus, hideGroup }: TProps) {
   const cls = useStyles();
   const changeActiveQueue = useUpdateAtom(activeQueueAtom);
   const changeActiveQueueLabel = useUpdateAtom(activeQueueLabelAtom);
@@ -107,7 +109,9 @@ function QueueCard({ queue, focusedStatus }: TProps) {
     >
       <div className={cls.head}>
         <Typography className={cls.name} variant="subtitle1" title={queue.name}>
-          {queue.group && <span className={cls.group}>{queue.group} / </span>}
+          {queue.group && !hideGroup && (
+            <span className={cls.group}>{queue.group} / </span>
+          )}
           {queue.name}
         </Typography>
         {queue.isPaused && (

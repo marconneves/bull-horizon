@@ -133,6 +133,7 @@ produção, com dev local funcionando.
 - [x] T024f [P2] `components/AccordionJsonView`: botões de expandir-tudo e copiar. Expandir também abre o card; copiar re-serializa (JSON formatado) e cai para `execCommand` porque `navigator.clipboard` não existe em http de LAN (`services/clipboard.ts`).
 - [x] T024g [P2] Linhas da tabela "By queue" viraram drill-down para a fila, como os cards do Overview.
 - [x] T024h [P1] Tela de métricas por fila removida a pedido do usuário (ver D3b).
+- [x] T024i [P2] Overview agrupado em seções por `Queue.group`, reusando `useGroupedQueues` da sidebar (as duas views não podem divergir sobre o que pertence a onde). Header traz nome + nº de filas + total; sob filtro de status conta **aquele** status, não o total geral. Cards dentro de uma seção não repetem o prefixo do grupo. Sem nenhum grupo definido, volta ao grid plano — um "No group" sozinho rotularia a tela inteira.
 - [x] T025 [P2] Mocks do demo (`get-metrics-summary`, `get-queue-metrics`) gerando série realista e aplicando o mesmo downsampling do servidor.
 
 ### Infra (E7)
