@@ -125,7 +125,7 @@ produção, com dev local funcionando.
 - [x] T021 [P1] [US002] `screens/shared/ThroughputChart.tsx` + `TimeRangePicker` + `time-range.ts` (janelas derivadas de `Query.metricsInfo`: 60m/6h/24h/7d/30d/90d com a retenção default).
 - [x] T022 [P1] [US002] `screens/jobs/Throughput/`: card colapsável no topo da lista; colapsado **não** faz polling.
 - [x] T023 [P1] [US002] `screens/history/`: gráfico agregado + tabela "By queue" com barra de runs e % de falha.
-- [x] T024 [P2] `stores/active-screen.ts`: `toggleScreen` virou `changeScreen`; `shell/Drawer/ScreenNav.tsx` agrupa a nav por escopo (Active queue / All queues) com `Jobs` explícito; o toggle da AppBar foi removido.
+- [x] T024 [P2] `stores/active-screen.ts`: `toggleScreen` virou `changeScreen`; `shell/Drawer/ScreenNav.tsx` lista as 3 telas com `Jobs` explícito; o toggle da AppBar foi removido. Agrupamento por escopo foi tentado e removido a pedido do usuário.
 - [x] T024b [P1] Tooltip dos gráficos temado via `screens/shared/chart-tooltip.ts` (o recharts nasce branco; havia um `color: 'black'` chumbado no gráfico antigo).
 - [x] T024c [P1] `% de falha` ao lado do total no card de throughput. Eixo duplo foi testado e **descartado** pelo usuário: torna a forma legível mas a magnitude incomparável.
 - [x] T024d [P1] Bug: escolher fila na sidebar a partir de `overview`/`history` não saía da tela. Corrigido + stale closure em `Drawer/Queues/Queue.tsx` (memoizava o handler sem `props.onSelect` nas deps).
