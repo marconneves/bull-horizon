@@ -14,7 +14,7 @@ import jsonata from 'jsonata';
 // anything that isn't a comparison/combination.
 
 export const COMPARISON_OPERATORS = ['=', '!=', '>', '>=', '<', '<='] as const;
-export type TComparisonOperator = typeof COMPARISON_OPERATORS[number];
+export type TComparisonOperator = (typeof COMPARISON_OPERATORS)[number];
 export type TFilterOperator = TComparisonOperator | 'contains';
 export type TConnector = 'and' | 'or';
 export type TValueKind = 'string' | 'number' | 'boolean';
@@ -73,7 +73,11 @@ const stepToSource = (step: any): string | null => {
 };
 
 const pathToSource = (node: any): string | null => {
-  if (node?.type !== 'path' || !Array.isArray(node.steps) || !node.steps.length) {
+  if (
+    node?.type !== 'path' ||
+    !Array.isArray(node.steps) ||
+    !node.steps.length
+  ) {
     return null;
   }
   const parts: string[] = [];
@@ -160,7 +164,10 @@ const parseNode = (ast: any): TFilterNode | null => {
 
 // Flattens `a and b and c` into a single list. A child with a different
 // connector (or inside parentheses) comes back as a nested group, via parseNode.
-const flattenChain = (ast: any, connector: TConnector): TFilterNode[] | null => {
+const flattenChain = (
+  ast: any,
+  connector: TConnector
+): TFilterNode[] | null => {
   const out: TFilterNode[] = [];
   const visit = (node: any): boolean => {
     if (node?.type === 'binary' && node.value === connector) {
@@ -184,7 +191,8 @@ export const inferValueKind = (raw: string): TValueKind => {
 };
 
 const formatValue = (value: string, valueKind: TValueKind): string => {
-  if (valueKind === 'boolean') return value.trim() === 'true' ? 'true' : 'false';
+  if (valueKind === 'boolean')
+    return value.trim() === 'true' ? 'true' : 'false';
   // A value flagged as a number but typed as text falls back to a string, so we
   // never emit invalid jsonata.
   if (valueKind === 'number' && !Number.isNaN(Number(value.trim()))) {
@@ -216,13 +224,18 @@ const serializeNode = (
   const inner = parts.join(` ${node.connector} `);
   // A nested group with more than one child is always parenthesised: `or` binds
   // looser than `and`, so flattening would change the search result.
-  return parentConnector !== undefined && parts.length > 1 ? `(${inner})` : inner;
+  return parentConnector !== undefined && parts.length > 1
+    ? `(${inner})`
+    : inner;
 };
 
 // --- public API -------------------------------------------------------------
 
 export const JsonataFilterService = {
-  createCondition(path = '', operator: TFilterOperator = '='): TFilterCondition {
+  createCondition(
+    path = '',
+    operator: TFilterOperator = '='
+  ): TFilterCondition {
     return {
       kind: 'condition',
       id: nextId(),

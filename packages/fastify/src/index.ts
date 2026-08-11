@@ -2,8 +2,12 @@ import {
   BullMonitor,
   typeDefs,
   resolvers,
-  type BullMonitorContext,
+  PROMETHEUS_CONTENT_TYPE,
 } from '@bull-horizon/root';
+// Separate `import type` rather than an inline `type` modifier: the repo's
+// eslint parser (typescript-eslint v4) cannot parse the inline form, which
+// left this file silently unlinted.
+import type { BullMonitorContext } from '@bull-horizon/root';
 import { ApolloServer, HeaderMap } from '@apollo/server';
 import type { HTTPGraphQLRequest } from '@apollo/server';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -120,6 +124,13 @@ export class BullMonitorFastify extends BullMonitor {
       instance.get(this.uiEndpoint, (_req, reply) => {
         reply.type('text/html').send(this.renderUi());
       });
+      if (this.isPrometheusEnabled) {
+        instance.get(this.prometheusEndpoint, async (_req, reply) => {
+          reply
+            .type(PROMETHEUS_CONTENT_TYPE)
+            .send(await this.renderPrometheus());
+        });
+      }
       done();
     };
   }

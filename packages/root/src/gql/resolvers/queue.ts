@@ -5,34 +5,54 @@ import type {
   QueueMetrics as GqlQueueMetrics,
 } from '../../typings/gql';
 
+/**
+ * Every per-status count comes out of a single `getJobCounts()` call, memoized
+ * per request by the data source. Before this, a query asking for `jobsCounts`
+ * plus a few `*Count` fields opened one Redis round-trip per field, per queue,
+ * on every poll — the dashboard polls all queues every 5s by default, so the
+ * cost scaled with (queues x fields).
+ *
+ * `count` and `isPaused` stay as their own calls: `count` has provider-specific
+ * semantics (waiting + delayed, with variations across bull/bullmq versions)
+ * that deriving from `jobsCounts` would silently change, and `isPaused` is a
+ * flag that `getJobCounts()` does not return.
+ */
 export const queueResolver: TResolvers = {
   Queue: {
-    async count(parent: Queue): Promise<GqlQueue['count']> {
-      return await parent.count();
+    async count(parent: Queue, _, { dataSources: { bull } }) {
+      return await bull.getCachedCount(parent);
     },
-    async failedCount(parent: Queue): Promise<GqlQueue['failedCount']> {
-      return await parent.getFailedCount();
+    async failedCount(parent: Queue, _, { dataSources: { bull } }) {
+      return (await bull.getCachedJobCounts(parent)).failed;
     },
-    async completedCount(parent: Queue): Promise<GqlQueue['completedCount']> {
-      return await parent.getCompletedCount();
+    async completedCount(parent: Queue, _, { dataSources: { bull } }) {
+      return (await bull.getCachedJobCounts(parent)).completed;
     },
-    async delayedCount(parent: Queue): Promise<GqlQueue['delayedCount']> {
-      return await parent.getDelayedCount();
+    async delayedCount(parent: Queue, _, { dataSources: { bull } }) {
+      return (await bull.getCachedJobCounts(parent)).delayed;
     },
-    async activeCount(parent: Queue): Promise<GqlQueue['activeCount']> {
-      return await parent.getActiveCount();
+    async activeCount(parent: Queue, _, { dataSources: { bull } }) {
+      return (await bull.getCachedJobCounts(parent)).active;
     },
-    async waitingCount(parent: Queue): Promise<GqlQueue['waitingCount']> {
-      return await parent.getWaitingCount();
+    async waitingCount(parent: Queue, _, { dataSources: { bull } }) {
+      return (await bull.getCachedJobCounts(parent)).waiting;
     },
-    async pausedCount(parent: Queue): Promise<GqlQueue['pausedCount']> {
-      return await parent.getPausedCount();
+    async pausedCount(parent: Queue, _, { dataSources: { bull } }) {
+      return (await bull.getCachedJobCounts(parent)).paused;
     },
-    async jobsCounts(parent: Queue): Promise<GqlQueue['jobsCounts']> {
-      return await parent.getJobCounts();
+    async jobsCounts(
+      parent: Queue,
+      _,
+      { dataSources: { bull } }
+    ): Promise<GqlQueue['jobsCounts']> {
+      return await bull.getCachedJobCounts(parent);
     },
-    async isPaused(parent: Queue): Promise<GqlQueue['isPaused']> {
-      return await parent.isPaused();
+    async isPaused(
+      parent: Queue,
+      _,
+      { dataSources: { bull } }
+    ): Promise<GqlQueue['isPaused']> {
+      return await bull.getCachedIsPaused(parent);
     },
     async jobs(parent: Queue, _, { dataSources: { bull } }) {
       return await bull.getQueueJobs({ queue: parent.id });

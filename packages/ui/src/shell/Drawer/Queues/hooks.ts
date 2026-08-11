@@ -39,9 +39,7 @@ export type TGroupedQueues = {
 // Splits queues into named groups (via the `group` field set on the
 // BullAdapter/BullMQAdapter config) plus whatever's left ungrouped, keeping
 // each group's first-seen order stable across renders.
-export const useGroupedQueues = (
-  queues: QueueFromQuery[]
-): TGroupedQueues => {
+export const useGroupedQueues = (queues: QueueFromQuery[]): TGroupedQueues => {
   return useMemo(() => {
     const groups: TQueueGroup[] = [];
     const groupsByName = new Map<string, TQueueGroup>();

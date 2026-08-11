@@ -6,7 +6,12 @@
 // `ApolloServer` localmente via `createContext()`) é só para acompanhar a
 // remoção de `createServer()`/`server` da classe base `BullMonitor` em
 // `@bull-horizon/root` — não é o início de uma migração para v4.
-import { BullMonitor, typeDefs, resolvers } from '@bull-horizon/root';
+import {
+  BullMonitor,
+  typeDefs,
+  resolvers,
+  PROMETHEUS_CONTENT_TYPE,
+} from '@bull-horizon/root';
 import {
   ApolloServer,
   ApolloServerPluginStopHapiServer,
@@ -26,9 +31,7 @@ export class BullMonitorHapi extends BullMonitor {
       typeDefs,
       resolvers,
       introspection: this.config.gqlIntrospection,
-      plugins: hapiServer && [
-        ApolloServerPluginStopHapiServer({ hapiServer }),
-      ],
+      plugins: hapiServer && [ApolloServerPluginStopHapiServer({ hapiServer })],
       context: async () => this.createContext(),
     });
     await this.server.start();
@@ -46,6 +49,20 @@ export class BullMonitorHapi extends BullMonitor {
             return this.renderUi();
           },
         });
+        if (this.isPrometheusEnabled) {
+          app.route({
+            method: 'GET',
+            options: {
+              auth,
+            },
+            path: this.prometheusEndpoint,
+            handler: async (_req, h) => {
+              return h
+                .response(await this.renderPrometheus())
+                .type(PROMETHEUS_CONTENT_TYPE);
+            },
+          });
+        }
         await this.server.applyMiddleware({
           app,
           path: this.gqlEndpoint,

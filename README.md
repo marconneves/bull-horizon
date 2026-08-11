@@ -56,6 +56,91 @@ import Queue from 'bull';
 
 See the [Express package README](https://github.com/marconneves/bull-horizon/tree/main/packages/express#usage) for the full set of options (readonly queues, metrics collection, GraphQL introspection toggle, and more).
 
+## Metrics and throughput
+
+**Collection is off by default — you have to turn it on.** Nothing is recorded
+until you pass a `metrics` config:
+
+```typescript
+const monitor = new BullMonitorExpress({
+  queues: [...],
+  metrics: {}, // enough to enable it; every field below has a default
+});
+```
+
+| | Without `metrics` | With `metrics` |
+|---|---|---|
+| Job counts in the sidebar and **Overview** | ✅ read live from redis | ✅ |
+| Throughput chart above the job list | — | ✅ |
+| **Metrics history** screen | hidden | ✅ |
+| Prometheus endpoint | gauges only (queue depth, paused) | + throughput counters and processing time |
+
+Once enabled, Bull Horizon records how many jobs completed and failed in each
+collection window, per queue. It counts queue *events*, so it works identically
+on Bull and BullMQ and does not depend on `removeOnComplete` leaving finished
+jobs behind for it to count.
+
+Throughput is only recorded while the monitor process is running — history is
+not backfilled, and a restart leaves a gap in the series. It is an
+observability signal, not accounting.
+
+### Retention
+
+Detail decays with age instead of history being truncated. Points are folded
+into coarser buckets as they are written, so 90 days of history costs ~1.5MB of
+Redis per queue rather than the ~36MB it would take stored raw:
+
+| Window | Resolution | Default |
+|---|---|---|
+| last 3 days | `collectInterval` (1 min) | 4320 points |
+| last 30 days | hourly | 720 buckets |
+| last 90 days | 12-hourly | 180 buckets |
+
+Every tier is configurable, in both resolution and depth:
+
+```typescript
+metrics: {
+  collectInterval: { minutes: 1 },
+  retention: {
+    raw: 4320,                                  // 3 days at one minute
+    rollups: [
+      { everyMs: 3_600_000, keep: 720 },        // 30 days hourly
+      { everyMs: 43_200_000, keep: 180 },       // 90 days, 12h buckets
+      { everyMs: 86_400_000, keep: 365 },       // + 1 year daily, if you want it
+    ],
+  },
+}
+```
+
+Reads pick the finest tier that covers the requested window, so the dashboard's
+range selector only offers windows the server can actually answer for. Charts
+plot a **rate per minute** rather than a raw counter, which is what makes a
+12-hour bucket comparable to a one-minute one.
+
+`maxMetrics` still works as an alias for `retention.raw`.
+
+## Prometheus / Grafana
+
+An optional Prometheus/OpenMetrics endpoint can be exposed for scraping by
+Prometheus, Grafana Alloy or Grafana Cloud:
+
+```typescript
+const monitor = new BullMonitorExpress({
+  queues: [...],
+  metrics: { collectInterval: { minutes: 1 } },
+  prometheus: true, // or { enabled: true, path: '/metrics' }
+});
+```
+
+```sh
+bull-horizon -q my-queue --metrics --prometheus
+```
+
+It is **off by default**: the route has no authentication of its own (like the
+rest of the dashboard) and publishes queue names as label values. See
+[`examples/grafana`](./examples/grafana) for the exported metrics, scrape
+configuration and an importable dashboard.
+
 ## Contributing
 
 All `@bull-horizon/*` packages share a single version and are released together with

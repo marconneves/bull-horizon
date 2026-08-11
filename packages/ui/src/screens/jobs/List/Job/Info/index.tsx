@@ -79,9 +79,7 @@ export default function JobInfo({ job }: TProps) {
       {returnData && (
         <JsonTreeView className={cls.text}>{returnData}</JsonTreeView>
       )}
-      {job.opts && (
-        <JsonTreeView className={cls.text}>{job.opts}</JsonTreeView>
-      )}
+      {job.opts && <JsonTreeView className={cls.text}>{job.opts}</JsonTreeView>}
     </Box>
   );
 }

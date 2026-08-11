@@ -1,6 +1,7 @@
 import type {
   QueryJobArgs,
   QueryMetricsArgs,
+  QueryMetricsSummaryArgs,
   QueryQueueArgs,
 } from '../../typings/gql';
 import type { TResolvers } from './typings';
@@ -13,11 +14,26 @@ export const queryResolver: TResolvers = {
     metricsEnabled(_, __, { dataSources: { metrics } }) {
       return metrics.isEnabled();
     },
+    metricsInfo(_, __, { dataSources: { metrics } }) {
+      return metrics.isEnabled() ? metrics.getInfo() : null;
+    },
     async metrics(_, args: QueryMetricsArgs, { dataSources: { metrics } }) {
       return await metrics.getMetrics(
         args.queue,
         args.start as number,
-        args.end as number
+        args.end as number,
+        args.since as number,
+        args.maxPoints as number
+      );
+    },
+    async metricsSummary(
+      _,
+      args: QueryMetricsSummaryArgs,
+      { dataSources: { metrics } }
+    ) {
+      return await metrics.getSummary(
+        args.since as number,
+        args.maxPoints as number
       );
     },
     queues(_, __, { dataSources: { bull } }) {

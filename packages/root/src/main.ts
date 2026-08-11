@@ -5,9 +5,14 @@ import {
 } from './gql/data-sources';
 import { UI } from './ui';
 import { MetricsCollector } from './metrics-collector';
+import { renderPrometheusMetrics } from './prometheus';
 import { Queue } from './queue';
-import { DEFAULT_METRICS_CONFIG, DEFAULT_ROOT_CONFIG } from './constants';
-import type { Config, MetricsConfig } from './typings/config';
+import {
+  DEFAULT_METRICS_CONFIG,
+  DEFAULT_PROMETHEUS_CONFIG,
+  DEFAULT_ROOT_CONFIG,
+} from './constants';
+import type { Config, MetricsConfig, PrometheusConfig } from './typings/config';
 
 /**
  * GraphQL context shape shared by every framework adapter.
@@ -70,6 +75,17 @@ export abstract class BullMonitor {
     this._metricsCollector?.stopCollecting();
   }
   /**
+   * Renders the Prometheus scrape body. Adapters mount this at
+   * `prometheusEndpoint` when `config.prometheus` is enabled; the throughput
+   * counters are only present when the metrics collector is also configured.
+   */
+  public async renderPrometheus(): Promise<string> {
+    return renderPrometheusMetrics(this._queues, this._metricsCollector);
+  }
+  public get isPrometheusEnabled(): boolean {
+    return this.prometheusConfig.enabled;
+  }
+  /**
    * Builds a fresh per-request GraphQL context bound to this instance's
    * queues, config and metrics collector. Framework adapters must call
    * this from the `context` function they hand to their `@apollo/server`
@@ -99,13 +115,27 @@ export abstract class BullMonitor {
     return this.baseUrl || '/';
   }
   protected get gqlEndpoint() {
+    return this._resolveEndpoint(this.gqlBasePath);
+  }
+  protected get prometheusConfig(): Required<PrometheusConfig> {
+    const raw = this.config.prometheus;
+    if (typeof raw === 'boolean') {
+      return { ...DEFAULT_PROMETHEUS_CONFIG, enabled: raw };
+    }
+    return { ...DEFAULT_PROMETHEUS_CONFIG, ...raw };
+  }
+  protected get prometheusEndpoint() {
+    return this._resolveEndpoint(this.prometheusConfig.path);
+  }
+
+  private _resolveEndpoint(path: string) {
     const base = this.baseUrl;
     if (!base) {
-      return this.gqlBasePath;
+      return path;
     } else if (base.endsWith('/')) {
-      return base.slice(0, -1) + this.gqlBasePath;
+      return base.slice(0, -1) + path;
     }
-    return base + this.gqlBasePath;
+    return base + path;
   }
 
   private _initQueues(rawQueues: Config['queues']) {

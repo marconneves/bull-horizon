@@ -5,6 +5,8 @@ export const QueryKeysConfig = {
   jobsList: 'jobs-list',
   jobById: 'job-by-id',
   redisInfo: 'redis-info',
-  metrics: 'metrics',
+  metricsSummary: 'metrics-summary',
+  throughput: 'throughput',
   metricsEnabled: 'metrics-enabled',
+  metricsInfo: 'metrics-info',
 };

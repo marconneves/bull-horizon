@@ -21,6 +21,10 @@ import { useQueuesQuery } from '@/hooks/use-queues-query';
 import isempty from 'lodash/isEmpty';
 import Alert from '@mui/material/Alert';
 import { LayoutConfig } from '@/config/layouts';
+import ScreenNav from './ScreenNav';
+import { useQuery } from 'react-query';
+import { useNetwork } from '@/hooks/use-network';
+import { QueryKeysConfig } from '@/config/query-keys';
 
 const useStyles = makeStyles((theme) => ({
   drawer: {
@@ -59,6 +63,14 @@ const useStyles = makeStyles((theme) => ({
 
 export default function Drawer() {
   const { data, status, refetch, error } = useQueuesQuery();
+  const {
+    queries: { getMetricsEnabled },
+  } = useNetwork();
+  const { data: metricsEnabledData } = useQuery(
+    QueryKeysConfig.metricsEnabled,
+    getMetricsEnabled,
+    { staleTime: Infinity }
+  );
   const cls = useStyles();
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
@@ -97,6 +109,9 @@ export default function Drawer() {
             )}
           </IconButton>
         </div>
+        <ScreenNav
+          metricsEnabled={metricsEnabledData?.metricsEnabled ?? false}
+        />
         <NetworkRequest error={error} status={status} refetch={refetch}>
           {isempty(queues) ? (
             <Alert severity="error">No queues</Alert>

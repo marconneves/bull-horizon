@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import makeStyles from '@mui/styles/makeStyles';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
@@ -7,6 +7,13 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 type TPrimitive = string | number | boolean | null;
 export type TPathSegment = string | number;
+
+/**
+ * Broadcast from the card header. `nonce` is what makes it fire: expanding all
+ * twice in a row has to reach nodes the user collapsed in between, so the
+ * signal must change identity even when `open` is unchanged.
+ */
+export type TExpandSignal = { open: boolean; nonce: number };
 
 const useStyles = makeStyles((theme) => ({
   row: {
@@ -75,7 +82,10 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-function formatScalar(value: TPrimitive): { text: string; cls: 'string' | 'scalar' | 'nullish' } {
+function formatScalar(value: TPrimitive): {
+  text: string;
+  cls: 'string' | 'scalar' | 'nullish';
+} {
   if (value === null) return { text: 'null', cls: 'nullish' };
   if (typeof value === 'string') return { text: `"${value}"`, cls: 'string' };
   return { text: String(value), cls: 'scalar' };
@@ -86,14 +96,29 @@ type TProps = {
   value: unknown;
   path: TPathSegment[];
   depth: number;
-  onAddFilter?: (path: TPathSegment[], value: string | number | boolean) => void;
+  onAddFilter?: (
+    path: TPathSegment[],
+    value: string | number | boolean
+  ) => void;
+  expandSignal?: TExpandSignal;
 };
 
-const JsonNode = ({ keyLabel, value, path, depth, onAddFilter }: TProps) => {
+const JsonNode = ({
+  keyLabel,
+  value,
+  path,
+  depth,
+  onAddFilter,
+  expandSignal,
+}: TProps) => {
   const cls = useStyles();
   const isBranch = value !== null && typeof value === 'object';
   const [open, setOpen] = useState(depth < 1);
   const toggle = useCallback(() => setOpen((v) => !v), []);
+
+  useEffect(() => {
+    if (expandSignal) setOpen(expandSignal.open);
+  }, [expandSignal]);
 
   if (isBranch) {
     const isArray = Array.isArray(value);
@@ -126,6 +151,7 @@ const JsonNode = ({ keyLabel, value, path, depth, onAddFilter }: TProps) => {
                 path={[...path, k]}
                 depth={depth + 1}
                 onAddFilter={onAddFilter}
+                expandSignal={expandSignal}
               />
             ))}
           </div>

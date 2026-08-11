@@ -12,8 +12,8 @@ const DataSearchTip = ({ className }: TProps) => {
         jsonata
       </a>
       . Query the job itself — <code>data</code>, <code>opts</code>,{' '}
-      <code>returnvalue</code>, <code>name</code> — or hit{' '}
-      <code>&lt;&gt;</code> to build the filter visually.
+      <code>returnvalue</code>, <code>name</code> — or hit <code>&lt;&gt;</code>{' '}
+      to build the filter visually.
     </>
   );
   return (
