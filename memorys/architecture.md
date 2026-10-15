@@ -106,7 +106,7 @@
 
 ## 📐 ADR-004: Runs de agente IA: linha em `job.log`, helper no root, série própria no collector (2026-10-15)
 
-**Contexto**: task 004. Filas que rodam agentes de IA viram uma visão própria (run em grafo/waterfall, agregados, lista de runs). O piloto (brand-api) já monta o rastro (`AiTrace` v1) mas só manda linhas de texto ao Bull. A tentativa que falha relança o erro para o Bull tentar de novo e o job não retorna valor. Desenho completo em `docs/todo/004-agentes-ia/architecture.md`.
+**Contexto**: task 004 (detalhes de implementação e armadilhas em `memorys/implementations/agent-runs.md`). Filas que rodam agentes de IA viram uma visão própria (run em grafo/waterfall, agregados, lista de runs). O piloto (brand-api) já monta o rastro (`AiTrace` v1) mas só manda linhas de texto ao Bull. A tentativa que falha relança o erro para o Bull tentar de novo e o job não retorna valor. Desenho completo em `docs/todo/004-agentes-ia/architecture.md`.
 
 **Decisão 1: o run vive numa linha estruturada de `job.log`** (`bull-horizon:agent-run <json>`), uma por tentativa, gravada no fim da tentativa. `returnvalue` perde as falhas; `job.update(data)` faz read-modify-write no payload do app e polui busca/edição; chave Redis própria desacopla o ciclo de vida do job (órfãs, TTL), acopla o helper ao esquema de chaves e não funciona no processor sandboxed do Bull. `job.log` tem API igual em Bull v3/v4 e BullMQ e some junto com o job. Custo aceito: fila de agente não pode usar `removeOnComplete/removeOnFail: true` (o collector conta como `lost` e a UI avisa).
 
