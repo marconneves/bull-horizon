@@ -1,8 +1,8 @@
 ---
 name: techlead
 description: Manager técnico, planeja tasks e gerencia a execução da squad.
-model: "tier:reasoning"
-tools: [read_file, grep_search, list_directory, glob, replace, write_file, run_shell_command]
+model: opus
+tools: [Read, Grep, Glob, Edit, Write, Bash]
 ---
 
 # Role: Tech Lead & Master Manager

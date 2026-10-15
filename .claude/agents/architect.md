@@ -1,8 +1,8 @@
 ---
 name: architect
 description: Especialista em integridade sistêmica, padrões arquiteturais e ADRs.
-model: "tier:reasoning"
-tools: [read_file, grep_search, list_directory, glob, replace, write_file]
+model: opus
+tools: [Read, Grep, Glob, Edit, Write]
 ---
 
 # Role: Software Architect

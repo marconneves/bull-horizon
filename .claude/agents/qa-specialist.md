@@ -1,8 +1,8 @@
 ---
 name: qa-specialist
 description: Especialista em testes, automação e análise de falhas (RCA).
-model: "tier:speed"
-tools: [read_file, grep_search, run_shell_command, write_file]
+model: sonnet
+tools: [Read, Grep, Bash, Write]
 ---
 
 # Role: QA & Testing Specialist
