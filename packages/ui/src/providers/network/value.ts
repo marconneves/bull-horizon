@@ -61,6 +61,15 @@ import { getMetricsInfo } from '@/network/queries/get-metrics-info';
 import { getMetricsInfoMock } from '@/demo-mocks/network/queries/get-metrics-info';
 import { getMetricsSummaryMock } from '@/demo-mocks/network/queries/get-metrics-summary';
 
+import { getAgentJob } from '@/network/queries/get-agent-job';
+import { getAgentJobMock } from '@/demo-mocks/network/queries/get-agent-job';
+import { getAgentsSummary } from '@/network/queries/get-agents-summary';
+import { getAgentsSummaryMock } from '@/demo-mocks/network/queries/get-agents-summary';
+import { getAgentRuns } from '@/network/queries/get-agent-runs';
+import { getAgentRunsMock } from '@/demo-mocks/network/queries/get-agent-runs';
+import { getAgentConversation } from '@/network/queries/get-agent-conversation';
+import { getAgentConversationMock } from '@/demo-mocks/network/queries/get-agent-conversation';
+
 import { EnvConfig } from '@/config/env';
 
 const { useMocks: m } = EnvConfig;
@@ -77,6 +86,10 @@ const queries = {
   getQueueMetrics: m ? getQueueMetricsMock : getQueueMetrics,
   getMetricsSummary: m ? getMetricsSummaryMock : getMetricsSummary,
   getMetricsInfo: m ? getMetricsInfoMock : getMetricsInfo,
+  getAgentJob: m ? getAgentJobMock : getAgentJob,
+  getAgentsSummary: m ? getAgentsSummaryMock : getAgentsSummary,
+  getAgentRuns: m ? getAgentRunsMock : getAgentRuns,
+  getAgentConversation: m ? getAgentConversationMock : getAgentConversation,
 };
 const mutations = {
   createJob: m ? createJobMock : createJob,

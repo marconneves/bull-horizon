@@ -41,5 +41,12 @@ export const JobResolver: TResolvers = {
     status(job: Job): Promise<GqlJob['status']> {
       return job.getState();
     },
+    agentRuns(
+      job: Job,
+      _vars,
+      { dataSources: { agents } }
+    ): Promise<GqlJob['agentRuns']> {
+      return agents.getJobRuns(job);
+    },
   },
 };

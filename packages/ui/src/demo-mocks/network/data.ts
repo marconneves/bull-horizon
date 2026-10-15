@@ -5,6 +5,14 @@ import random from 'lodash/random';
 import { EnvConfig } from '@/config/env';
 import without from 'lodash/without';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  agentMock,
+  AGENT_QUEUE_CONFIG,
+  AGENT_QUEUE_ID,
+  AGENT_QUEUE_NAME,
+} from './agents/runs';
+
+type TAgentConfig = typeof AGENT_QUEUE_CONFIG;
 
 const QUEUES_AMOUNT = 10;
 const JOBS_AMOUNT = 100;
@@ -84,6 +92,7 @@ const generateData = () => {
     isPaused: false,
     keyPrefix: 'bull',
     group: DEMO_GROUPS[n] ?? null,
+    agent: null as TAgentConfig | null,
   }));
   const jobs = range(JOBS_AMOUNT).map((n) => {
     const status = sample(jobStatuses) as JobStatus;
@@ -124,6 +133,57 @@ const generateData = () => {
         logs: ['some log'] as string[],
       },
     };
+  });
+  // An AI agent queue (task 004), added after the random jobs so none of
+  // them lands in it: its `reply` jobs carry one recorded run per
+  // attempt in their logs, which is what the Agents screen reads.
+  queues.push({
+    id: AGENT_QUEUE_ID,
+    name: AGENT_QUEUE_NAME,
+    isPaused: false,
+    keyPrefix: 'bull',
+    group: 'AI agents',
+    agent: AGENT_QUEUE_CONFIG,
+  });
+  for (const agentJob of agentMock().jobs) {
+    jobs.push({
+      id: agentJob.id,
+      queue: AGENT_QUEUE_ID,
+      status: agentJob.status,
+      progress: '100',
+      attemptsMade: agentJob.attemptsMade,
+      returnValue: null,
+      failedReason: agentJob.failedReason,
+      processedOn: agentJob.processedOn,
+      finishedOn: agentJob.finishedOn,
+      delay: 0,
+      timestamp: agentJob.timestamp,
+      name: 'reply',
+      opts: JSON.stringify({ attempts: 2, removeOnComplete: 500 }, null, 2),
+      stacktrace: [],
+      data: agentJob.data,
+      logs: { count: agentJob.logs.length, logs: agentJob.logs },
+    });
+  }
+  // Not listed in the queue's `ai.jobs`: shown without the Agent run action.
+  const now = Date.now();
+  jobs.push({
+    id: 'cleanup-1',
+    queue: AGENT_QUEUE_ID,
+    status: JobStatus.Completed,
+    progress: '100',
+    attemptsMade: 1,
+    returnValue: null,
+    failedReason: null,
+    processedOn: now - 30 * 60000,
+    finishedOn: now - 30 * 60000 + 120,
+    delay: 0,
+    timestamp: now - 30 * 60000 - 50,
+    name: 'cleanup',
+    opts: JSON.stringify({}, null, 2),
+    stacktrace: [],
+    data: JSON.stringify({ olderThanDays: 30 }, null, 2),
+    logs: { count: 1, logs: ['removed 12 expired drafts'] },
   });
   return { jobs, queues };
 };

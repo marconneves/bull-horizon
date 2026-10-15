@@ -141,6 +141,30 @@ rest of the dashboard) and publishes queue names as label values. See
 [`examples/grafana`](./examples/grafana) for the exported metrics, scrape
 configuration and an importable dashboard.
 
+## AI agent runs
+
+Queues that run AI agents can be shown as **agent runs** instead of opaque
+jobs: every LLM step and tool call, tokens, timing and estimated cost, plus an
+**Agents** screen with latency, tool and cost aggregates, a list of recent
+runs and a conversation view that groups runs by `input.conversationId`. Declare the queue with `ai` next to `group`, record each attempt with
+`createAgentRun` in your worker, and keep `removeOnComplete` numeric:
+
+```typescript
+const AI_AGENT: AgentQueueConfig = { jobs: ['reply'], detail: 'basic' }; // shared with the worker
+
+new BullMonitorExpress({
+  queues: [new BullAdapter(aiQueue, { group: 'AI', ai: AI_AGENT })],
+  metrics: {},
+  ai: { pricing: { 'gemini-3.8-flash': { input: 0.3, output: 2.5 } } }, // USD per 1M tokens
+});
+```
+
+`basic` (the default) never stores tool inputs/outputs or texts in Redis. See
+[docs/agent-runs.md](./docs/agent-runs.md) for the run contract, detail levels,
+limits, AI SDK and NestJS examples, and the security guidance. A Claude Code
+skill for instrumenting agent jobs lives in
+[skills/bull-horizon-agent-jobs](./skills/bull-horizon-agent-jobs).
+
 ## Contributing
 
 All `@bull-horizon/*` packages share a single version and are released together with

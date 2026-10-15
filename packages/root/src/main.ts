@@ -1,4 +1,5 @@
 import {
+  AgentsDataSource,
   BullDataSource,
   MetricsDataSource,
   PoliciesDataSource,
@@ -34,6 +35,7 @@ export type BullMonitorContext = {
     bull: BullDataSource;
     metrics: MetricsDataSource;
     policies: PoliciesDataSource;
+    agents: AgentsDataSource;
   };
 };
 
@@ -99,6 +101,12 @@ export abstract class BullMonitor {
         }),
         metrics: new MetricsDataSource(this._metricsCollector),
         policies: new PoliciesDataSource(this._queuesMap),
+        agents: new AgentsDataSource(
+          this._queues,
+          this._queuesMap,
+          this._metricsCollector,
+          this.config.ai
+        ),
       },
     };
   }
@@ -173,7 +181,8 @@ export abstract class BullMonitor {
   private _initMetricsCollector() {
     this._metricsCollector = new MetricsCollector(
       this._queues,
-      this.config.metrics as Required<MetricsConfig>
+      this.config.metrics as Required<MetricsConfig>,
+      this.config.ai
     );
     this._metricsCollector.startCollecting();
   }

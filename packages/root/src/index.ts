@@ -1,7 +1,15 @@
 export { BullMonitor } from './main';
 export type { BullMonitorContext } from './main';
-export type { Config, MetricsConfig, PrometheusConfig } from './typings/config';
+export type {
+  Config,
+  MetricsConfig,
+  PrometheusConfig,
+  QueueConfig,
+  AgentsConfig,
+  AgentModelPrice,
+} from './typings/config';
 export { Queue } from './queue';
 export { typeDefs } from './gql/type-defs';
 export { resolvers } from './gql/resolvers';
 export { renderPrometheusMetrics, PROMETHEUS_CONTENT_TYPE } from './prometheus';
+export * from './agent';

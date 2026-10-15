@@ -1,4 +1,3 @@
-import { JsonService } from './services/json';
 import {
   ToadScheduler as Scheduler,
   SimpleIntervalJob as SchedulerJob,
@@ -7,13 +6,11 @@ import {
 import sum from 'lodash/sum';
 import isEmpty from 'lodash/isEmpty';
 import round from 'lodash/round';
-import { DEFAULT_METRICS_RETENTION } from './constants';
+import { TieredSeries } from './metrics/tiered-series';
+import { AgentMetrics } from './metrics/agent-metrics';
+import { DEFAULT_AGENTS_CONFIG } from './constants';
 import type { Queue, JobCounts, JobId } from './queue';
-import type {
-  MetricsConfig,
-  MetricsRetention,
-  MetricsRollupTier,
-} from './typings/config';
+import type { AgentsConfig, MetricsConfig } from './typings/config';
 
 export type TMetrics = {
   queue: string;
@@ -74,9 +71,6 @@ export type TMetricsInfo = {
   retentionMs: number;
 };
 
-const bucketOf = (timestamp: number, everyMs: number) =>
-  Math.floor(timestamp / everyMs) * everyMs;
-
 const minOf = (a?: number, b?: number) =>
   a == null ? b : b == null ? a : Math.min(a, b);
 const maxOf = (a?: number, b?: number) =>
@@ -94,8 +88,25 @@ export class MetricsCollector {
   private _schedulerJob: SchedulerJob;
   private _isActive = false;
 
-  constructor(queues: Queue[], private _config: Required<MetricsConfig>) {
+  private _series: TieredSeries<TMetrics>;
+  private _agents: AgentMetrics;
+
+  constructor(
+    queues: Queue[],
+    private _config: Required<MetricsConfig>,
+    agentsConfig: AgentsConfig = {}
+  ) {
     this._scheduler = new Scheduler();
+    this._series = new TieredSeries<TMetrics>({
+      config: _config,
+      client: () => this._redisClient,
+      merge: (base, next) => this._mergePoints(base, next),
+    });
+    this._agents = new AgentMetrics({
+      config: _config,
+      agents: { ...DEFAULT_AGENTS_CONFIG, ...agentsConfig },
+      client: () => this._redisClient,
+    });
     this._queues = queues.filter((q) => !_config.blacklist.includes(q.name));
   }
   public startCollecting(): void {
@@ -103,11 +114,13 @@ export class MetricsCollector {
     this._scheduler.addSimpleIntervalJob(this._schedulerJob);
     this._attachEventCbs();
     this._windowStartedAt = Date.now();
+    this._agents.start();
     this._isActive = true;
   }
   public stopCollecting(): void {
     this._scheduler.stop();
     this._detachEventCbs();
+    this._agents.stop();
     this._isActive = false;
   }
   public async extract(
@@ -115,10 +128,7 @@ export class MetricsCollector {
     start = 0,
     end = -1
   ): Promise<TMetrics[]> {
-    const key = this._buildPersistKey(queue);
-    const client = await this._redisClient;
-    const metrics = await client.lrange(key, start, end);
-    return metrics.map(JsonService.maybeParse).filter(Boolean);
+    return await this._series.range(queue, start, end);
   }
   /**
    * Time-windowed read. Redis lists cannot be sliced by value, so the window
@@ -139,30 +149,8 @@ export class MetricsCollector {
     if (!since) {
       return this._maybeDownsample(await this.extract(queue), maxPoints);
     }
-    // Finest tier whose span still reaches `since`. Reading raw for a 90-day
-    // window would mean pulling three days of minutes and calling it 90 days.
-    const tier = this._tierFor(since);
-    const key = this._buildPersistKey(queue, tier);
-    const client = await this._redisClient;
-    const cap = tier ? tier.keep : this._retention.raw;
-    const resolutionMs = tier ? tier.everyMs : this._intervalMs;
-    let tail = this._estimatePointsSince(since, resolutionMs, cap);
-    let metrics: TMetrics[] = [];
-    // The estimate assumes the stored points are spaced by the *current*
-    // collect interval. That breaks when the interval was raised after the
-    // series was written (the list is denser than we think), and silently
-    // truncating the window is worse than one extra round-trip — so widen
-    // until the slice actually reaches past `since` or the list runs out.
-    for (;;) {
-      const raw = await client.lrange(key, -tail, -1);
-      metrics = raw.map(JsonService.maybeParse).filter(Boolean);
-      const exhaustedList = raw.length < tail;
-      const reachedWindow = metrics.length > 0 && metrics[0].timestamp <= since;
-      if (exhaustedList || reachedWindow || tail >= cap) break;
-      tail = Math.min(tail * 4, cap);
-    }
     return this._maybeDownsample(
-      metrics.filter((metric) => metric.timestamp >= since),
+      await this._series.since(queue, since),
       maxPoints
     );
   }
@@ -242,7 +230,7 @@ export class MetricsCollector {
     const client = await this._redisClient;
     const pipeline = client.pipeline();
     // Every tier, otherwise "clear metrics" leaves months of rollups behind.
-    for (const key of this._allPersistKeys(queue)) {
+    for (const key of this._allKeys(queue)) {
       pipeline.del(key);
     }
     await pipeline.exec();
@@ -251,11 +239,15 @@ export class MetricsCollector {
     const client = await this._redisClient;
     const pipeline = client.pipeline();
     this._queues.forEach((queue) => {
-      for (const key of this._allPersistKeys(queue.id)) {
+      for (const key of this._allKeys(queue.id)) {
         pipeline.del(key);
       }
     });
     await pipeline.exec();
+  }
+  /** Agent run aggregates and the recent runs index (agent queues only). */
+  public get agents(): AgentMetrics {
+    return this._agents;
   }
   public get queues(): Queue[] {
     return this._queues;
@@ -294,6 +286,7 @@ export class MetricsCollector {
     try {
       const metrics = await this._collect();
       await this._persist(metrics);
+      await this._agents.persist(this._agents.drain(this._queues));
     } catch (e) {
       console.error('[bull-horizon] metrics collector error: ', e);
     }
@@ -322,59 +315,16 @@ export class MetricsCollector {
       })
     );
   }
-  private async _persist(metrics: TMetrics[]) {
-    const client = await this._redisClient;
-    const lpopPipeline = client.pipeline();
-    await Promise.all(
-      metrics.map(async (metric) => {
-        const key = this._buildPersistKey(metric.queue);
-        const listLen = await client.rpush(key, JSON.stringify(metric));
-        if (listLen > this._retention.raw) {
-          lpopPipeline.lpop(key);
-        }
-      })
-    );
-    await lpopPipeline.exec();
-    await this._rollUp(metrics);
-  }
   /**
-   * Folds each fresh point into its hourly and daily bucket as it is written.
-   * This is what makes long windows affordable: 90 days of raw one-minute
-   * points is ~36MB of Redis per queue, while the rolled-up tiers cover a year
-   * in ~1.5MB.
-   *
-   * Read-modify-write on the tail rather than accumulating in memory, so a
-   * restart cannot lose a half-finished bucket.
+   * Each fresh point is folded into its hourly and daily bucket as it is
+   * written. This is what makes long windows affordable: 90 days of raw
+   * one-minute points is ~36MB of Redis per queue, while the rolled-up tiers
+   * cover a year in ~1.5MB.
    */
-  private async _rollUp(metrics: TMetrics[]) {
-    const client = await this._redisClient;
-    for (const tier of this._rollups) {
-      await Promise.all(
-        metrics.map(async (metric) => {
-          const key = this._buildPersistKey(metric.queue, tier);
-          const bucketStart = bucketOf(metric.timestamp, tier.everyMs);
-          const [rawTail] = await client.lrange(key, -1, -1);
-          const tail: TMetrics | undefined = rawTail
-            ? JsonService.maybeParse(rawTail)
-            : undefined;
-          if (tail && bucketOf(tail.timestamp, tier.everyMs) === bucketStart) {
-            await client.lset(
-              key,
-              -1,
-              JSON.stringify(this._mergePoints(tail, metric))
-            );
-            return;
-          }
-          const listLen = await client.rpush(
-            key,
-            JSON.stringify({ ...metric, timestamp: bucketStart })
-          );
-          if (listLen > tier.keep) {
-            await client.lpop(key);
-          }
-        })
-      );
-    }
+  private async _persist(metrics: TMetrics[]) {
+    await this._series.append(
+      metrics.map((metric) => ({ queue: metric.queue, point: metric }))
+    );
   }
   /**
    * `base` is an open bucket, `next` a fresh raw point landing in it. Counters
@@ -412,7 +362,7 @@ export class MetricsCollector {
     this._detachEventCbs();
     for (const queue of this._queues) {
       queue.onGlobalJobCompletion = this._onJobComplete.bind(this, queue);
-      queue.onGlobalJobFailure = () => this._onJobFail(queue);
+      queue.onGlobalJobFailure = (jobId) => this._onJobFail(queue, jobId);
     }
   }
   private _detachEventCbs() {
@@ -424,6 +374,7 @@ export class MetricsCollector {
   private async _onJobComplete(queue: Queue, jobId: JobId) {
     this._bump(this._completedGauge, queue.id);
     this._bump(this._totalCompleted, queue.id);
+    if (queue.agent) void this._agents.onJobFinished(queue, jobId);
     const job = await queue.getJob(jobId);
     if (!job?.finishedOn || !job.processedOn) {
       return;
@@ -437,9 +388,16 @@ export class MetricsCollector {
       stats.push(dur);
     }
   }
-  private _onJobFail(queue: Queue) {
+  private _onJobFail(queue: Queue, jobId?: JobId) {
     this._bump(this._failedGauge, queue.id);
     this._bump(this._totalFailed, queue.id);
+    if (queue.agent && jobId != null) {
+      void this._agents.onJobFinished(queue, String(jobId));
+    }
+  }
+  /** Every key the collector owns for a queue: throughput tiers + agents. */
+  private _allKeys(queue: string): string[] {
+    return [...this._series.keys(queue), ...this._agents.keys(queue)];
   }
   private _bump(gauge: Map<string, number>, queueId: string) {
     gauge.set(queueId, (gauge.get(queueId) ?? 0) + 1);
@@ -461,83 +419,14 @@ export class MetricsCollector {
   private _normalizeProcessingTime(time: number) {
     return round(time, 2);
   }
-  /**
-   * Rollup tiers live under a suffixed key so the raw series keeps the exact
-   * key it always had — existing deployments keep their history untouched.
-   */
-  private _buildPersistKey(queue: string, tier?: MetricsRollupTier) {
-    const base = this._config.redisPrefix + queue;
-    return tier ? `${base}::r${tier.everyMs}` : base;
-  }
-  private _allPersistKeys(queue: string): string[] {
-    return [
-      this._buildPersistKey(queue),
-      ...this._rollups.map((tier) => this._buildPersistKey(queue, tier)),
-    ];
-  }
-  private get _retention(): Required<MetricsRetention> {
-    const configured = this._config.retention ?? {};
-    return {
-      // `maxMetrics` is the legacy name for the same number; honour it when
-      // `retention.raw` wasn't given so old configs keep working verbatim.
-      raw:
-        configured.raw ??
-        this._config.maxMetrics ??
-        DEFAULT_METRICS_RETENTION.raw,
-      rollups: configured.rollups ?? DEFAULT_METRICS_RETENTION.rollups,
-    };
-  }
-  /** Ordered finest first, ignoring tiers configured to keep nothing. */
-  private get _rollups(): MetricsRollupTier[] {
-    return this._retention.rollups
-      .filter((tier) => tier.keep > 0 && tier.everyMs > 0)
-      .sort((a, b) => a.everyMs - b.everyMs);
-  }
-  private _tierFor(since: number): MetricsRollupTier | undefined {
-    const needed = Math.max(Date.now() - since, 0);
-    if (needed <= this._retention.raw * this._intervalMs) return undefined;
-    const rollups = this._rollups;
-    for (const tier of rollups) {
-      if (needed <= tier.keep * tier.everyMs) return tier;
-    }
-    // Beyond every tier's span: the coarsest one is all the history there is.
-    return rollups[rollups.length - 1];
-  }
   public get info(): TMetricsInfo {
-    const rollups = this._rollups;
-    const spans = [
-      this._retention.raw * this._intervalMs,
-      ...rollups.map((tier) => tier.keep * tier.everyMs),
-    ];
     return {
       collectIntervalMs: this._intervalMs,
-      retentionMs: Math.max(...spans),
+      retentionMs: this._series.retentionMs,
     };
   }
   private get _intervalMs(): number {
-    const schedule = this._config.collectInterval as Record<string, number>;
-    const ms =
-      (schedule.days ?? 0) * 86400000 +
-      (schedule.hours ?? 0) * 3600000 +
-      (schedule.minutes ?? 0) * 60000 +
-      (schedule.seconds ?? 0) * 1000 +
-      (schedule.milliseconds ?? 0);
-    // A misconfigured schedule must not turn into a division by zero below.
-    return ms > 0 ? ms : 60000;
-  }
-  /**
-   * How many points from the tail of the list can possibly cover `since`.
-   * Padded because the interval is nominal — a busy event loop stretches it —
-   * and capped at `maxMetrics` because the list never grows past that.
-   */
-  private _estimatePointsSince(
-    since: number,
-    resolutionMs: number,
-    cap: number
-  ): number {
-    const span = Math.max(Date.now() - since, 0);
-    const estimate = Math.ceil(span / resolutionMs) + 2;
-    return Math.min(estimate, cap);
+    return this._series.intervalMs;
   }
   private _downsamplePoints(
     points: TThroughputPoint[],

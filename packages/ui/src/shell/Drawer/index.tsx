@@ -111,6 +111,7 @@ export default function Drawer() {
         </div>
         <ScreenNav
           metricsEnabled={metricsEnabledData?.metricsEnabled ?? false}
+          hasAgents={!!queues?.some((queue) => !!queue.agent)}
         />
         <NetworkRequest error={error} status={status} refetch={refetch}>
           {isempty(queues) ? (

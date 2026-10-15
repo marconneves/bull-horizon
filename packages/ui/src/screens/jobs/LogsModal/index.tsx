@@ -16,6 +16,12 @@ import { useAbstractMutation } from '@/hooks/use-abstract-mutation';
 import NetworkRequest from '@/components/NetworkRequest';
 import makeStyles from '@mui/styles/makeStyles';
 import { useQueueData } from '@/hooks/use-queue-data';
+import { useAgentsStore } from '@/stores/agents';
+import {
+  readAgentRunLogLine,
+  shouldCollapseAgentRunLine,
+} from '@/services/agent-run-log';
+import type { TJobIdentity } from '@/typings';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -23,6 +29,34 @@ const useStyles = makeStyles((theme) => ({
     '@media(max-width: 540px)': {
       width: 'auto',
     },
+  },
+  runLine: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: theme.spacing(0.5),
+  },
+  runHead: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(1),
+    fontSize: 14,
+  },
+  runMeta: {
+    flex: 1,
+    fontSize: 12,
+    color: theme.palette.text.secondary,
+  },
+  raw: {
+    margin: 0,
+    maxHeight: 200,
+    overflow: 'auto',
+    fontFamily: '"IBM Plex Mono", ui-monospace, monospace',
+    fontSize: 11,
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-all',
+    color: theme.palette.text.secondary,
   },
   inputRoot: {
     display: 'flex',
@@ -33,6 +67,62 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+/**
+ * A run line is one JSON object of up to 64 KB. Printed as-is it buries every
+ * other log line, so it collapses to a summary that links to the run view.
+ */
+const AgentRunLine = ({
+  line,
+  jobIdentity,
+  onOpen,
+}: {
+  line: string;
+  jobIdentity: TJobIdentity;
+  onOpen: () => void;
+}) => {
+  const cls = useStyles();
+  const [showRaw, setShowRaw] = React.useState(false);
+  const openRun = useAgentsStore((state) => state.openRun);
+  const { attempt, chars } = React.useMemo(
+    () => readAgentRunLogLine(line),
+    [line]
+  );
+  return (
+    <div className={cls.runLine}>
+      <div className={cls.runHead}>
+        <span>agent run{attempt !== null ? ` (attempt ${attempt})` : ''}</span>
+        <span className={cls.runMeta}>
+          {chars.toLocaleString('en-US')} chars
+        </span>
+        <Button
+          size="small"
+          color="inherit"
+          onClick={() => setShowRaw(!showRaw)}
+        >
+          {showRaw ? 'Hide raw' : 'Raw'}
+        </Button>
+        <Button
+          size="small"
+          onClick={() => {
+            onOpen();
+            openRun(
+              {
+                queue: jobIdentity.queue,
+                jobId: jobIdentity.id,
+                attempt: attempt ?? undefined,
+              },
+              'jobs'
+            );
+          }}
+        >
+          Open run
+        </Button>
+      </div>
+      {showRaw && <pre className={cls.raw}>{line}</pre>}
+    </div>
+  );
+};
+
 const JobLogs = () => {
   const [log, setLog] = React.useState('');
   const cls = useStyles();
@@ -40,14 +130,16 @@ const JobLogs = () => {
     queries: { getJobLogs },
     mutations: { createJobLog },
   } = useNetwork();
-  const [onClose, jobIdentity] = useJobLogsStore(
+  const [onClose, jobIdentity, jobName] = useJobLogsStore(
     (state) => [
       state.close,
       state.jobIdentity as NonNullable<typeof state.jobIdentity>,
+      state.jobName,
     ],
     shallow
   );
-  const readonly = !!useQueueData(jobIdentity.queue)?.readonly;
+  const queueData = useQueueData(jobIdentity.queue);
+  const readonly = !!queueData?.readonly;
   const { status, refetch, data } = useQuery(
     [QueryKeysConfig.jobLogs, jobIdentity],
     () => getJobLogs(jobIdentity),
@@ -93,7 +185,16 @@ const JobLogs = () => {
           <List dense>
             {data?.job?.logs?.logs.map((log, idx) => (
               <ListItem divider={true} disableGutters key={idx}>
-                <ListItemText primary={log} />
+                {log &&
+                shouldCollapseAgentRunLine(log, queueData?.agent, jobName) ? (
+                  <AgentRunLine
+                    line={log}
+                    jobIdentity={jobIdentity}
+                    onOpen={onClose}
+                  />
+                ) : (
+                  <ListItemText primary={log} />
+                )}
               </ListItem>
             ))}
           </List>

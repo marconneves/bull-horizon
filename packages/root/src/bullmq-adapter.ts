@@ -287,8 +287,12 @@ export class BullMQAdapter extends Queue {
     throw new Error('Not implemented');
   }
 
-  public async getJobLogs(jobId: JobId): Promise<JobLogs> {
-    return this._queue.getJobLogs(jobId);
+  public async getJobLogs(
+    jobId: JobId,
+    start?: number,
+    end?: number
+  ): Promise<JobLogs> {
+    return this._queue.getJobLogs(jobId, start, end);
   }
   public async close(): Promise<void> {
     await this._queue.close();

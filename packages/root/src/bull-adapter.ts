@@ -258,8 +258,12 @@ export class BullAdapter extends Queue {
   public async removeJobs(pattern: string): Promise<void> {
     return this._queue.removeJobs(pattern);
   }
-  public async getJobLogs(jobId: JobId): Promise<JobLogs> {
-    return this._queue.getJobLogs(jobId);
+  public async getJobLogs(
+    jobId: JobId,
+    start?: number,
+    end?: number
+  ): Promise<JobLogs> {
+    return this._queue.getJobLogs(jobId, start, end);
   }
 
   public async close(doNotWaitJobs?: boolean): Promise<void> {

@@ -1,4 +1,8 @@
 import type {
+  QueryAgentConversationArgs,
+  QueryAgentRunArgs,
+  QueryAgentRunsArgs,
+  QueryAgentsSummaryArgs,
   QueryJobArgs,
   QueryMetricsArgs,
   QueryMetricsSummaryArgs,
@@ -35,6 +39,30 @@ export const queryResolver: TResolvers = {
         args.since as number,
         args.maxPoints as number
       );
+    },
+    async agentRun(
+      _,
+      { queue, jobId, attempt }: QueryAgentRunArgs,
+      { dataSources: { agents } }
+    ) {
+      return await agents.getRun(queue, jobId, attempt);
+    },
+    async agentsSummary(
+      _,
+      { queues, since, until, maxPoints }: QueryAgentsSummaryArgs,
+      { dataSources: { agents } }
+    ) {
+      return await agents.getSummary(queues, since, until, maxPoints);
+    },
+    async agentRuns(_, args: QueryAgentRunsArgs, { dataSources: { agents } }) {
+      return await agents.getRuns(args);
+    },
+    async agentConversation(
+      _,
+      { queue, conversationId }: QueryAgentConversationArgs,
+      { dataSources: { agents } }
+    ) {
+      return await agents.getConversation(queue, conversationId);
     },
     queues(_, __, { dataSources: { bull } }) {
       return bull.getQueues();

@@ -22,6 +22,7 @@
 - **Adapters de framework** (`packages/express`, `packages/koa`, `packages/fastify`) — cada um instancia seu próprio `@apollo/server` v4 e embrulha o schema GraphQL do `root` como middleware para o framework HTTP correspondente. `packages/hapi` permanece em `apollo-server-hapi` v3 (débito consciente, ver ADR-001).
 - **`packages/cli`** — binário standalone (`bin: bull-horizon`) que sobe um servidor Express próprio embutindo `@bull-horizon/express` + `@bull-horizon/root`, sem exigir integração em app existente.
 - **`packages/ui`** — frontend React 17 + MUI v5, build via Vite. Client GraphQL via `graphql-request` + `react-query`; estado local via `zustand`/`jotai`; edição de JSON via `codemirror`; gráficos de métricas via `recharts`. Possui modo demo (`VITE_ENABLE_MOCKS`) com mocks em `demo-mocks/` para o build publicado no GitHub Pages, sem dependência de Redis real.
+- **`packages/root/src/agent/`** (desde a task 004, ADR-004): contrato `AgentRunV1` + helper `createAgentRun()` que roda **dentro do worker do app consumidor**, não do monitor. Escreve o run como linha estruturada em `job.log`; o monitor lê essas linhas (run detail via GraphQL) e o collector as agrega numa série própria. Módulo isolado: não importa `gql/`, collector nem libs de terceiros.
 - Fluxo ponta a ponta: UI → GraphQL (via adapter no framework HTTP do usuário) → `root` data sources → Redis (via cliente Bull/BullMQ) → resposta GraphQL → UI.
 
 ## Resumo do Ecossistema (Memory State de Deps Principais)
@@ -103,11 +104,30 @@
 
 **Não fazer**: não remover `fixed` sem nova decisão de arquitetura (quebra o acoplamento root↔ui); não publicar sem `lerna run build` (o `dist/` dos pacotes de servidor e o `build/` da UI são gitignored mas entram no tarball npm — publish sem build gera pacote vazio e o npm não permite sobrescrever a versão).
 
+## 📐 ADR-004: Runs de agente IA: linha em `job.log`, helper no root, série própria no collector (2026-10-15)
+
+**Contexto**: task 004. Filas que rodam agentes de IA viram uma visão própria (run em grafo/waterfall, agregados, lista de runs). O piloto (brand-api) já monta o rastro (`AiTrace` v1) mas só manda linhas de texto ao Bull. A tentativa que falha relança o erro para o Bull tentar de novo e o job não retorna valor. Desenho completo em `docs/todo/004-agentes-ia/architecture.md`.
+
+**Decisão 1: o run vive numa linha estruturada de `job.log`** (`bull-horizon:agent-run <json>`), uma por tentativa, gravada no fim da tentativa. `returnvalue` perde as falhas; `job.update(data)` faz read-modify-write no payload do app e polui busca/edição; chave Redis própria desacopla o ciclo de vida do job (órfãs, TTL), acopla o helper ao esquema de chaves e não funciona no processor sandboxed do Bull. `job.log` tem API igual em Bull v3/v4 e BullMQ e some junto com o job. Custo aceito: fila de agente não pode usar `removeOnComplete/removeOnFail: true` (o collector conta como `lost` e a UI avisa).
+
+**Decisão 2: contrato `AgentRunV1` = `AiTrace` v1 + campos opcionais**, versionado por `v: 1`. Nível `basic | full` por fila, default `basic`, **cortado no processo do app pelo helper antes de gravar**; o servidor corta de novo ao servir (defesa em profundidade, não substitui o corte na origem).
+
+**Decisão 3: helper `createAgentRun()` em `packages/root/src/agent/`, exportado pelo índice do root**, sem importar nada do resto do pacote nem libs de terceiros (tipos do AI SDK são estruturais). Nunca lança nem rejeita. Extraível para `@bull-horizon/agent` sem refactor se o peso do root no worker incomodar.
+
+**Decisão 4: agregados numa série própria do collector** (`<prefix><queueId>::ai` + camadas `::ai::r<everyMs>`), reaproveitando a retenção em camadas, que é extraída de `metrics-collector.ts` para uma `TieredSeries` genérica. Fonte: eventos terminais já existentes (`completed`/`failed`), lendo todas as linhas de run do job; ingestão idempotente por `ZADD NX` no índice de runs recentes (`::ai::runs` zset + `::ai::runs::data` hash, capado). Latência por **histograma de faixas fixas** (mesclável por soma, p50/p95 interpolados na leitura) em vez de t-digest: zero dependência, erro limitado à largura da faixa. Série esparsa (ponto só com runs). Pior caso ~9 MB raw + ~2 MB camadas por fila de agente.
+
+**Decisão 5: custo calculado na leitura**, a partir de tokens por modelo guardados nos rollups e de `Config.ai.pricing` (USD por 1M in/out). Trocar preço reprecifica o histórico; modelo sem preço devolve `null`, nunca `0`.
+
+**Decisão 6: a Conversa é montada do índice de runs recentes, sem chave nova.** A entrada do índice ganha `c` (`input.conversationId` recortado) e `Query.agentConversation` filtra o hash da fila, deduplica por job (fica a última tentativa), carrega no máximo 100 logs e corta o detalhe como o `agentRun`. Um índice secundário por conversa geraria chaves sem fim nem dono; o custo aceito é que conversa mais velha que o teto `recentRuns` fica incompleta, avisada por heurística (índice cheio e alcance anterior à primeira mensagem menor que a maior pausa da conversa, mínimo 30 min).
+
+**Não fazer**: não gravar o run em `job.data`/`returnvalue`; não gravar o `recorder.run` (completo) sem passar pelo corte de nível; não guardar custo nos rollups; não adicionar `ai`, t-digest ou similar como dependência do root; não expor métricas de agente no `/metrics` Prometheus sem reabrir com Security (nomes de tool/modelo como label em rota sem auth); não mudar `AGENT_LATENCY_BOUNDS_MS` sem incrementar a versão `h` do ponto.
+
 ## 🛡️ Modelo de Ameaças (Security Specialist)
 
 - **Sem autenticação/autorização nativa**: o middleware GraphQL exposto por qualquer adapter (e o CLI) não possui controle de acesso embutido. Qualquer requisição que alcance a rota montada tem acesso de leitura/escrita total às queues (dados de job, incluindo payloads que podem conter PII, e capacidade de retry/remoção de jobs).
 - **Superfície de ataque**: rota HTTP montada (GraphQL endpoint) + UI estática servida junto. Sem rate limiting, sem CSRF/CORS configurados nativamente nos adapters (verificar caso a caso ao tocar essa camada).
 - **Mitigação de referência**: fork comunitário (issue upstream `#82`) implementou Basic Auth via flags `--user`/`--password` no adapter Express — candidato a padrão inicial se a squad decidir endereçar isso.
+- **Runs de agente IA (task 004)**: em `full`, input/output de tool e textos do modelo (potencialmente PII/dado de saúde) ficam em `<job>:logs` no Redis e são legíveis por qualquer um que alcance o painel, inclusive pelo modal de Logs. Default é `basic`, cortado no processo do app. Texto vindo do LLM é renderizado só como texto na UI. Validado pelo Security em 2026-10-15 (`docs/todo/004-agentes-ia/security-review.md`, sem Critical/High). Residuais aceitos: em `basic` ficam `summary`, títulos de card e `error` do run (texto controlado pelo app; o `failedReason` do Bull já guarda a mesma mensagem, então sanear o erro é responsabilidade do app antes do `fail()` e do relançamento); `note()` não passa pelo corte de nível; `detailMismatch` corta ao servir mas não remove do Redis.
 - **Ação obrigatória**: qualquer task que toque os adapters (express/koa/hapi/fastify) ou o CLI deve acionar o **Security Specialist** para avaliação de auth/authz antes do release (regra do Manager: superfícies sensíveis).
 
 ## Segurança e Compliance

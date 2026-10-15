@@ -33,7 +33,7 @@ export default function DrawerQueuesList({ queues }: TProps) {
       if (status) {
         changeActiveStatus(status);
       }
-      // Overview and Metrics history are cross-queue: picking a queue while one
+      // Overview, Metrics history and Agents are cross-queue: picking a queue while one
       // of them is open changed the selection but left the screen looking
       // identical, which reads as "clicking a queue does nothing". Per-queue
       // screens (jobs, metrics) keep their context and just swap the queue.
@@ -42,7 +42,11 @@ export default function DrawerQueuesList({ queues }: TProps) {
       // keeps a stable identity — it is handed to every queue row, and a new
       // identity on every screen change re-renders the entire list.
       const { screen, changeScreen } = useActiveScreenStore.getState();
-      if (screen === 'overview' || screen === 'history') {
+      if (
+        screen === 'overview' ||
+        screen === 'history' ||
+        screen === 'agents'
+      ) {
         changeScreen('jobs');
       }
       closeDrawer();

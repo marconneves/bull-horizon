@@ -1,4 +1,5 @@
 import {
+  AgentsConfig,
   Config,
   MetricsConfig,
   MetricsRetention,
@@ -16,6 +17,11 @@ export const DEFAULT_ROOT_CONFIG: Required<Config> = {
   textSearchScanCount: DEFAULT_DATA_SEARCH_SCAN_COUNT,
   metrics: false,
   prometheus: false,
+  ai: {},
+};
+export const DEFAULT_AGENTS_CONFIG: Required<AgentsConfig> = {
+  pricing: {},
+  recentRuns: 2000,
 };
 const HOUR_MS = 3600000;
 
