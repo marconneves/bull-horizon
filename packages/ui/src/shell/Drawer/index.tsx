@@ -18,6 +18,8 @@ import QueuesFilter from './Filter';
 import QueuesSorter from './Sorter';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueuesQuery } from '@/hooks/use-queues-query';
+import { useActiveScreenStore } from '@/stores/active-screen';
+import { queuesForScreen } from './Queues/screen-scope';
 import isempty from 'lodash/isEmpty';
 import Alert from '@mui/material/Alert';
 import { LayoutConfig } from '@/config/layouts';
@@ -80,7 +82,10 @@ export default function Drawer() {
   );
   const { onMouseDown: onDraggerMouseDown } = useDraggerEventHandlers();
   const queues = data?.queues;
-  const filteredQueues = useFilteredQueues(queues);
+  const screen = useActiveScreenStore((state) => state.screen);
+  // Before the text filter, so the Filter box and group counts see the same
+  // list the sidebar shows.
+  const filteredQueues = useFilteredQueues(queuesForScreen(queues, screen));
   const sortedQueues = useSortedQueues(filteredQueues);
 
   return (

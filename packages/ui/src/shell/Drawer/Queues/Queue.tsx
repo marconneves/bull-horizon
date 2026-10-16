@@ -5,6 +5,8 @@ import ListItemText from '@mui/material/ListItemText';
 import JobsCount from './JobsCount';
 import PauseIcon from '@mui/icons-material/Pause';
 import BlockIcon from '@mui/icons-material/Block';
+import AgentIcon from '@mui/icons-material/SmartToy';
+import { alpha } from '@mui/material/styles';
 import makeStyles from '@mui/styles/makeStyles';
 import Typography from '@mui/material/Typography';
 import { useJobsCountArray, useQueueWorkspaceLabel } from './hooks';
@@ -19,11 +21,29 @@ const useStyles = makeStyles((theme) => ({
       minWidth: 32,
     },
   },
+  name: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(0.75),
+    minWidth: 0,
+  },
+  nameText: {
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+  },
+  agentIcon: {
+    flex: 'none',
+    fontSize: '15px !important',
+    color: alpha(theme.palette.text.primary, 0.6),
+  },
 }));
 
 type TProps = {
   queue: NonNullable<GetQueuesQuery['queues']>[0];
   isSelected: boolean;
+  /** Marks AI agent queues (not on Agents, where every queue is one). */
+  showAgentIcon?: boolean;
 
   onSelect: (queue: string, label: string, status?: Maybe<JobStatus>) => void;
 };
@@ -64,15 +84,15 @@ const DrawerQueue = (props: TProps) => {
       <ListItemText
         disableTypography
         primary={
-          <Typography
-            style={{
-              textOverflow: 'ellipsis',
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {props.queue.name}
-          </Typography>
+          <span className={cls.name}>
+            <Typography className={cls.nameText}>{props.queue.name}</Typography>
+            {props.showAgentIcon && props.queue.agent && (
+              <AgentIcon
+                className={cls.agentIcon}
+                titleAccess="AI agent queue"
+              />
+            )}
+          </span>
         }
         secondary={<JobsCount count={countArray} />}
       />

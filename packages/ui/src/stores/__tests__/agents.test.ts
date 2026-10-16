@@ -96,6 +96,38 @@ describe('agents store', () => {
     expect(agents().runsLimit).toBe(AGENT_RUNS_PAGE);
   });
 
+  describe('sidebar queue on Agents', () => {
+    it('filters by the queue, keeps the tab and closes an open run', () => {
+      agents().changeTab('runs');
+      agents().openRun(RUN, 'runs');
+      agents().showMoreRuns();
+      agents().pickSidebarQueue('bull:brand-app:ai');
+      expect(screen()).toBe('agents');
+      expect(agents().queue).toBe('bull:brand-app:ai');
+      expect(agents().tab).toBe('runs');
+      expect(agents().run).toBeNull();
+      expect(agents().runsLimit).toBe(AGENT_RUNS_PAGE);
+    });
+
+    it('closes an open conversation too', () => {
+      agents().openRun(RUN, 'runs');
+      agents().openConversation({ queue: RUN.queue, conversationId: 'c-1' });
+      agents().pickSidebarQueue('bull:brand-app:ai');
+      expect(agents().conversation).toBeNull();
+      expect(agents().conversationFrom).toBeNull();
+    });
+
+    it('the same queue again goes back to every agent queue', () => {
+      agents().changeQueue(null);
+      agents().pickSidebarQueue('bull:brand-app:ai');
+      agents().pickSidebarQueue('bull:brand-app:ai');
+      expect(agents().queue).toBeNull();
+      agents().pickSidebarQueue('bull:brand-app:ai');
+      agents().pickSidebarQueue('bull:other:ai');
+      expect(agents().queue).toBe('bull:other:ai');
+    });
+  });
+
   describe('conversation', () => {
     const CONV = { queue: RUN.queue, conversationId: 'c-7f21' };
     const MSG = { queue: RUN.queue, jobId: 'd41e6b02', attempt: 1 };

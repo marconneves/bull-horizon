@@ -64,6 +64,12 @@ type TAgentsState = {
 
   changeTab: (tab: TAgentsTab) => void;
   changeQueue: (queue: string | null) => void;
+  /**
+   * A queue picked in the sidebar while on Agents: filters the screen by it
+   * (again on the same queue = every agent queue), closing an open run or
+   * conversation, and keeps the tab.
+   */
+  pickSidebarQueue: (queue: string) => void;
   changeRunLayout: (layout: TAgentsRunLayout) => void;
   changeRange: (range: string) => void;
   changeAttempt: (attempt: number) => void;
@@ -110,6 +116,12 @@ export const useAgentsStore = createStore<TAgentsState>(
 
       changeTab: (tab) => set({ tab, ...CLEARED }),
       changeQueue: (queue) => set({ queue, runsLimit: AGENT_RUNS_PAGE }),
+      pickSidebarQueue: (queue) =>
+        set({
+          ...CLEARED,
+          queue: get().queue === queue ? null : queue,
+          runsLimit: AGENT_RUNS_PAGE,
+        }),
       changeRunLayout: (runLayout) => set({ runLayout }),
       changeRange: (range) => set({ range }),
       changeAttempt: (attempt) => {
