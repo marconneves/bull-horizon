@@ -68,7 +68,7 @@ const monitor = new BullMonitorExpress({
   ai: {
     pricing: {
       // USD per 1M tokens. Key = model name as recorded in the run.
-      'gemini-3.8-flash': { input: 0.3, output: 2.5 },
+      'gemini-3.8-flash': { input: 0.75, output: 3.75 },
     },
     recentRuns: 2000, // size of the recent runs index per queue (default)
   },
@@ -204,7 +204,7 @@ export class BullMonitorService extends BullMonitorExpress {
         new BullAdapter(push, { group: 'App' }),
       ],
       metrics: {},
-      ai: { pricing: { 'gemini-3.8-flash': { input: 0.3, output: 2.5 } } },
+      ai: { pricing: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } } },
     });
   }
 }

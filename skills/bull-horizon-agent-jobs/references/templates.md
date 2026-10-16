@@ -48,7 +48,7 @@ export class BullMonitorService extends BullMonitorExpress {
       ),
       metrics: { collectInterval: { minutes: 1 } }, // necessário para Metrics/Runs
       ai: {
-        pricing: { 'gemini-3.8-flash': { input: 0.3, output: 2.5 } }, // USD por 1M tokens
+        pricing: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } }, // USD por 1M tokens
       },
     });
   }

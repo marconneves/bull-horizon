@@ -6,7 +6,7 @@ import { AgentRunDetail } from '../../../typings/gql';
 
 /** USD per 1M tokens. Mirrors `config.ai.pricing`; the demo has no server. */
 export const DEMO_PRICING: Record<string, { input: number; output: number }> = {
-  'gemini-3.8-flash': { input: 0.3, output: 2.5 },
+  'gemini-3.8-flash': { input: 0.75, output: 3.75 },
   'gemini-3.8-pro': { input: 1.25, output: 10 },
 };
 

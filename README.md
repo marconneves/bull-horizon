@@ -155,7 +155,7 @@ const AI_AGENT: AgentQueueConfig = { jobs: ['reply'], detail: 'basic' }; // shar
 new BullMonitorExpress({
   queues: [new BullAdapter(aiQueue, { group: 'AI', ai: AI_AGENT })],
   metrics: {},
-  ai: { pricing: { 'gemini-3.8-flash': { input: 0.3, output: 2.5 } } }, // USD per 1M tokens
+  ai: { pricing: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } } }, // USD per 1M tokens
 });
 ```
 

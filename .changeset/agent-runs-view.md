@@ -22,7 +22,7 @@ the monitor:
 ```ts
 new BullAdapter(aiQueue, { group: 'AI', ai: { jobs: ['reply'], detail: 'basic' } });
 // monitor config
-ai: { pricing: { 'gemini-3.8-flash': { input: 0.3, output: 2.5 } } } // USD per 1M tokens
+ai: { pricing: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } } } // USD per 1M tokens
 ```
 
 Runs are recorded in your worker with the new `createAgentRun` helper exported

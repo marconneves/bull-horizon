@@ -230,7 +230,7 @@ export const AI_AGENT: AgentQueueConfig = { jobs: ['reply'], detail: 'basic', la
 
 // bull-monitor.service.ts
 new BullAdapter(queue, { group: QUEUE_GROUPS[queue.name], ai: queue.name === AI_QUEUE ? AI_AGENT : undefined });
-super({ queues, metrics: {...}, ai: { pricing: { 'gemini-3.8-flash': { input: 0.3, output: 2.5 } } } });
+super({ queues, metrics: {...}, ai: { pricing: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } } } });
 ```
 
 O nível vale **onde o helper roda**. Por isso o mesmo objeto (`AI_AGENT`) é passado ao adapter e ao helper. O adapter usa o `detail` para cortar de novo ao servir e para avisar quando o run gravado tem mais detalhe que o declarado (`detailMismatch`).
