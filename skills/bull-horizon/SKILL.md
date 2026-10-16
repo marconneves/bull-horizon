@@ -1,11 +1,11 @@
 ---
 name: bull-horizon
-description: Configura, instrumenta e depura o Bull Horizon (@bull-horizon/*), o painel de filas Bull e BullMQ montado dentro da app (Express, NestJS, Fastify, Koa, Hapi) ou via CLI. Use ao "montar o painel /bull", "instalar bull-horizon", "adicionar fila no painel", "agrupar filas na sidebar", "ligar métricas/histórico/throughput", "expor Prometheus/Grafana", "instrumentar fila de IA/agente", "mostrar run do agente", usar createAgentRun com generateText do AI SDK, escrever ou revisar um BullMonitorService/BullMonitorExpress com BullAdapter ou BullMQAdapter, proteger a rota do painel, depurar "a fila não aparece", "sem histórico", "aba Agents sumiu", "run não aparece", custo "sem preço", ou migrar de @bull-monitor para @bull-horizon.
+description: Configura, instrumenta e depura o Bull Horizon (@bull-horizon/*), o painel de filas Bull e BullMQ montado dentro da app (Express, NestJS, Fastify, Koa, Hapi) ou via CLI. Use ao "montar o painel /bull", "instalar bull-horizon", "adicionar fila no painel", "agrupar filas na sidebar", "ligar métricas/histórico/throughput", "expor Prometheus/Grafana", "instrumentar fila de IA/agente", "mostrar run do agente", usar createAgentRun com generateText do AI SDK, "declarar flow", "rastrear item entre filas", "trace id", usar startTrace/withTrace/continueTrace, escrever ou revisar um BullMonitorService/BullMonitorExpress com BullAdapter ou BullMQAdapter, proteger a rota do painel, depurar "a fila não aparece", "sem histórico", "aba Agents sumiu", "run não aparece", custo "sem preço", "trace não aparece", "aba Flows vazia", ou migrar de @bull-monitor para @bull-horizon.
 ---
 
 # Bull Horizon
 
-Bull Horizon é um dashboard (UI React + API GraphQL) para filas **Bull** (v3/v4) e **BullMQ**, distribuído como biblioteca: você monta o router/plugin dentro da sua app Node e ele lê as filas direto do Redis. Mostra jobs (listar, buscar com `jsonata`, retry, remove, promote), contagens ao vivo, histórico de throughput opcional, endpoint Prometheus opcional e, para filas de agente de IA, cada tentativa como um **run** (passos LLM, tools, tokens, custo).
+Bull Horizon é um dashboard (UI React + API GraphQL) para filas **Bull** (v3/v4) e **BullMQ**, distribuído como biblioteca: você monta o router/plugin dentro da sua app Node e ele lê as filas direto do Redis. Mostra jobs (listar, buscar com `jsonata`, retry, remove, promote), contagens ao vivo, histórico de throughput opcional, endpoint Prometheus opcional e, para filas de agente de IA, cada tentativa como um **run** (passos LLM, tools, tokens, custo). Com **flows** declarados, mostra o pipeline entre filas e o caminho de um item pelo trace id.
 
 Fork mantido do `bull-monitor` (s-r-x, arquivado em 2023). Desde a v6 o escopo npm é `@bull-horizon/*`; as classes mantiveram o nome (`BullMonitorExpress`, `BullMonitorFastify`...).
 
@@ -15,8 +15,9 @@ Fork mantido do `bull-monitor` (s-r-x, arquivado em 2023). Desde a v6 o escopo n
 - Adicionar uma fila nova ao painel, separar filas em grupos, marcar fila como readonly.
 - Ligar métricas (throughput, tela Metrics history), ajustar retenção, expor Prometheus.
 - Instrumentar uma fila de agente de IA (`ai` na fila + `createAgentRun` no worker).
+- Declarar um flow (pipeline que atravessa filas) e propagar o trace nos workers (`flows` no monitor + `startTrace`/`withTrace`/`continueTrace`).
 - Proteger a rota do painel (ele não tem auth própria).
-- Depurar: fila não aparece, sem histórico, aba Agents ausente, run ausente, contagem `lost`, custo sem preço.
+- Depurar: fila não aparece, sem histórico, aba Agents ausente, run ausente, contagem `lost`, custo sem preço, trace quebrado ou ausente na aba Flows.
 - Migrar um projeto de `@bull-monitor/*` para `@bull-horizon/*`.
 
 ## Pacotes
@@ -56,7 +57,7 @@ new BullAdapter(queue, { group: 'App', readonly: false, ai: undefined });
 | `readonly` | Esconde/bloqueia ações que alteram jobs (retry, remove, add...) |
 | `ai` | Marca fila de agente (`true` ou `AgentQueueConfig`). Ver `references/agent-runs.md` |
 
-Config do monitor (`new BullMonitorX({...})`): `queues` (obrigatório), `metrics` (off por padrão), `prometheus` (off), `ai` (pricing e `recentRuns`), `baseUrl` (Fastify/Koa/Hapi), `gqlIntrospection` (default: true fora de produção), `textSearchScanCount` (500).
+Config do monitor (`new BullMonitorX({...})`): `queues` (obrigatório), `metrics` (off por padrão), `prometheus` (off), `ai` (pricing e `recentRuns`), `flows` e `flowsOptions` (ver `references/flows.md`), `baseUrl` (Fastify/Koa/Hapi), `gqlIntrospection` (default: true fora de produção), `textSearchScanCount` (500).
 
 ## Fluxo de decisão
 
@@ -66,8 +67,9 @@ Config do monitor (`new BullMonitorX({...})`): `queues` (obrigatório), `metrics
 4. **Grupos?** Mais de ~4 filas ou fluxos distintos: um mapa `QUEUE_GROUPS` nome → grupo.
 5. **Histórico?** Precisa de gráfico de throughput, tela Metrics history, ou abas Metrics/Runs de agente: `metrics: {}` (ou com retenção custom). Ver `references/metrics-and-prometheus.md`.
 6. **Prometheus/Grafana?** `prometheus: true` + `metrics`. Rota sem auth: proteja igual ao painel.
-7. **Fila de agente de IA?** `ai` na fila, `createAgentRun` no worker, `removeOnComplete` numérico, `ai.pricing` no monitor. Ver `references/agent-runs.md`.
-8. **Quem acessa?** Defina a proteção da rota antes de subir (Cloudflare Access, VPN, basic auth, middleware de sessão).
+7. **Fila de agente de IA?** `ai` na fila, `createAgentRun` no worker (job que não chama o modelo: `await recorder.skip('motivo')` ou `markAgentRunSkipped`), `removeOnComplete` numérico, `ai.pricing` no monitor. Ver `references/agent-runs.md`.
+8. **Item de negócio atravessa várias filas?** Declare o flow em `flows` (etapas = filas), `startTrace` nas entradas, `withTrace` em todo `queue.add` do flow, `encodeTrace`/`continueTrace` em elo por webhook, `metrics` ligado, retenção numérica. Ver `references/flows.md`.
+9. **Quem acessa?** Defina a proteção da rota antes de subir (Cloudflare Access, VPN, basic auth, middleware de sessão).
 
 ## Regras de ouro
 
@@ -82,6 +84,8 @@ Config do monitor (`new BullMonitorX({...})`): `queues` (obrigatório), `metrics
 9. **Sem auth nativa.** Quem alcança a rota lê e altera tudo (inclusive logs de job e GraphQL). Proteja a rota com algo **antes** do router.
 10. **`await monitor.init()` antes de montar** o router/plugin.
 11. **Run de agente mora no `job.log`, gravado pelo `createAgentRun`.** `job.data` leva só ids, o processor dá `await` no `finish`/`fail` e retorna só uma referência, nunca o run. Ler o run do `returnvalue` é só compatibilidade com worker antigo (ver `references/agent-runs.md` § 0).
+12. **Flow: trace em todo elo.** `startTrace` em toda entrada e `withTrace(job, data)` em todo `add` do flow; um `add` sem ele quebra o caminho ali. Um trace por item (lote grande = um trace por item com `parent`), mesmo `FlowConfig` no monitor e no worker.
+13. **Chave de negócio do flow é id interno opaco** (UUID, chave do banco). Nunca email, telefone, documento, nome, nem hash deles: a busca roda sem auth e vira oráculo de existência.
 
 ## Snippet mínimo (Express)
 
@@ -116,6 +120,7 @@ Para NestJS (padrão canônico com `BullMonitorService` + módulo), use `referen
 - `references/setup-nestjs.md`: NestJS canônico (service + módulo), proteção da rota, snippets Express/Fastify/Koa/Hapi/CLI.
 - `references/metrics-and-prometheus.md`: `metrics`, retenção em camadas, o que cada tela mostra, Prometheus e scrape.
 - `references/agent-runs.md`: filas de agente de IA, `createAgentRun` com AI SDK v6, basic vs full, conversa, pricing, erros comuns.
+- `references/flows.md`: flows e traces: declarar o flow, `startTrace`/`withTrace`/`continueTrace`, retenção, status do trace, tetos, erros comuns.
 - `references/troubleshooting.md`: sintoma → causa → correção.
 
-Documentação completa no repositório: `README.md`, `docs/agent-runs.md`, `examples/` (nest, express, fastify, koa, hapi, grafana) em https://github.com/marconneves/bull-horizon.
+Documentação completa no repositório: `README.md`, `docs/agent-runs.md`, `docs/flows.md`, `examples/` (nest, express, fastify, koa, hapi, grafana) em https://github.com/marconneves/bull-horizon.

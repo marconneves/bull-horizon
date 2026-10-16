@@ -13,3 +13,4 @@ export { typeDefs } from './gql/type-defs';
 export { resolvers } from './gql/resolvers';
 export { renderPrometheusMetrics, PROMETHEUS_CONTENT_TYPE } from './prometheus';
 export * from './agent';
+export * from './flow';

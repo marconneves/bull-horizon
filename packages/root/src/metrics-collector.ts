@@ -8,9 +8,13 @@ import isEmpty from 'lodash/isEmpty';
 import round from 'lodash/round';
 import { TieredSeries } from './metrics/tiered-series';
 import { AgentMetrics } from './metrics/agent-metrics';
+import { FlowMetrics } from './metrics/flow-metrics';
 import { DEFAULT_AGENTS_CONFIG } from './constants';
-import type { Queue, JobCounts, JobId } from './queue';
+import { normalizeFlowsOptions } from './flow/contract';
+import type { Queue, Job, JobCounts, JobId } from './queue';
 import type { AgentsConfig, MetricsConfig } from './typings/config';
+import type { FlowsOptions } from './flow/contract';
+import type { NormalizedFlow } from './flow/definition';
 
 export type TMetrics = {
   queue: string;
@@ -90,11 +94,13 @@ export class MetricsCollector {
 
   private _series: TieredSeries<TMetrics>;
   private _agents: AgentMetrics;
+  private _flows: FlowMetrics;
 
   constructor(
     queues: Queue[],
     private _config: Required<MetricsConfig>,
-    agentsConfig: AgentsConfig = {}
+    agentsConfig: AgentsConfig = {},
+    flows: { flows?: NormalizedFlow[]; options?: FlowsOptions } = {}
   ) {
     this._scheduler = new Scheduler();
     this._series = new TieredSeries<TMetrics>({
@@ -107,6 +113,15 @@ export class MetricsCollector {
       agents: { ...DEFAULT_AGENTS_CONFIG, ...agentsConfig },
       client: () => this._redisClient,
     });
+    this._flows = new FlowMetrics(
+      {
+        config: _config,
+        options: normalizeFlowsOptions(flows.options),
+        client: () => this._redisClient,
+        queues: () => this._queues,
+      },
+      flows.flows ?? []
+    );
     this._queues = queues.filter((q) => !_config.blacklist.includes(q.name));
   }
   public startCollecting(): void {
@@ -115,6 +130,7 @@ export class MetricsCollector {
     this._attachEventCbs();
     this._windowStartedAt = Date.now();
     this._agents.start();
+    this._flows.start();
     this._isActive = true;
   }
   public stopCollecting(): void {
@@ -238,16 +254,23 @@ export class MetricsCollector {
   public async clearAll(): Promise<void> {
     const client = await this._redisClient;
     const pipeline = client.pipeline();
+    const keys = new Set<string>(this._flows.allKeys());
     this._queues.forEach((queue) => {
-      for (const key of this._allKeys(queue.id)) {
-        pipeline.del(key);
-      }
+      for (const key of this._allKeys(queue.id)) keys.add(key);
     });
+    keys.forEach((key) => pipeline.del(key));
     await pipeline.exec();
   }
   /** Agent run aggregates and the recent runs index (agent queues only). */
   public get agents(): AgentMetrics {
     return this._agents;
+  }
+  /** Flow aggregates and the trace index. */
+  public get flows(): FlowMetrics {
+    return this._flows;
+  }
+  public setFlows(flows: NormalizedFlow[]): void {
+    this._flows.setFlows(flows);
   }
   public get queues(): Queue[] {
     return this._queues;
@@ -287,6 +310,7 @@ export class MetricsCollector {
       const metrics = await this._collect();
       await this._persist(metrics);
       await this._agents.persist(this._agents.drain(this._queues));
+      await this._flows.persist(this._flows.drain());
     } catch (e) {
       console.error('[bull-horizon] metrics collector error: ', e);
     }
@@ -371,11 +395,18 @@ export class MetricsCollector {
       queue.onGlobalJobFailure = null;
     }
   }
+  /**
+   * The job is fetched once per event and handed to throughput and flows.
+   * Agents keep their own read: they may re-read later (late log line).
+   */
   private async _onJobComplete(queue: Queue, jobId: JobId) {
     this._bump(this._completedGauge, queue.id);
     this._bump(this._totalCompleted, queue.id);
     if (queue.agent) void this._agents.onJobFinished(queue, jobId);
-    const job = await queue.getJob(jobId);
+    const job = await this._fetchJob(queue, jobId);
+    if (this._flows.hasQueue(queue.id) && job !== undefined) {
+      void this._flows.onJobFinished(queue, jobId, job, 'completed');
+    }
     if (!job?.finishedOn || !job.processedOn) {
       return;
     }
@@ -394,10 +425,36 @@ export class MetricsCollector {
     if (queue.agent && jobId != null) {
       void this._agents.onJobFinished(queue, String(jobId));
     }
+    if (jobId != null && this._flows.hasQueue(queue.id)) {
+      void this._fetchJob(queue, String(jobId)).then((job) => {
+        if (job === undefined) return;
+        return this._flows.onJobFinished(queue, String(jobId), job, 'failed');
+      });
+    }
   }
-  /** Every key the collector owns for a queue: throughput tiers + agents. */
+  /** `null` = the job is gone; `undefined` = the read itself failed. */
+  private async _fetchJob(
+    queue: Queue,
+    jobId: JobId
+  ): Promise<Job | null | undefined> {
+    try {
+      return (await queue.getJob(jobId)) ?? null;
+    } catch (e) {
+      console.error('[bull-horizon] metrics collector job read error: ', e);
+      return undefined;
+    }
+  }
+  /**
+   * Every key the collector owns for a queue: throughput tiers, agents and
+   * the flows that hold a step on it (clearing one of their queues clears
+   * the flow: its series and index are per flow, not per queue).
+   */
   private _allKeys(queue: string): string[] {
-    return [...this._series.keys(queue), ...this._agents.keys(queue)];
+    return [
+      ...this._series.keys(queue),
+      ...this._agents.keys(queue),
+      ...this._flows.keysOfQueue(queue),
+    ];
   }
   private _bump(gauge: Map<string, number>, queueId: string) {
     gauge.set(queueId, (gauge.get(queueId) ?? 0) + 1);

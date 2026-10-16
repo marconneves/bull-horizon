@@ -59,7 +59,7 @@ Sem collector: as queries retornam `NO_COLLECTOR` e as abas somem. Correção: `
 
 ## Contagem `unrecorded` nas métricas de agente
 
-`unrecorded` = job de agente que terminou sem nenhum run: nem linha `bull-horizon:agent-run` no log, nem run válido no returnvalue. Diferente de `lost` (job já removido). Causa quase sempre: worker sem `createAgentRun` (ver "Agents vazio"). Também conta se `ai.jobs` inclui um nome de job que o worker não instrumenta.
+`unrecorded` = job de agente que terminou sem nenhum run: nem linha `bull-horizon:agent-run` no log, nem run válido no returnvalue. Diferente de `lost` (job já removido). Causa quase sempre: worker sem `createAgentRun` (ver "Agents vazio"). Também conta se `ai.jobs` inclui um nome de job que o worker não instrumenta, e quando o job termina de propósito sem chamar o modelo (conteúdo já fresco, mensagem já respondida) sem marcar o skip. Correção para esse caso: `await recorder.skip('motivo')` ou `markAgentRunSkipped(job, { reason })`; a tentativa passa a contar como `skipped` e o aviso "finished without a run" some.
 
 ## Contagem `lost` nas métricas de agente
 
@@ -85,6 +85,45 @@ Log: `[bull-horizon] queue "X" declares detail "basic" but carries runs recorded
 ## Tentativa com número errado
 
 Passou um objeto próprio em vez do job real como `job`. Passe o job do Bull/BullMQ, ou `attempt` explícito (1-based).
+
+## Aba Flows não aparece / só a aba Config
+
+1. **Nenhum flow declarado**: falta `flows` na config do monitor. A entrada Flows da sidebar só aparece com flow declarado.
+2. **Sem collector**: Flow e Trace somem, Config fica. Correção: `metrics: {}`.
+3. **Flow descartado na validação**: veja os checks na aba Config e o `console.warn` do boot (`duplicate-flow`, `invalid-flow`, `too-many-flows`).
+
+## Flow sem números numa etapa
+
+1. **Fila fora de `queues`** do monitor: check `unknown-queue`. Correção: injetar a fila.
+2. **`jobs` da etapa não bate com o nome real do job**: os eventos caem em outra etapa da fila ou em nenhuma.
+3. **`removeOnComplete: true`**: os jobs viram `lost` (em `(queue)` se a fila tem várias etapas). Correção: número ou `{ age }`.
+4. **Monitor acabou de subir**: nada é retroativo.
+
+## Trace não encontrado na busca
+
+1. **Busca exata**: trace id, job id ou valor exato da chave (sem texto livre, sem prefixo parcial).
+2. **Trace mais velho que o índice** (`flowsOptions.recentTraces`, 2000 por flow): a tela avisa "pode ser mais antigo que o índice". Correção: aumentar `recentTraces` (≈180 B por job por trace).
+3. **Entrada sem `startTrace`**: só existe o trace implícito `<fila>:<jobId>` da entrada; procure pelo job id da entrada.
+4. **Chave errada**: `trace.key` aponta para um caminho que não existe em `job.data`, ou `startTrace` não recebeu `key`. A chave tem que ser o id que o operador cola.
+5. **Job sem `_trace` chegando por sistema externo**: `trace.aliases` não liga job sem trace. Leve o trace no hop com `encodeTrace`/`continueTrace`.
+
+## Trace quebrado (caminho para no meio, aresta "(unknown)", `untraced` alto)
+
+1. **`queue.add` sem `withTrace`** naquele elo: o filho fica `untraced` e o caminho para ali. Confira a cobertura de `_trace` na aba Config.
+2. **Elo por webhook sem `encodeTrace`/`continueTrace`**: o trace não volta.
+3. **`flow` diferente no worker e no monitor**: o `_trace` de outro flow é ignorado. Importe o mesmo `FlowConfig` nos dois.
+4. **DTO estrito** removendo `_trace` do payload: libere o campo ou use `trace.field`.
+5. **`hop` 64 atingido** (laço de re-enfileiramento): `withTrace` para de propagar e chama `onError`.
+6. Aresta `undeclared-edge` na aba Config: o código enfileira algo que a definição não declara. Divergência é dado, não erro: atualize a definição ou o código.
+
+## Status do trace estranho
+
+- **RUNNING para sempre**: tem job do trace parado em waiting/delayed/paused (fila pausada, delay longo). Abra o job pela timeline.
+- **FAILED**: um job falhou sem enfileirar filho. Se o app trata o erro enfileirando a etapa `onError`, esse filho precisa de `withTrace`.
+- **UNKNOWN**: o caminho parou numa etapa que não está em `complete` (declare `complete` explícito) ou os jobs saíram do índice.
+- **`partial`**: a varredura de pendentes estourou o teto (`pendingScanLimit` por fila, e o orçamento por requisição): pode haver pendente não listado.
+- **`truncated`**: o trace bateu `jobsPerTrace` (300). Um trace por item, não por lote.
+- **"Job removed from Redis (retention)" ao abrir um job**: o trace é mais velho que a retenção do job; o metadado continua no índice. Aumente a idade se precisar abrir jobs antigos.
 
 ## GraphQL / body parser / Apollo
 

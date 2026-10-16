@@ -24,6 +24,7 @@ import isempty from 'lodash/isEmpty';
 import Alert from '@mui/material/Alert';
 import { LayoutConfig } from '@/config/layouts';
 import ScreenNav from './ScreenNav';
+import { useFlowsQuery } from '@/hooks/use-flows-query';
 import { useQuery } from 'react-query';
 import { useNetwork } from '@/hooks/use-network';
 import { QueryKeysConfig } from '@/config/query-keys';
@@ -83,6 +84,7 @@ export default function Drawer() {
   const { onMouseDown: onDraggerMouseDown } = useDraggerEventHandlers();
   const queues = data?.queues;
   const screen = useActiveScreenStore((state) => state.screen);
+  const { data: flowsData } = useFlowsQuery();
   // Before the text filter, so the Filter box and group counts see the same
   // list the sidebar shows.
   const filteredQueues = useFilteredQueues(queuesForScreen(queues, screen));
@@ -117,6 +119,7 @@ export default function Drawer() {
         <ScreenNav
           metricsEnabled={metricsEnabledData?.metricsEnabled ?? false}
           hasAgents={!!queues?.some((queue) => !!queue.agent)}
+          hasFlows={!!flowsData?.flows.length}
         />
         <NetworkRequest error={error} status={status} refetch={refetch}>
           {isempty(queues) ? (

@@ -336,7 +336,7 @@ Memória do índice: ~180 B por job × 16 jobs × 2000 traces ≈ 6 MB por flow 
 
 ### 4.4 Etapas pendentes (leitura, não collector)
 
-Na busca, depois de ler os jobs terminais do trace, o servidor calcula a **fronteira**: etapas declaradas como `next` das etapas vistas que ainda não têm job no trace (mais a entrada, se o trace estiver vazio). Para cada fila da fronteira, lê `waiting`, `active`, `delayed`, `prioritized`, `paused` em páginas até `pendingScanLimit` por fila e filtra em memória por `readTrace(job).traceId` (ou pela chave, na busca por chave sem índice). Achou: o job entra com `status` real. Estourou o teto sem achar: `partial: true` na resposta. Nunca varre filas fora da fronteira.
+Na busca, depois de ler os jobs terminais do trace, o servidor varre as filas de **todas as etapas do flow** (distintas, no máximo 64), não só a fronteira: um irmão de leque numa etapa que já tem job concluído também está pendente (ajuste pós-QA G2). Para cada fila, lê `waiting`, `active`, `delayed`, `paused` (+ `prioritized` no BullMQ) em páginas até `pendingScanLimit` por fila e filtra em memória por `readTrace(job).traceId`. Achou: o job entra com `status` real e `pending: true`. Estourou o teto: `partial: true` na resposta. Um trace só é `COMPLETED`/`COMPLETED_WITH_FALLBACK` quando nenhum job dele está pendente em nenhuma etapa.
 
 ### 4.5 Tentativa terminal (lição da 004)
 
@@ -483,6 +483,14 @@ Sem biblioteca de grafo (mesma escolha do `layoutRunGraph` da 004). Estilo com `
 | `/metrics` Prometheus | topologia/chaves como label | fora (D10) |
 
 Sem mudança de mount nos adapters: não reabre a regra de mount-order do ADR-001. A aba nova só lê; nenhuma mutation.
+
+## 7.1 Ajustes pós-QA (2026-10-16, decisões do Architect sobre `qa-report-backend.md`)
+
+- **G1**: todo evento de falha é final (nem Bull nem BullMQ emitem falha para tentativa que vai ter retry). O filtro "tentativas restantes" do collector saiu; `discard()`, `UnrecoverableError`, backoff `-1` e stalled contam como falha definitiva nos agregados e no índice. A numeração de tentativa continua em `shared/attempt.ts`.
+- **G2**: a varredura de pendentes cobre todas as etapas do flow (§4.4 atualizado), com o mesmo teto por fila. `COMPLETED` exige zero pendentes no trace.
+- **G3**: a aresta de qualquer etapa para a etapa `onError` é implicitamente declarada (tipo onError): sai como `declared: true` em `FlowSummary.edges` e não gera `undeclared-edge`. Não entra em `Flow.edges` nem em `unseen-edge` (sem mudança de schema).
+- **G4**: busca por trace id sem nada no índice (trace aberto, sem evento terminal) cai na varredura limitada de pendentes, comparando `_trace.traceId`, antes de responder `NONE`. Roda depois das buscas por job id e por chave.
+- **Pós-Security (S1/S2/S4)**: passo 4 só para id no formato `tr_`+16 hex ou com `traceId` explícito; `flowTrace` memoizado por request, no máximo 2 varreduras por request e 2000 jobs lidos por varredura (além dos 500 por fila); o score do zset `traces` é a hora de ingestão (não `startedAt`, que fica no meta para exibição, recortado a agora + 5 min); o teto `jobsPerTrace` conta a faixa inteira do trace menos os marcadores.
 
 ## 8. Fatiamento para o Tech Lead
 

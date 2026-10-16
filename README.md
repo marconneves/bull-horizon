@@ -165,6 +165,43 @@ limits, AI SDK and NestJS examples, and the security guidance. A Claude Code
 skill for instrumenting agent jobs lives in
 [skills/bull-horizon](./skills/bull-horizon/references/agent-runs.md).
 
+## Flows and traces
+
+A **flow** is a business pipeline that crosses several queues (one job
+enqueues the next, with fan-outs, fallbacks and an error queue). Declare it in
+the monitor setup and the **Flows** screen shows the pipeline with live counts,
+throughput, p50/p95, queue wait and the bottleneck per step, plus the path of
+**one** item, found by trace id, job id or business key. Workers carry the
+trace from parent to child in `data._trace`:
+
+```typescript
+import type { FlowConfig } from '@bull-horizon/root';
+import { startTrace, withTrace } from '@bull-horizon/root';
+
+const CONTENT_INGEST: FlowConfig = {
+  id: 'content-ingest',
+  entry: 'content:check',
+  trace: { key: 'itemId' }, // opaque internal id, never personal data
+  steps: {
+    'content:check': { next: 'content:fetch' },
+    'content:fetch': { next: 'content:index' },
+    'content:index': {},
+  },
+};
+
+new BullMonitorExpress({ queues, metrics: {}, flows: [CONTENT_INGEST] });
+
+// Entry, then every link of the flow:
+await checkQueue.add('check', startTrace({ itemId }, { flow: 'content-ingest', key: itemId }));
+await fetchQueue.add('fetch', withTrace(job, { itemId: job.data.itemId }));
+```
+
+The Flow and Trace tabs need the metrics collector, and flow queues need
+numeric `removeOnComplete`/`removeOnFail`. See [docs/flows.md](./docs/flows.md)
+for the definition reference, the `_trace` contract, external hops
+(`encodeTrace`/`continueTrace`), trace status rules, limits and security
+guidance.
+
 ## Claude Code skill
 
 Copy [skills/bull-horizon](./skills/bull-horizon) into your project's `.claude/skills/` to let an agent set up, instrument and debug Bull Horizon end to end.

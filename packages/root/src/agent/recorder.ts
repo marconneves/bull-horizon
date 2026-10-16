@@ -1,4 +1,8 @@
-import { AGENT_RUN_LOG_PREFIX, AGENT_RUN_VERSION } from './contract';
+import {
+  AGENT_RUN_LOG_PREFIX,
+  AGENT_RUN_SKIP_LOG_PREFIX,
+  AGENT_RUN_VERSION,
+} from './contract';
 import { applyAgentRunDetail, normalizeAgentRunDetail } from './detail';
 import {
   DEFAULT_AGENT_RUN_LIMITS,
@@ -18,6 +22,7 @@ import type {
   AgentRunV1,
 } from './contract';
 import type { AgentRunLimits } from './limits';
+import { currentAttempt, finiteNumber } from '../shared/attempt';
 
 /**
  * The bit of a job the helper uses. Bull and BullMQ jobs both satisfy it.
@@ -35,32 +40,13 @@ export interface AgentRunJobLike {
   progress?: unknown;
 }
 
-const finiteNumber = (value: unknown): value is number =>
-  typeof value === 'number' && Number.isFinite(value);
-
 /**
- * 1-based number of the attempt running now, from the job alone.
- *
- * The libraries disagree on `attemptsMade` inside the processor:
- * - Bull v3 bumps it only when an attempt fails, so attempt N sees N - 1.
- * - BullMQ 1.x to 4.x bumps it when the job becomes active
- *   (`moveJobFromWaitToActive`), so attempt N already sees N.
- * - BullMQ 5+ only bumps it on failure again, and counts activations in
- *   `attemptsStarted`, so attempt N sees `attemptsStarted = N`.
- *
- * `attemptsStarted` wins when present; otherwise a BullMQ job (it has
- * `updateProgress()`, and `progress` is a number, not Bull's method) uses
- * `attemptsMade` as is, and anything else is treated as Bull.
+ * 1-based number of the attempt running now, from the job alone. Bull and
+ * BullMQ count differently; the rule lives in `shared/attempt.ts`
+ * (`currentAttempt`), shared with the flow helpers and the collector.
  */
 export function defaultAgentRunAttempt(job: AgentRunJobLike): number {
-  const started = job?.attemptsStarted;
-  if (finiteNumber(started) && started >= 1) return Math.floor(started);
-  const made = job?.attemptsMade;
-  if (!finiteNumber(made)) return 1;
-  const bullmq =
-    typeof job.updateProgress === 'function' &&
-    typeof job.progress !== 'function';
-  return Math.max(Math.floor(bullmq ? made : made + 1), 1);
+  return currentAttempt(job);
 }
 
 /** Only finite, positive numbers override a default limit. */
@@ -134,6 +120,15 @@ export interface AgentRunRecorder {
   finish(text: string, cards?: AgentRunCard[]): Promise<void>;
   /** Closes the run as a failure and writes the line. Never rejects. */
   fail(err: unknown): Promise<void>;
+  /**
+   * Closes the attempt as deliberately skipped (it ends without calling the
+   * model: content already fresh, message already answered...). Writes a skip
+   * line instead of a run, so the monitor counts it as `skipped`, not
+   * `unrecorded`. First of finish/fail/skip wins. Never rejects.
+   * `reason` is a short id-like label (`already-answered`), clipped to 120
+   * chars and stored at any detail level: never put content in it.
+   */
+  skip(reason?: string): Promise<void>;
   /**
    * Free-form line in the job log (plain text, fire-and-forget). NOT cut by
    * the detail level: written as-is in any level, clipped to `textChars`.
@@ -220,6 +215,59 @@ function skeletonAgentRunLine(run: AgentRunV1): string {
     truncated: true,
   };
   return AGENT_RUN_LOG_PREFIX + JSON.stringify(skeleton);
+}
+
+/**
+ * Skip line: `bull-horizon:agent-run-skip {"v":1,"attempt":N,"reason":...,"at":ISO}`.
+ * The reason is clipped like an identifier and omitted when empty.
+ */
+export function formatAgentRunSkipLine(
+  attempt: number,
+  reason?: unknown,
+  at: Date = new Date()
+): string {
+  const payload: Record<string, unknown> = {
+    v: AGENT_RUN_VERSION,
+    attempt: finiteNumber(attempt) && attempt >= 1 ? Math.floor(attempt) : 1,
+  };
+  const label = typeof reason === 'string' ? clipId(reason) : '';
+  if (label) payload.reason = label;
+  payload.at = at.toISOString();
+  return AGENT_RUN_SKIP_LOG_PREFIX + JSON.stringify(payload);
+}
+
+/**
+ * Resolves once `job.log` settles or `timeoutMs` elapses, whichever comes
+ * first. Never rejects: a Redis hiccup must not become a job failure (for an
+ * agent, a retry is another paid LLM call).
+ */
+function writeLogLine(
+  job: { log(row: string): Promise<unknown> },
+  row: string,
+  timeoutMs: number,
+  report: (err: unknown) => void
+): Promise<void> {
+  return new Promise<void>((resolve) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const done = () => {
+      if (timer) clearTimeout(timer);
+      resolve();
+    };
+    try {
+      timer = setTimeout(() => {
+        report(new Error('agent run: job.log timed out'));
+        resolve();
+      }, timeoutMs);
+      (timer as { unref?: () => void }).unref?.();
+      Promise.resolve(job.log(row)).then(done, (err) => {
+        report(err);
+        done();
+      });
+    } catch (err) {
+      report(err);
+      done();
+    }
+  });
 }
 
 /**
@@ -425,6 +473,18 @@ class Recorder implements AgentRunRecorder {
     });
   }
 
+  public skip(reason?: string): Promise<void> {
+    if (this._closed || this._closing) return Promise.resolve();
+    try {
+      const row = formatAgentRunSkipLine(this.run.attempt, reason, this._now());
+      this._closed = true;
+      return this._write(row);
+    } catch (err) {
+      this._report(err);
+      return Promise.resolve();
+    }
+  }
+
   /**
    * Free text, written as-is at any detail level (the app owns its content),
    * only clipped to `textChars`.
@@ -432,8 +492,13 @@ class Recorder implements AgentRunRecorder {
   public note(line: string): void {
     this._guard(() => {
       const row = clip(String(line), this._limits.textChars);
-      // A note must never be mistaken for the run line.
-      if (row.startsWith(AGENT_RUN_LOG_PREFIX)) return;
+      // A note must never be mistaken for the run or skip line.
+      if (
+        row.startsWith(AGENT_RUN_LOG_PREFIX) ||
+        row.startsWith(AGENT_RUN_SKIP_LOG_PREFIX)
+      ) {
+        return;
+      }
       void this._write(row);
     });
   }
@@ -491,27 +556,12 @@ class Recorder implements AgentRunRecorder {
    * (for an agent, a retry is another paid LLM call).
    */
   private _write(row: string): Promise<void> {
-    return new Promise<void>((resolve) => {
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const done = () => {
-        if (timer) clearTimeout(timer);
-        resolve();
-      };
-      try {
-        timer = setTimeout(() => {
-          this._report(new Error('agent run: job.log timed out'));
-          resolve();
-        }, this._limits.writeTimeoutMs);
-        (timer as { unref?: () => void }).unref?.();
-        Promise.resolve(this._options.job.log(row)).then(done, (err) => {
-          this._report(err);
-          done();
-        });
-      } catch (err) {
-        this._report(err);
-        done();
-      }
-    });
+    return writeLogLine(
+      this._options.job,
+      row,
+      this._limits.writeTimeoutMs,
+      (err) => this._report(err)
+    );
   }
 
   private _ensureStep(stepNumber?: number): AgentRunStep | null {
@@ -627,6 +677,7 @@ function noopRecorder(options: CreateAgentRunOptions): AgentRunRecorder {
     tool: () => undefined,
     finish: () => Promise.resolve(),
     fail: () => Promise.resolve(),
+    skip: () => Promise.resolve(),
     note: () => undefined,
   };
 }
@@ -648,5 +699,61 @@ export function createAgentRun(
       // ignore
     }
     return noopRecorder(options);
+  }
+}
+
+export interface MarkAgentRunSkippedOptions {
+  /** Same object as `createAgentRun`; reserved, the skip line has no level. */
+  agent?: AgentQueueConfig;
+  /** Short id-like label (`already-answered`), never content. 120 chars. */
+  reason?: string;
+  /** Default: the attempt running now, from the job (`currentAttempt`). */
+  attempt?: number;
+  onError?: (err: unknown) => void;
+  /** Default 5000, same as `limits.writeTimeoutMs`. */
+  writeTimeoutMs?: number;
+  now?: () => Date;
+}
+
+/**
+ * Marks the attempt running now as deliberately skipped, for code paths that
+ * never created a recorder. Same line and rules as `recorder.skip()`. Never
+ * throws nor rejects.
+ */
+export function markAgentRunSkipped(
+  job: AgentRunJobLike,
+  options: MarkAgentRunSkippedOptions = {}
+): Promise<void> {
+  const report = (err: unknown) => {
+    try {
+      options?.onError?.(err);
+    } catch {
+      // Diagnostics must not throw either.
+    }
+  };
+  try {
+    const attempt = finiteNumber(options?.attempt)
+      ? options.attempt
+      : currentAttempt(job);
+    let at = new Date();
+    try {
+      const now = options?.now?.();
+      if (now instanceof Date && !isNaN(now.getTime())) at = now;
+    } catch (err) {
+      report(err);
+    }
+    const timeout =
+      finiteNumber(options?.writeTimeoutMs) && options.writeTimeoutMs > 0
+        ? options.writeTimeoutMs
+        : DEFAULT_AGENT_RUN_LIMITS.writeTimeoutMs;
+    return writeLogLine(
+      job,
+      formatAgentRunSkipLine(attempt, options?.reason, at),
+      timeout,
+      report
+    );
+  } catch (err) {
+    report(err);
+    return Promise.resolve();
   }
 }

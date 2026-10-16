@@ -1,10 +1,12 @@
 import { JsonService } from '../services/json';
 import { TieredSeries } from './tiered-series';
+import { histogramBand, histogramQuantile } from './histogram';
 import {
   AGENT_RUN_MAX_READ_CHARS,
   isAgentRunV1,
   applyAgentRunDetail,
   parseAgentRunLine,
+  parseAgentRunSkipLine,
   recordedAgentRunDetail,
 } from '../agent';
 import { clipId } from '../agent/limits';
@@ -50,6 +52,12 @@ export type TAgentPoint = {
    * points written before it existed: read as 0.
    */
   unrecorded?: number;
+  /**
+   * Finished agent job whose attempt was deliberately skipped (a skip line,
+   * `recorder.skip()` / `markAgentRunSkipped`, and no run line). Not a run.
+   * Absent on points written before it existed: read as 0.
+   */
+  skipped?: number;
   /** Runs with at least one empty tool result. */
   emptyRuns: number;
   durSum: number;
@@ -113,6 +121,7 @@ export const emptyAgentPoint = (timestamp = 0, windowMs = 0): TAgentPoint => ({
   failed: 0,
   lost: 0,
   unrecorded: 0,
+  skipped: 0,
   emptyRuns: 0,
   durSum: 0,
   durMax: 0,
@@ -139,38 +148,21 @@ export function agentRunOutcome(run: AgentRunV1): string {
 }
 
 export function latencyBand(ms: number): number {
-  const index = AGENT_LATENCY_BOUNDS_MS.findIndex((bound) => ms <= bound);
-  return index === -1 ? AGENT_LATENCY_BOUNDS_MS.length : index;
+  return histogramBand(ms, AGENT_LATENCY_BOUNDS_MS);
 }
 
 /**
  * Estimated percentile from the band histogram: walk the bands up to
  * `q * total`, then interpolate linearly inside the band. The overflow band
- * answers `durMax`. Error is at most the width of the band.
+ * answers `durMax`. Error is at most the width of the band. The algorithm is
+ * `histogramQuantile` (shared with the flow series).
  */
 export function latencyPercentile(
   lat: number[],
   q: number,
   durMax: number
 ): number | null {
-  const total = lat.reduce((a, b) => a + b, 0);
-  if (!total) return null;
-  const target = q * total;
-  let cumulative = 0;
-  for (let i = 0; i < lat.length; i++) {
-    const count = lat[i] ?? 0;
-    if (count && cumulative + count >= target) {
-      if (i >= AGENT_LATENCY_BOUNDS_MS.length) return durMax;
-      const lower = i === 0 ? 0 : AGENT_LATENCY_BOUNDS_MS[i - 1];
-      const upper = AGENT_LATENCY_BOUNDS_MS[i];
-      const estimate =
-        lower + ((target - cumulative) / count) * (upper - lower);
-      // Never report more than was actually observed.
-      return durMax > 0 ? Math.min(estimate, durMax) : estimate;
-    }
-    cumulative += count;
-  }
-  return durMax;
+  return histogramQuantile(lat, AGENT_LATENCY_BOUNDS_MS, q, durMax);
 }
 
 /**
@@ -243,6 +235,7 @@ export function mergeAgentPoints(
     failed: base.failed + next.failed,
     lost: base.lost + next.lost,
     unrecorded: (base.unrecorded ?? 0) + (next.unrecorded ?? 0),
+    skipped: (base.skipped ?? 0) + (next.skipped ?? 0),
     emptyRuns: base.emptyRuns + next.emptyRuns,
     durSum: base.durSum + next.durSum,
     durMax: Math.max(base.durMax, next.durMax),
@@ -502,14 +495,40 @@ export class AgentMetrics {
       const processedOn = job.processedOn;
       let currentSeen = false;
       const attempts = new Set<number>();
+      const skips: Array<{ attempt: number; at: string }> = [];
       for (const line of logs ?? []) {
         const parsed = parseAgentRunLine(line);
-        if (!parsed) continue;
+        if (!parsed) {
+          const skip = parseAgentRunSkipLine(line);
+          if (skip) skips.push(skip);
+          continue;
+        }
         checkAgentDetailMismatch(queue.name, agent.detail, parsed);
         const run = applyAgentRunDetail(parsed, agent.detail);
         await this._ingest(queue, jobId, job.name, run);
         attempts.add(run.attempt);
         if (isCurrentAttemptRun(run, processedOn)) currentSeen = true;
+      }
+      // A skip line closes its attempt like a run line would, unless a run
+      // line covers the same attempt (the run wins). Without `processedOn`
+      // the current attempt is unknown: a skip with no run line at all counts.
+      const liveSkips = skips.filter((skip) => !attempts.has(skip.attempt));
+      const knownStart =
+        typeof processedOn === 'number' && Number.isFinite(processedOn);
+      const currentSkipped =
+        !currentSeen &&
+        (knownStart
+          ? liveSkips.some((skip) =>
+              isCurrentAttemptRun(
+                { startedAt: skip.at, finishedAt: skip.at },
+                processedOn
+              )
+            )
+          : liveSkips.length > 0 && !attempts.size);
+      if (currentSkipped) {
+        this._accumulator(queue.id).skipped =
+          (this._accumulator(queue.id).skipped ?? 0) + 1;
+        return;
       }
       // Earlier attempts' lines can be new on this event (no lib emits a
       // global event on retry), so "something was ingested" does not mean
@@ -529,7 +548,7 @@ export class AgentMetrics {
           job.name,
           applyAgentRunDetail(fallback, agent.detail)
         );
-      } else if (!fallback && !attempts.size) {
+      } else if (!fallback && !attempts.size && !skips.length) {
         this._accumulator(queue.id).unrecorded =
           (this._accumulator(queue.id).unrecorded ?? 0) + 1;
       }
@@ -540,7 +559,8 @@ export class AgentMetrics {
 
   /**
    * Hands the tick's accumulators over as points, one per queue that saw a
-   * run, a lost job or an unrecorded one. Sparse on purpose: idle minutes write nothing.
+   * run, a lost, unrecorded or skipped job. Sparse on purpose: idle minutes
+   * write nothing.
    */
   public drain(
     queues: Queue[],
@@ -553,7 +573,11 @@ export class AgentMetrics {
     this._pending.forEach((point, queue) => {
       if (
         ids.has(queue) &&
-        point.runs + point.lost + (point.unrecorded ?? 0) > 0
+        point.runs +
+          point.lost +
+          (point.unrecorded ?? 0) +
+          (point.skipped ?? 0) >
+          0
       ) {
         out.push({ queue, point: { ...point, timestamp, windowMs } });
       }

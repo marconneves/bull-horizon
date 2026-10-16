@@ -33,7 +33,8 @@ Checklist do job no padrão:
 2. `createAgentRun({ job, model, agent: AI_AGENT })` no começo da tentativa. **Não passe `attempt`**: o helper deriva do job e trata a diferença entre Bull e BullMQ (o `attemptsMade` do BullMQ já vem incrementado).
 3. `await recorder.finish(...)` ou `await recorder.fail(err)` **antes** de o processor retornar ou relançar. Assim a linha chega antes do evento `completed`/`failed` que o monitor escuta.
 4. O processor retorna só a referência. Nunca o run.
-5. Verificação: no modal de Logs do job aparece "agent run (attempt N)" com Open run, e o run **não** tem o chip "from return value". Se aparecer o chip, ou o aviso "agent jobs finished without a run", algum worker ainda roda código antigo.
+5. Job que não chama o modelo (conteúdo já fresco, mensagem já respondida): `await recorder.skip('motivo')` ou, sem recorder, `await markAgentRunSkipped(job, { agent: AI_AGENT, reason: 'motivo' })`. Conta como `skipped`, não como `unrecorded`. O motivo é rótulo curto tipo id (`already-answered`), 120 chars, gravado em qualquer nível: nunca conteúdo.
+6. Verificação: no modal de Logs do job aparece "agent run (attempt N)" com Open run, e o run **não** tem o chip "from return value". Se aparecer o chip, ou o aviso "agent jobs finished without a run", algum worker ainda roda código antigo.
 
 ## Índice
 
@@ -249,7 +250,7 @@ await queue.add('reply', data, { attempts: 2, removeOnComplete: 500, removeOnFai
 
 ### Compatibilidade: run no returnvalue
 
-Worker antigo que devolve o trace (AiTrace v1) no `return` em vez de usar `createAgentRun`: o monitor aceita o returnvalue como run da tentativa que completou (`source: returnvalue` no GraphQL), se passar no mesmo check de formato e no teto de 512 KB, e nunca duplica uma tentativa que já tem linha no log. É caminho de compatibilidade: **não registra tentativas que falharam** e o Bull grava o returnvalue como está, então **conteúdo `full` vai para o Redis seja qual for o `detail`** (o corte só vale ao servir e no índice). O caminho recomendado continua sendo `createAgentRun`, sem devolver o trace. Job de agente sem linha e sem returnvalue válido conta como `unrecorded`.
+Worker antigo que devolve o trace (AiTrace v1) no `return` em vez de usar `createAgentRun`: o monitor aceita o returnvalue como run da tentativa que completou (`source: returnvalue` no GraphQL), se passar no mesmo check de formato e no teto de 512 KB, e nunca duplica uma tentativa que já tem linha no log. É caminho de compatibilidade: **não registra tentativas que falharam** e o Bull grava o returnvalue como está, então **conteúdo `full` vai para o Redis seja qual for o `detail`** (o corte só vale ao servir e no índice). O caminho recomendado continua sendo `createAgentRun`, sem devolver o trace. Job de agente sem linha e sem returnvalue válido conta como `unrecorded`, exceto se a tentativa tiver linha de skip (`recorder.skip()` / `markAgentRunSkipped`): aí conta como `skipped`.
 
 ## 7. Conversa (opcional)
 

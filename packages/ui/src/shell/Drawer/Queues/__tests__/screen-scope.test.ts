@@ -27,6 +27,7 @@ describe('sidebarQueueAction', () => {
   it('hands the cross-queue screens over to Jobs', () => {
     expect(sidebarQueueAction('overview')).toBe('go-to-jobs');
     expect(sidebarQueueAction('history')).toBe('go-to-jobs');
+    expect(sidebarQueueAction('flows')).toBe('go-to-jobs');
   });
   it('keeps Jobs where it is', () => {
     expect(sidebarQueueAction('jobs')).toBe('stay');

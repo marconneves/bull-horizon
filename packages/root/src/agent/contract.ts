@@ -16,6 +16,22 @@ export const AGENT_RUN_LOG_PREFIX = 'bull-horizon:agent-run ';
  * ignored by the parser rather than parsed.
  */
 export const AGENT_RUN_MAX_READ_CHARS = 512 * 1024;
+/**
+ * Prefix of the line that marks an attempt as deliberately skipped (the job
+ * ended without calling the model). Not a run: the monitor counts it apart.
+ */
+export const AGENT_RUN_SKIP_LOG_PREFIX = 'bull-horizon:agent-run-skip ';
+/** Read-side ceiling of a skip line (it only carries a short reason). */
+const AGENT_RUN_SKIP_MAX_READ_CHARS = 4 * 1024;
+
+/** Payload of a skip line. `reason` is a short id-like label, never content. */
+export type AgentRunSkipV1 = {
+  v: 1;
+  attempt: number;
+  reason?: string;
+  /** ISO time the skip was recorded. */
+  at: string;
+};
 
 export type AgentRunDetail = 'full' | 'basic';
 
@@ -164,6 +180,30 @@ export function isAgentRunV1(value: unknown): value is AgentRunV1 {
     isOptional(value.input, isInput) &&
     isOptional(value.truncated, (v) => typeof v === 'boolean')
   );
+}
+
+/** Skip marker carried by a log line, or `null` for any other line. Never throws. */
+export function parseAgentRunSkipLine(line: unknown): AgentRunSkipV1 | null {
+  if (typeof line !== 'string') return null;
+  if (!line.startsWith(AGENT_RUN_SKIP_LOG_PREFIX)) return null;
+  if (line.length > AGENT_RUN_SKIP_MAX_READ_CHARS) return null;
+  try {
+    const value: unknown = JSON.parse(
+      line.slice(AGENT_RUN_SKIP_LOG_PREFIX.length)
+    );
+    if (
+      isObject(value) &&
+      value.v === AGENT_RUN_VERSION &&
+      isNumber(value.attempt) &&
+      typeof value.at === 'string' &&
+      isOptional(value.reason, (v) => typeof v === 'string')
+    ) {
+      return value as AgentRunSkipV1;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 /** Run carried by a log line, or `null` for any other line. Never throws. */

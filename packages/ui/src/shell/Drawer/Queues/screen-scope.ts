@@ -18,12 +18,14 @@ export type TSidebarQueueAction = 'filter-agents' | 'go-to-jobs' | 'stay';
 
 /**
  * What picking a queue in the sidebar does. Agents filters itself by it.
- * Overview and Metrics history are cross-queue, so they hand over to Jobs
+ * Overview, Metrics history and Flows are cross-queue, so they hand over to Jobs
  * (otherwise the click would look like it did nothing); Jobs just swaps the
  * queue.
  */
 export const sidebarQueueAction = (screen: string): TSidebarQueueAction => {
   if (screen === 'agents') return 'filter-agents';
-  if (screen === 'overview' || screen === 'history') return 'go-to-jobs';
+  if (screen === 'overview' || screen === 'history' || screen === 'flows') {
+    return 'go-to-jobs';
+  }
   return 'stay';
 };

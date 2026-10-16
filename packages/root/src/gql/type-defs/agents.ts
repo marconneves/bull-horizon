@@ -185,6 +185,12 @@ export const agentsTypeDef = gql`
     (e.g. old code still consuming the queue). Distinct from lost.
     """
     unrecorded: Int!
+    """
+    Finished agent jobs whose attempt was deliberately skipped before calling
+    the model (recorder.skip() or markAgentRunSkipped). Not runs, and never
+    counted as unrecorded.
+    """
+    skipped: Int!
     p50: Float
     p95: Float
     avgDurationMs: Float

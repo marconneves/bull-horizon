@@ -48,7 +48,7 @@ export default function DrawerQueuesList({ queues }: TProps) {
       if (status) {
         changeActiveStatus(status);
       }
-      // Overview and Metrics history are cross-queue: picking a queue there
+      // Overview, Metrics history and Flows are cross-queue: picking a queue there
       // changed the selection but left the screen looking identical, which
       // reads as "clicking a queue does nothing", so it opens Jobs.
       if (action === 'go-to-jobs') changeScreen('jobs');

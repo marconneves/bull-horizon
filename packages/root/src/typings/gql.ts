@@ -307,6 +307,12 @@ export type AgentsSummary = {
    * (e.g. old code still consuming the queue). Distinct from lost.
    */
   unrecorded: Scalars['Int'];
+  /**
+   * Finished agent jobs whose attempt was deliberately skipped before calling
+   * the model (recorder.skip() or markAgentRunSkipped). Not runs, and never
+   * counted as unrecorded.
+   */
+  skipped: Scalars['Int'];
   p50?: Maybe<Scalars['Float']>;
   p95?: Maybe<Scalars['Float']>;
   avgDurationMs?: Maybe<Scalars['Float']>;
@@ -333,6 +339,201 @@ export type CreateJobInput = {
   data?: Maybe<Scalars['JSON']>;
   options?: Maybe<Scalars['JSON']>;
 };
+
+export type Flow = {
+  id: Scalars['ID'];
+  label: Scalars['String'];
+  group?: Maybe<Scalars['String']>;
+  keyLabel?: Maybe<Scalars['String']>;
+  entry: Array<Scalars['ID']>;
+  complete: Array<Scalars['ID']>;
+  onError?: Maybe<Scalars['ID']>;
+  steps: Array<FlowStep>;
+  edges: Array<FlowEdge>;
+  /** The accepted definition rendered as YAML (read only). */
+  definition: Scalars['String'];
+  /** Static checks from the boot validation. */
+  checks: Array<FlowCheck>;
+};
+
+export type FlowCheck = {
+  level: FlowCheckLevel;
+  code: Scalars['String'];
+  message: Scalars['String'];
+};
+
+export enum FlowCheckLevel {
+  Ok = 'OK',
+  Warn = 'WARN',
+  Error = 'ERROR',
+}
+
+export type FlowEdge = {
+  from: Scalars['ID'];
+  to: Scalars['ID'];
+  kind: FlowEdgeKind;
+  when?: Maybe<Scalars['String']>;
+  declared: Scalars['Boolean'];
+};
+
+export enum FlowEdgeKind {
+  Next = 'NEXT',
+  Conditional = 'CONDITIONAL',
+  Fallback = 'FALLBACK',
+  Sidecar = 'SIDECAR',
+  End = 'END',
+}
+
+export type FlowEdgeStats = {
+  from: Scalars['ID'];
+  to: Scalars['ID'];
+  count: Scalars['Int'];
+  declared: Scalars['Boolean'];
+  /** Average queue wait of the target step. */
+  waitAvg?: Maybe<Scalars['Float']>;
+};
+
+export type FlowStep = {
+  id: Scalars['ID'];
+  kind: FlowStepKind;
+  label: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  /** Execution condition of the step (display only). */
+  when?: Maybe<Scalars['String']>;
+  /** Null on END nodes. */
+  queue?: Maybe<Scalars['String']>;
+  /** Null on END nodes and when the queue is not registered in the monitor. */
+  queueId?: Maybe<Scalars['ID']>;
+  /** Job names of the step. Null = every job of the queue. */
+  jobs?: Maybe<Array<Scalars['String']>>;
+  /** The queue holds more than one step: live counts are the queue's. */
+  sharedQueue: Scalars['Boolean'];
+};
+
+export type FlowStepError = {
+  /** First line of the failure reason, 120 chars. */
+  message: Scalars['String'];
+  count: Scalars['Int'];
+  lastJobId?: Maybe<Scalars['ID']>;
+};
+
+export enum FlowStepKind {
+  Step = 'STEP',
+  End = 'END',
+  Error = 'ERROR',
+}
+
+export type FlowStepStats = {
+  stepId: Scalars['ID'];
+  /** Live counts of the step's queue (getJobCounts). */
+  waiting: Scalars['Int'];
+  active: Scalars['Int'];
+  delayed: Scalars['Int'];
+  failedNow: Scalars['Int'];
+  /** Terminal events in the window. */
+  completed: Scalars['Int'];
+  failed: Scalars['Int'];
+  lost: Scalars['Int'];
+  untraced: Scalars['Int'];
+  retried: Scalars['Int'];
+  throughputPerMin: Scalars['Float'];
+  procP50?: Maybe<Scalars['Float']>;
+  procP95?: Maybe<Scalars['Float']>;
+  waitAvg?: Maybe<Scalars['Float']>;
+  waitP95?: Maybe<Scalars['Float']>;
+  failureRate: Scalars['Float'];
+  bottleneck: Scalars['Boolean'];
+  /** 32 buckets of completed jobs across the window. */
+  spark: Array<Scalars['Int']>;
+  /** Top 5, read from the failed set (up to 200 jobs) within the window. */
+  errors: Array<FlowStepError>;
+};
+
+export type FlowSummary = {
+  flowId: Scalars['ID'];
+  since: Scalars['Float'];
+  entries: Scalars['Int'];
+  done: Scalars['Int'];
+  errors: Scalars['Int'];
+  failed: Scalars['Int'];
+  e2eAvg?: Maybe<Scalars['Float']>;
+  e2eP50?: Maybe<Scalars['Float']>;
+  e2eP95?: Maybe<Scalars['Float']>;
+  bottleneck?: Maybe<Scalars['ID']>;
+  /** 1 - untraced / total; null without events. */
+  coverage?: Maybe<Scalars['Float']>;
+  steps: Array<FlowStepStats>;
+  /** Declared edges plus observed edges that are not declared. */
+  edges: Array<FlowEdgeStats>;
+  /** Dynamic checks: coverage, lost jobs, undeclared and never seen edges. */
+  checks: Array<FlowCheck>;
+};
+
+export type FlowTrace = {
+  traceId: Scalars['ID'];
+  key?: Maybe<Scalars['String']>;
+  startedAt: Scalars['Float'];
+  finishedAt?: Maybe<Scalars['Float']>;
+  durationMs?: Maybe<Scalars['Float']>;
+  status: FlowTraceStatus;
+  jobs: Array<FlowTraceJob>;
+  longestWait?: Maybe<FlowTraceJob>;
+  /** Hit jobsPerTrace: later jobs were not indexed. */
+  truncated: Scalars['Boolean'];
+  /** The pending-step scan hit pendingScanLimit without covering the queue. */
+  partial: Scalars['Boolean'];
+};
+
+export type FlowTraceCandidate = {
+  traceId: Scalars['ID'];
+  startedAt: Scalars['Float'];
+  status: FlowTraceStatus;
+};
+
+export type FlowTraceJob = {
+  stepId: Scalars['ID'];
+  queueId: Scalars['ID'];
+  jobId: Scalars['ID'];
+  attempt: Scalars['Int'];
+  status: JobStatus;
+  parentQueueId?: Maybe<Scalars['ID']>;
+  parentJobId?: Maybe<Scalars['ID']>;
+  parentStepId?: Maybe<Scalars['ID']>;
+  enqueuedAt: Scalars['Float'];
+  startedAt?: Maybe<Scalars['Float']>;
+  finishedAt?: Maybe<Scalars['Float']>;
+  waitMs?: Maybe<Scalars['Float']>;
+  processMs?: Maybe<Scalars['Float']>;
+  failedReason?: Maybe<Scalars['String']>;
+  /** Entered through a FALLBACK edge. */
+  fallback: Scalars['Boolean'];
+  /** Found by the pending-step scan (not finished yet). */
+  pending: Scalars['Boolean'];
+};
+
+export enum FlowTraceMatch {
+  TraceId = 'TRACE_ID',
+  JobId = 'JOB_ID',
+  Key = 'KEY',
+  None = 'NONE',
+}
+
+export type FlowTraceResult = {
+  matchedBy: FlowTraceMatch;
+  trace?: Maybe<FlowTrace>;
+  /** Key search with more than one execution, newest first, up to 20. */
+  candidates: Array<FlowTraceCandidate>;
+  /** The index is at its cap: older traces may have been evicted. */
+  indexFull: Scalars['Boolean'];
+};
+
+export enum FlowTraceStatus {
+  Running = 'RUNNING',
+  Completed = 'COMPLETED',
+  CompletedWithFallback = 'COMPLETED_WITH_FALLBACK',
+  Failed = 'FAILED',
+  Unknown = 'UNKNOWN',
+}
 
 export type Job = {
   /**
@@ -557,6 +758,18 @@ export type Query = {
    * window (comparison).
    */
   agentsSummary?: Maybe<AgentsSummary>;
+  /**
+   * Null without the metrics collector or for an unknown flow. `since`
+   * (unix ms) defaults to the last 24 hours.
+   */
+  flowSummary?: Maybe<FlowSummary>;
+  /**
+   * Exact search by trace id, job id or business key value (1 to 256 chars).
+   * `traceId` picks one of the candidates. Null without the metrics
+   * collector or for an unknown flow.
+   */
+  flowTrace?: Maybe<FlowTraceResult>;
+  flows: Array<Flow>;
   job?: Maybe<Job>;
   jobs: Array<Job>;
   /**
@@ -602,6 +815,17 @@ export type QueryAgentsSummaryArgs = {
   since: Scalars['Float'];
   until?: Maybe<Scalars['Float']>;
   maxPoints?: Maybe<Scalars['Int']>;
+};
+
+export type QueryFlowSummaryArgs = {
+  flow: Scalars['ID'];
+  since?: Maybe<Scalars['Float']>;
+};
+
+export type QueryFlowTraceArgs = {
+  flow: Scalars['ID'];
+  query: Scalars['String'];
+  traceId?: Maybe<Scalars['ID']>;
 };
 
 export type QueryJobArgs = {

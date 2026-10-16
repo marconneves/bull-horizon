@@ -2,8 +2,10 @@ export {
   AGENT_RUN_VERSION,
   AGENT_RUN_LOG_PREFIX,
   AGENT_RUN_MAX_READ_CHARS,
+  AGENT_RUN_SKIP_LOG_PREFIX,
   isAgentRunV1,
   parseAgentRunLine,
+  parseAgentRunSkipLine,
 } from './contract';
 export type {
   AgentQueueConfig,
@@ -12,6 +14,7 @@ export type {
   AgentRunStep,
   AgentRunCard,
   AgentRunV1,
+  AgentRunSkipV1,
 } from './contract';
 export {
   applyAgentRunDetail,
@@ -25,8 +28,11 @@ export {
   createAgentRun,
   defaultAgentRunAttempt,
   formatAgentRunLine,
+  formatAgentRunSkipLine,
+  markAgentRunSkipped,
 } from './recorder';
 export type {
+  MarkAgentRunSkippedOptions,
   AgentRunJobLike,
   AgentRunEvent,
   CreateAgentRunOptions,

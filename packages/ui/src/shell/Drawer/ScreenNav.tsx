@@ -8,6 +8,7 @@ import OverviewIcon from '@mui/icons-material/GridView';
 import HistoryIcon from '@mui/icons-material/ShowChart';
 import JobsIcon from '@mui/icons-material/ViewList';
 import AgentsIcon from '@mui/icons-material/SmartToy';
+import FlowsIcon from '@mui/icons-material/AccountTree';
 import makeStyles from '@mui/styles/makeStyles';
 import { useActiveScreenStore } from '@/stores/active-screen';
 import { useDrawerState } from '@/stores/drawer';
@@ -40,6 +41,8 @@ type TEntry = {
    * collector: without it the screen still opens single runs.
    */
   needsAgents?: boolean;
+  /** Only when the monitor setup declares flows. */
+  needsFlows?: boolean;
 };
 
 /**
@@ -50,6 +53,12 @@ type TEntry = {
 const ENTRIES: TEntry[] = [
   { screen: 'jobs', label: 'Jobs', icon: <JobsIcon /> },
   { screen: 'overview', label: 'Overview', icon: <OverviewIcon /> },
+  {
+    screen: 'flows',
+    label: 'Flows',
+    icon: <FlowsIcon />,
+    needsFlows: true,
+  },
   {
     screen: 'history',
     label: 'Metrics history',
@@ -67,16 +76,18 @@ const ENTRIES: TEntry[] = [
 type TProps = {
   metricsEnabled: boolean;
   hasAgents: boolean;
+  hasFlows: boolean;
 };
 
-function ScreenNav({ metricsEnabled, hasAgents }: TProps) {
+function ScreenNav({ metricsEnabled, hasAgents, hasFlows }: TProps) {
   const cls = useStyles();
   const { screen, changeScreen } = useActiveScreenStore();
   const closeDrawer = useDrawerState((state) => state.close);
   const entries = ENTRIES.filter(
     (entry) =>
       (!entry.needsMetrics || metricsEnabled) &&
-      (!entry.needsAgents || hasAgents)
+      (!entry.needsAgents || hasAgents) &&
+      (!entry.needsFlows || hasFlows)
   );
 
   return (

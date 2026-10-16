@@ -11,6 +11,13 @@ import {
   AGENT_QUEUE_ID,
   AGENT_QUEUE_NAME,
 } from './agents/runs';
+import {
+  FLOW_GROUP,
+  FLOW_QUEUES,
+  flowQueueId,
+  flowTracesMock,
+  traceJobData,
+} from './flows/content-ingest';
 
 type TAgentConfig = typeof AGENT_QUEUE_CONFIG;
 
@@ -126,7 +133,7 @@ const generateData = () => {
         null,
         2
       ),
-      stacktrace: [],
+      stacktrace: [] as string[],
       data: JSON.stringify(DEMO_PAYLOADS[n % DEMO_PAYLOADS.length](n), null, 2),
       logs: {
         count: 0,
@@ -185,6 +192,88 @@ const generateData = () => {
     data: JSON.stringify({ olderThanDays: 30 }, null, 2),
     logs: { count: 1, logs: ['removed 12 expired drafts'] },
   });
+  // The `content-ingest` flow (task 005): one queue per step in the Content
+  // group, its live backlog and failures, and the jobs of the demo traces
+  // (minus the ones retention already removed).
+  const flowNow = Date.now();
+  for (const step of FLOW_QUEUES) {
+    const queueId = flowQueueId(step.queue);
+    queues.push({
+      id: queueId,
+      name: step.queue,
+      isPaused: false,
+      keyPrefix: 'bull',
+      group: FLOW_GROUP,
+      agent: null,
+    });
+    const reasons = step.errors.flatMap(([message, count]) =>
+      range(count).map(() => message)
+    );
+    const backlog: Array<[JobStatus, number]> = [
+      [JobStatus.Waiting, step.waiting],
+      [JobStatus.Active, step.active],
+      [JobStatus.Failed, step.failedNow],
+    ];
+    let k = 0;
+    for (const [status, count] of backlog) {
+      for (const i of range(count)) {
+        k += 1;
+        const failed = status === JobStatus.Failed;
+        const at = flowNow - (k % 90) * 20000;
+        jobs.push({
+          id: String(70000 + k + step.queue.length * 1000),
+          queue: queueId,
+          status,
+          progress: '0',
+          attemptsMade: failed ? 3 : 0,
+          returnValue: null,
+          failedReason: failed ? reasons[i] ?? 'Error: step failed' : null,
+          processedOn: status === JobStatus.Waiting ? null : at + 400,
+          finishedOn: failed ? at + 2400 : null,
+          delay: 0,
+          timestamp: at,
+          name: '__default__',
+          opts: JSON.stringify(
+            { attempts: 3, removeOnComplete: { age: 1800 } },
+            null,
+            2
+          ),
+          stacktrace: [],
+          data: JSON.stringify({ videoId: String(7428000000000 + k) }, null, 2),
+          logs: { count: 0, logs: [] as string[] },
+        });
+      }
+    }
+  }
+  for (const trace of flowTracesMock()) {
+    for (const job of trace.jobs) {
+      if (job.removed) continue;
+      jobs.push({
+        id: job.jobId,
+        queue: job.queueId,
+        status: job.status,
+        progress: '0',
+        attemptsMade: job.attempt,
+        returnValue: job.returnValue,
+        failedReason: job.failedReason ?? null,
+        processedOn: job.startedAt ?? null,
+        finishedOn: job.finishedAt ?? null,
+        delay: 0,
+        timestamp: job.enqueuedAt,
+        name: '__default__',
+        opts: JSON.stringify(
+          { attempts: 3, removeOnComplete: { age: 1800 } },
+          null,
+          2
+        ),
+        stacktrace: job.failedReason
+          ? [`Error: ${job.failedReason}\n    at processor (worker.ts:42:11)`]
+          : [],
+        data: traceJobData(job),
+        logs: { count: 0, logs: [] as string[] },
+      });
+    }
+  }
   return { jobs, queues };
 };
 

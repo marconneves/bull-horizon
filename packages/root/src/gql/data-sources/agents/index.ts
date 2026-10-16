@@ -208,6 +208,7 @@ export class AgentsDataSource {
       ),
       runsWithEmptyTool: total.emptyRuns,
       unrecorded: total.unrecorded ?? 0,
+      skipped: total.skipped ?? 0,
       latency: this._downsample(series, maxPoints).map(
         (point): AgentLatencyPoint => ({
           timestamp: point.timestamp,

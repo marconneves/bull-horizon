@@ -40,17 +40,61 @@ export class FakeRedis {
       this.hashes.delete(key);
     return had ? 1 : 0;
   }
-  async zadd(key: string, mode: string, score: number, member: string) {
+  /** `zadd(key, score, member)` or `zadd(key, 'NX', score, member)`. */
+  async zadd(key: string, ...args: Array<string | number>) {
+    const nx = args[0] === 'NX';
+    const [score, member] = (nx ? args.slice(1) : args) as [number, string];
     const zset = this.zsets.get(key) ?? new Map<string, number>();
     this.zsets.set(key, zset);
-    if (mode === 'NX' && zset.has(member)) return 0;
-    zset.set(member, score);
-    return 1;
+    if (nx && zset.has(member)) return 0;
+    const added = zset.has(member) ? 0 : 1;
+    zset.set(member, Number(score));
+    return added;
   }
+  /** Like Redis: by score, ties by member (byte order). */
   private _sorted(key: string) {
     return Array.from(this.zsets.get(key) ?? new Map<string, number>())
-      .sort((a, b) => a[1] - b[1])
+      .sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
       .map(([member]) => member);
+  }
+  async zscore(key: string, member: string) {
+    const score = this.zsets.get(key)?.get(member);
+    return score === undefined ? null : String(score);
+  }
+  async zcard(key: string) {
+    return this.zsets.get(key)?.size ?? 0;
+  }
+  /** Lex bounds: '-', '+', '[x' (inclusive) or '(x' (exclusive). */
+  private _inLex(member: string, min: string, max: string) {
+    const above =
+      min === '-' ||
+      (min[0] === '[' ? member >= min.slice(1) : member > min.slice(1));
+    const below =
+      max === '+' ||
+      (max[0] === '[' ? member <= max.slice(1) : member < max.slice(1));
+    return above && below;
+  }
+  async zrangebylex(
+    key: string,
+    min: string,
+    max: string,
+    ...limit: Array<string | number>
+  ) {
+    const found = this._sorted(key).filter((m) => this._inLex(m, min, max));
+    if (limit[0] === 'LIMIT') {
+      const offset = Number(limit[1]);
+      const count = Number(limit[2]);
+      return found.slice(offset, count < 0 ? undefined : offset + count);
+    }
+    return found;
+  }
+  async zlexcount(key: string, min: string, max: string) {
+    return (await this.zrangebylex(key, min, max)).length;
+  }
+  async zremrangebylex(key: string, min: string, max: string) {
+    const found = await this.zrangebylex(key, min, max);
+    found.forEach((m) => this.zsets.get(key)?.delete(m));
+    return found.length;
   }
   async zrange(key: string, start: number, stop: number) {
     const sorted = this._sorted(key);
@@ -74,6 +118,16 @@ export class FakeRedis {
     hash.set(field, value);
     this.hashes.set(key, hash);
   }
+  async hsetnx(key: string, field: string, value: string) {
+    const hash = this.hashes.get(key) ?? new Map<string, string>();
+    this.hashes.set(key, hash);
+    if (hash.has(field)) return 0;
+    hash.set(field, value);
+    return 1;
+  }
+  async hget(key: string, field: string) {
+    return this.hashes.get(key)?.get(field) ?? null;
+  }
   async hmget(key: string, ...fields: string[]) {
     return fields.map((f) => this.hashes.get(key)?.get(f) ?? null);
   }
@@ -88,7 +142,16 @@ export class FakeRedis {
         return [];
       },
     };
-    for (const name of ['del', 'lpop', 'hset', 'zrem', 'hdel']) {
+    for (const name of [
+      'del',
+      'lpop',
+      'hset',
+      'hsetnx',
+      'zadd',
+      'zrem',
+      'zremrangebylex',
+      'hdel',
+    ]) {
       chain[name] = (...args: any[]) => {
         ops.push(() => (this as any)[name](...args));
         return chain;

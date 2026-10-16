@@ -13,4 +13,7 @@ export const QueryKeysConfig = {
   agentsSummary: 'agents-summary',
   agentRuns: 'agent-runs',
   agentConversation: 'agent-conversation',
+  flows: 'flows',
+  flowSummary: 'flow-summary',
+  flowTrace: 'flow-trace',
 };

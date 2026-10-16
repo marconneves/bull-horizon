@@ -3,6 +3,8 @@ import type {
   QueryAgentRunArgs,
   QueryAgentRunsArgs,
   QueryAgentsSummaryArgs,
+  QueryFlowSummaryArgs,
+  QueryFlowTraceArgs,
   QueryJobArgs,
   QueryMetricsArgs,
   QueryMetricsSummaryArgs,
@@ -63,6 +65,23 @@ export const queryResolver: TResolvers = {
       { dataSources: { agents } }
     ) {
       return await agents.getConversation(queue, conversationId);
+    },
+    flows(_, __, { dataSources: { flows } }) {
+      return flows.getFlows();
+    },
+    async flowSummary(
+      _,
+      { flow, since }: QueryFlowSummaryArgs,
+      { dataSources: { flows } }
+    ) {
+      return await flows.getSummary(flow, since);
+    },
+    async flowTrace(
+      _,
+      { flow, query, traceId }: QueryFlowTraceArgs,
+      { dataSources: { flows } }
+    ) {
+      return await flows.getTrace(flow, query, traceId);
     },
     queues(_, __, { dataSources: { bull } }) {
       return bull.getQueues();

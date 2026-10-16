@@ -1,5 +1,6 @@
 import type { SimpleIntervalSchedule } from 'toad-scheduler';
 import type { Queue } from '../queue';
+import type { FlowConfig, FlowsOptions } from '../flow/contract';
 
 /** One rollup tier: keep `keep` buckets of `everyMs` each. */
 export type MetricsRollupTier = {
@@ -71,4 +72,13 @@ export type Config = {
   prometheus?: PrometheusConfig | boolean;
   /** AI agent queues: model pricing and the recent runs index. */
   ai?: AgentsConfig;
+  /**
+   * Business flows (steps = queues, who enqueues whom). Read-only in the
+   * dashboard; aggregates and traces need `metrics`. Validated at boot with
+   * warnings, never an exception.
+   */
+  flows?: FlowConfig[];
+  /** Trace index and pending-step scan limits. */
+  flowsOptions?: FlowsOptions;
 };
+export type { FlowConfig, FlowsOptions };

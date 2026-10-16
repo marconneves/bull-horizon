@@ -18,6 +18,8 @@ export const DEFAULT_ROOT_CONFIG: Required<Config> = {
   metrics: false,
   prometheus: false,
   ai: {},
+  flows: [],
+  flowsOptions: {},
 };
 export const DEFAULT_AGENTS_CONFIG: Required<AgentsConfig> = {
   pricing: {},

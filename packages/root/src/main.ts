@@ -1,6 +1,7 @@
 import {
   AgentsDataSource,
   BullDataSource,
+  FlowsDataSource,
   MetricsDataSource,
   PoliciesDataSource,
 } from './gql/data-sources';
@@ -13,6 +14,10 @@ import {
   DEFAULT_PROMETHEUS_CONFIG,
   DEFAULT_ROOT_CONFIG,
 } from './constants';
+import { normalizeFlows } from './flow/definition';
+import { normalizeFlowsOptions } from './flow/contract';
+import type { NormalizedFlows } from './flow/definition';
+import type { FlowsOptions } from './flow/contract';
 import type { Config, MetricsConfig, PrometheusConfig } from './typings/config';
 
 /**
@@ -36,6 +41,7 @@ export type BullMonitorContext = {
     metrics: MetricsDataSource;
     policies: PoliciesDataSource;
     agents: AgentsDataSource;
+    flows: FlowsDataSource;
   };
 };
 
@@ -44,11 +50,15 @@ export abstract class BullMonitor {
   private _queuesMap: Map<string, Queue> = new Map();
   private _ui: UI;
   private _metricsCollector?: MetricsCollector;
+  private _flows: NormalizedFlows = { flows: [], checks: [] };
+  private _flowsOptions: Required<FlowsOptions>;
 
   constructor(config: Config) {
     this.config = this._normalizeConfig(config);
     this._ui = new UI();
+    this._flowsOptions = normalizeFlowsOptions(this.config.flowsOptions);
     this._initQueues(this.config.queues);
+    this._initFlows();
     if (this.config.metrics) {
       this._initMetricsCollector();
     }
@@ -59,8 +69,10 @@ export abstract class BullMonitor {
   public abstract init(...args: any): Promise<any>;
   public setQueues(queues: Config['queues']): void {
     this._initQueues(queues);
+    this._initFlows();
     if (this._metricsCollector && this.config.metrics) {
       this._metricsCollector.queues = this._queues;
+      this._metricsCollector.setFlows(this._flows.flows);
     }
   }
   public startMetricsCollector() {
@@ -106,6 +118,12 @@ export abstract class BullMonitor {
           this._queuesMap,
           this._metricsCollector,
           this.config.ai
+        ),
+        flows: new FlowsDataSource(
+          this._queuesMap,
+          this._flows,
+          this._flowsOptions,
+          this._metricsCollector
         ),
       },
     };
@@ -153,6 +171,10 @@ export abstract class BullMonitor {
       this._queuesMap.set(queue.id, queue);
     });
   }
+  /** Never throws: problems become checks (Config tab) and one warning. */
+  private _initFlows() {
+    this._flows = normalizeFlows(this.config.flows, this._queues);
+  }
   private _validateQueues(queues: Queue[]): Queue[] {
     let hasInvalid = false;
     const validated = queues.filter((queue) => {
@@ -182,7 +204,8 @@ export abstract class BullMonitor {
     this._metricsCollector = new MetricsCollector(
       this._queues,
       this.config.metrics as Required<MetricsConfig>,
-      this.config.ai
+      this.config.ai,
+      { flows: this._flows.flows, options: this._flowsOptions }
     );
     this._metricsCollector.startCollecting();
   }

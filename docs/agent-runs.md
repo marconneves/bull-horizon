@@ -262,6 +262,7 @@ createAgentRun(options: CreateAgentRunOptions): AgentRunRecorder
 | `tool({ stepNumber?, name, input, durationMs, success, output?, error? })` | `experimental_onToolCallFinish`, normalized |
 | `finish(text, cards?)` | Closes as success and writes the line. Resolves after `job.log` settles or `writeTimeoutMs` (5 s). Never rejects |
 | `fail(err)` | Closes as failure (`error` = message, 500 chars) and writes the line. Never rejects |
+| `skip(reason?)` | Closes the attempt as deliberately skipped (it ends without calling the model) and writes a skip line instead of a run. Never rejects. See "Skipped attempts" |
 | `note(line)` | Plain-text line in the job log, fire-and-forget, clipped to `textChars` (4000). **Not cut by the detail level**: written as-is at `basic` too, so never put sensitive content in a note. A note that starts with the run prefix is dropped |
 | `run` | The whole run (capped, **not** cut by level), for your app to keep elsewhere (e.g. your database). Only the cut reaches Redis |
 
@@ -271,7 +272,7 @@ Rules:
   do. A Redis hiccup must not become a job failure: for an agent, a retry is
   another paid LLM call. If even constructing the recorder fails, you get a
   no-op recorder with the same surface.
-- `finish`/`fail` are idempotent: only the first call writes.
+- `finish`/`fail`/`skip` are idempotent: only the first call writes.
 - A bad value never costs the whole line: tool inputs/outputs are copied when
   `tool()` is called (mutating your object afterwards changes nothing), a card
   whose field throws is stored with that field empty, and if the line still
@@ -287,6 +288,39 @@ Rules:
   earlier attempts were new on that event.
 - If the process dies before `finish`/`fail`, that attempt has no line and
   shows as a plain job attempt.
+
+### Skipped attempts
+
+An agent job may legitimately end without calling the model (content already
+fresh, message already answered). Without a line it would count as
+`unrecorded`, the signal for "worker not instrumented". Mark it instead:
+
+```typescript
+const recorder = createAgentRun({ job, model, agent: AI_AGENT });
+if (alreadyAnswered) {
+  await recorder.skip('already-answered');
+  return;
+}
+
+// A code path that never created a recorder:
+import { markAgentRunSkipped } from '@bull-horizon/root';
+await markAgentRunSkipped(job, { agent: AI_AGENT, reason: 'content-fresh' });
+```
+
+Both write one line,
+`bull-horizon:agent-run-skip {"v":1,"attempt":N,"reason":"...","at":"ISO"}`,
+with the attempt taken from the job like `createAgentRun` does (or
+`attempt` in the options). The first of `finish`/`fail`/`skip` wins, so a
+`skip()` after `finish()` is ignored. They never throw nor reject.
+
+**`reason` is a short id-like label** (`already-answered`,
+`content-fresh`), clipped to 120 chars and written at any detail level:
+never put content (user text, names, ids of people) in it.
+
+The collector counts a finished agent job whose attempt has a skip line and no
+run line as **skipped** (`skipped` on `agentsSummary`), never `unrecorded`. A
+skipped attempt is not a run: it is not in the Runs list, the conversation, the
+latency or `Job.agentRuns`. A run line for the same attempt wins over a skip.
 
 ### Tool summaries
 
@@ -647,7 +681,10 @@ A finished agent job with no run at all (no run line in its log and no run in
 its returnvalue, see below) is counted as **unrecorded** (`unrecorded` on
 `agentsSummary`). It usually means the worker consuming the queue is not
 instrumented with `createAgentRun` (old code still deployed). It is distinct
-from `lost` (job already removed).
+from `lost` (job already removed). An attempt that ends on purpose without
+calling the model should be marked with `recorder.skip()` /
+`markAgentRunSkipped`: it is then counted as `skipped`, not `unrecorded` (see
+Skipped attempts).
 
 ### Compatibility: run in the job's returnvalue
 
