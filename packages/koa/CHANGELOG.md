@@ -1,5 +1,14 @@
 # Change Log
 
+## 6.5.0
+
+### Patch Changes
+
+- Updated dependencies [64be374]
+- Updated dependencies [cc8e14b]
+- Updated dependencies [3cef839]
+  - @bull-horizon/root@6.5.0
+
 ## 6.5.0-beta.2
 
 ### Patch Changes
