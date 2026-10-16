@@ -1,5 +1,6 @@
 import type { SimpleIntervalSchedule } from 'toad-scheduler';
 import type { Queue } from '../queue';
+import type { FlowConfig, FlowsOptions } from '../flow/contract';
 
 /** One rollup tier: keep `keep` buckets of `everyMs` each. */
 export type MetricsRollupTier = {
@@ -39,8 +40,17 @@ export type MetricsConfig = {
   retention?: MetricsRetention;
   blacklist?: string[];
 };
-export type QueueConfig = {
-  readonly?: boolean;
+export type { QueueConfig } from '../queue';
+/** USD per 1 million tokens. */
+export type AgentModelPrice = { input: number; output: number };
+export type AgentsConfig = {
+  /**
+   * Key = model name as recorded in the run (exact match, case-insensitive).
+   * A model without a price shows no cost, never a cost of 0.
+   */
+  pricing?: Record<string, AgentModelPrice>;
+  /** Size of the per-queue recent runs index. Default 2000. */
+  recentRuns?: number;
 };
 /**
  * Prometheus/OpenMetrics scrape endpoint. Off by default on purpose: it is an
@@ -60,4 +70,15 @@ export type Config = {
   textSearchScanCount?: number;
   metrics?: MetricsConfig | false;
   prometheus?: PrometheusConfig | boolean;
+  /** AI agent queues: model pricing and the recent runs index. */
+  ai?: AgentsConfig;
+  /**
+   * Business flows (steps = queues, who enqueues whom). Read-only in the
+   * dashboard; aggregates and traces need `metrics`. Validated at boot with
+   * warnings, never an exception.
+   */
+  flows?: FlowConfig[];
+  /** Trace index and pending-step scan limits. */
+  flowsOptions?: FlowsOptions;
 };
+export type { FlowConfig, FlowsOptions };

@@ -1,8 +1,8 @@
 ---
 name: product-owner
 description: Especialista em requisitos de negócio, critérios de aceite e histórias de usuário.
-model: "tier:reasoning"
-tools: [read_file, grep_search, list_directory, write_file]
+model: opus
+tools: [Read, Grep, Glob, Write]
 ---
 
 # Role: Product Owner & Business Analyst

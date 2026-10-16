@@ -7,9 +7,12 @@ import Divider from '@mui/material/Divider';
 import OverviewIcon from '@mui/icons-material/GridView';
 import HistoryIcon from '@mui/icons-material/ShowChart';
 import JobsIcon from '@mui/icons-material/ViewList';
+import AgentsIcon from '@mui/icons-material/SmartToy';
+import FlowsIcon from '@mui/icons-material/AccountTree';
 import makeStyles from '@mui/styles/makeStyles';
 import { useActiveScreenStore } from '@/stores/active-screen';
 import { useDrawerState } from '@/stores/drawer';
+import { useAgentsStore } from '@/stores/agents';
 import type { TScreen } from '@/stores/active-screen';
 
 const useStyles = makeStyles((theme) => ({
@@ -33,34 +36,58 @@ type TEntry = {
   icon: React.ReactNode;
   /** Only meaningful while the metrics collector is running. */
   needsMetrics?: boolean;
+  /**
+   * Only meaningful when some queue is an AI agent queue. Not tied to the
+   * collector: without it the screen still opens single runs.
+   */
+  needsAgents?: boolean;
+  /** Only when the monitor setup declares flows. */
+  needsFlows?: boolean;
 };
 
 /**
  * `Jobs` is listed rather than being implicit so returning to it is always one
  * click: while it lived behind an AppBar toggle, the other screens were a dead
- * end. Flat on purpose — three entries do not need grouping.
+ * end. Flat on purpose — a handful of entries do not need grouping.
  */
 const ENTRIES: TEntry[] = [
   { screen: 'jobs', label: 'Jobs', icon: <JobsIcon /> },
   { screen: 'overview', label: 'Overview', icon: <OverviewIcon /> },
+  {
+    screen: 'flows',
+    label: 'Flows',
+    icon: <FlowsIcon />,
+    needsFlows: true,
+  },
   {
     screen: 'history',
     label: 'Metrics history',
     icon: <HistoryIcon />,
     needsMetrics: true,
   },
+  {
+    screen: 'agents',
+    label: 'Agents',
+    icon: <AgentsIcon />,
+    needsAgents: true,
+  },
 ];
 
 type TProps = {
   metricsEnabled: boolean;
+  hasAgents: boolean;
+  hasFlows: boolean;
 };
 
-function ScreenNav({ metricsEnabled }: TProps) {
+function ScreenNav({ metricsEnabled, hasAgents, hasFlows }: TProps) {
   const cls = useStyles();
   const { screen, changeScreen } = useActiveScreenStore();
   const closeDrawer = useDrawerState((state) => state.close);
   const entries = ENTRIES.filter(
-    (entry) => !entry.needsMetrics || metricsEnabled
+    (entry) =>
+      (!entry.needsMetrics || metricsEnabled) &&
+      (!entry.needsAgents || hasAgents) &&
+      (!entry.needsFlows || hasFlows)
   );
 
   return (
@@ -74,6 +101,11 @@ function ScreenNav({ metricsEnabled }: TProps) {
             className={cls.item}
             selected={screen === entry.screen}
             onClick={() => {
+              // The sidebar entry is the way into the Agents tabs; an open
+              // run is left through its own back button.
+              if (entry.screen === 'agents') {
+                useAgentsStore.getState().leaveRun();
+              }
               changeScreen(entry.screen);
               closeDrawer();
             }}

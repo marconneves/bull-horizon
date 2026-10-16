@@ -9,4 +9,11 @@ export const QueryKeysConfig = {
   throughput: 'throughput',
   metricsEnabled: 'metrics-enabled',
   metricsInfo: 'metrics-info',
+  agentJob: 'agent-job',
+  agentsSummary: 'agents-summary',
+  agentRuns: 'agent-runs',
+  agentConversation: 'agent-conversation',
+  flows: 'flows',
+  flowSummary: 'flow-summary',
+  flowTrace: 'flow-trace',
 };

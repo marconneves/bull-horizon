@@ -141,6 +141,71 @@ rest of the dashboard) and publishes queue names as label values. See
 [`examples/grafana`](./examples/grafana) for the exported metrics, scrape
 configuration and an importable dashboard.
 
+## AI agent runs
+
+Queues that run AI agents can be shown as **agent runs** instead of opaque
+jobs: every LLM step and tool call, tokens, timing and estimated cost, plus an
+**Agents** screen with latency, tool and cost aggregates, a list of recent
+runs and a conversation view that groups runs by `input.conversationId`. Declare the queue with `ai` next to `group`, record each attempt with
+`createAgentRun` in your worker, and keep `removeOnComplete` numeric:
+
+```typescript
+const AI_AGENT: AgentQueueConfig = { jobs: ['reply'], detail: 'basic' }; // shared with the worker
+
+new BullMonitorExpress({
+  queues: [new BullAdapter(aiQueue, { group: 'AI', ai: AI_AGENT })],
+  metrics: {},
+  ai: { pricing: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } } }, // USD per 1M tokens
+});
+```
+
+`basic` (the default) never stores tool inputs/outputs or texts in Redis. See
+[docs/agent-runs.md](./docs/agent-runs.md) for the run contract, detail levels,
+limits, AI SDK and NestJS examples, and the security guidance. A Claude Code
+skill for instrumenting agent jobs lives in
+[skills/bull-horizon](./skills/bull-horizon/references/agent-runs.md).
+
+## Flows and traces
+
+A **flow** is a business pipeline that crosses several queues (one job
+enqueues the next, with fan-outs, fallbacks and an error queue). Declare it in
+the monitor setup and the **Flows** screen shows the pipeline with live counts,
+throughput, p50/p95, queue wait and the bottleneck per step, plus the path of
+**one** item, found by trace id, job id or business key. Workers carry the
+trace from parent to child in `data._trace`:
+
+```typescript
+import type { FlowConfig } from '@bull-horizon/root';
+import { startTrace, withTrace } from '@bull-horizon/root';
+
+const CONTENT_INGEST: FlowConfig = {
+  id: 'content-ingest',
+  entry: 'content:check',
+  trace: { key: 'itemId' }, // opaque internal id, never personal data
+  steps: {
+    'content:check': { next: 'content:fetch' },
+    'content:fetch': { next: 'content:index' },
+    'content:index': {},
+  },
+};
+
+new BullMonitorExpress({ queues, metrics: {}, flows: [CONTENT_INGEST] });
+
+// Entry, then every link of the flow:
+await checkQueue.add('check', startTrace({ itemId }, { flow: 'content-ingest', key: itemId }));
+await fetchQueue.add('fetch', withTrace(job, { itemId: job.data.itemId }));
+```
+
+The Flow and Trace tabs need the metrics collector, and flow queues need
+numeric `removeOnComplete`/`removeOnFail`. See [docs/flows.md](./docs/flows.md)
+for the definition reference, the `_trace` contract, external hops
+(`encodeTrace`/`continueTrace`), trace status rules, limits and security
+guidance.
+
+## Claude Code skill
+
+Copy [skills/bull-horizon](./skills/bull-horizon) into your project's `.claude/skills/` to let an agent set up, instrument and debug Bull Horizon end to end.
+
 ## Contributing
 
 All `@bull-horizon/*` packages share a single version and are released together with

@@ -6,6 +6,8 @@ import type {
   QueueJobsCounts as JobCounts,
 } from './typings/gql';
 import type { Maybe } from './typings/utils';
+import { normalizeAgentRunDetail } from './agent/detail';
+import type { AgentQueueConfig, AgentRunDetail } from './agent/contract';
 
 export type { JobStatusClean, JobCounts };
 export { JobStatus };
@@ -27,6 +29,18 @@ export type QueueConfig = {
    * entry in the sidebar. Queues without a group render as before.
    */
   group?: string;
+  /**
+   * Marks the queue as an AI agent queue: its jobs carry one structured run
+   * line per attempt in `job.log` (see `createAgentRun`). `true` = every job,
+   * basic detail.
+   */
+  ai?: AgentQueueConfig | boolean;
+};
+export type { AgentQueueConfig };
+/** Agent config with the defaults applied. */
+export type NormalizedAgentQueueConfig = AgentQueueConfig & {
+  detail: AgentRunDetail;
+  label: string;
 };
 
 export abstract class Job {
@@ -64,6 +78,23 @@ export abstract class Queue {
   }
   public get group(): Maybe<string> {
     return this._config?.group;
+  }
+  /** `undefined` outside agent queues. Detail defaults to 'basic'. */
+  public get agent(): Maybe<NormalizedAgentQueueConfig> {
+    const ai = this._config?.ai;
+    if (!ai) return undefined;
+    const config = ai === true ? {} : ai;
+    return {
+      ...config,
+      detail: normalizeAgentRunDetail(config.detail),
+      label: config.label || this.name,
+    };
+  }
+  /** Whether a job of this name is an agent run (`ai.jobs` omitted = all). */
+  public isAgentJob(name: string): boolean {
+    const agent = this.agent;
+    if (!agent) return false;
+    return !agent.jobs || agent.jobs.includes(name);
   }
   public abstract get provider(): QueueProvider;
   public abstract get client(): Promise<RedisClient>;
@@ -117,7 +148,12 @@ export abstract class Queue {
   public abstract getPausedCount(): Promise<number>;
 
   public abstract removeJobs(pattern: string): Promise<void>;
-  public abstract getJobLogs(jobId: JobId): Promise<JobLogs>;
+  /** `start`/`end` follow LRANGE semantics (negative = from the tail). */
+  public abstract getJobLogs(
+    jobId: JobId,
+    start?: number,
+    end?: number
+  ): Promise<JobLogs>;
 
   public abstract close(doNotWaitJobs?: boolean): Promise<void>;
 }

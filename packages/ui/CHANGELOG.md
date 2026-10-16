@@ -1,5 +1,303 @@
 # Change Log
 
+## 6.5.0
+
+### Minor Changes
+
+- cc8e14b: show AI agent jobs as runs: steps, tools, tokens and cost
+
+  Queues that run AI agents can now be declared as **agent queues**, and their
+  jobs open as an agent run instead of an opaque job with a wall of log lines:
+  each LLM step and tool call as a graph or a waterfall, with tokens, timing and
+  an estimated cost, one run per attempt so a failed attempt sits next to its
+  retry. A new **Agents** screen (shown only when an agent queue exists) adds
+  latency p50/p95, steps per run, tool stats (calls, duration, errors, empty
+  results), tokens and cost per model, how runs ended, and a filterable list of
+  recent runs. Runs that share an `input.conversationId` can be opened as a
+  **conversation**: every message of the chat with its own run, as a chat
+  transcript or as a list with the steps of the picked message.
+
+  Setup is one option next to `group` on the queue adapter, plus a price table on
+  the monitor:
+
+  ```ts
+  new BullAdapter(aiQueue, { group: 'AI', ai: { jobs: ['reply'], detail: 'basic' } });
+  // monitor config
+  ai: { pricing: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } } } // USD per 1M tokens
+  ```
+
+  Runs are recorded in your worker with the new `createAgentRun` helper exported
+  by `@bull-horizon/root`, wired to the AI SDK `generateText` callbacks. It
+  writes one structured line per attempt to `job.log`, has no dependencies, and
+  never throws or rejects, so tracing cannot fail a job or trigger a paid retry.
+
+  **Privacy by default.** The detail level is applied in your process, before
+  anything reaches Redis. `basic` (the default, and what `ai: true` gives) keeps
+  model, timing, tokens, tool names, durations and content-free summaries; tool
+  inputs/outputs, step texts and the final answer are only stored at `full`,
+  which is meant for test queues or dashboards behind authentication.
+
+  Things to know:
+
+  - Agent queues must keep finished jobs: `removeOnComplete`/`removeOnFail` set
+    to `true` delete the run with the job (counted as _lost_). Use a number or an
+    age.
+  - The Metrics and Runs tabs need the metrics collector (`metrics: {}`); the run
+    view of a single job does not.
+  - Cost is an estimate computed at read time; a model without a price shows "no
+    price", never `$0`.
+  - Agent aggregates are not exported to the Prometheus endpoint.
+  - The conversation view also needs the collector and is built from the
+    recent-runs index (`ai.recentRuns`), so a long or old conversation can be
+    incomplete (the screen says so). `conversationId` must be an opaque id, never
+    an email, phone number or a hash of one.
+
+  New in the public API: `QueueConfig.ai`, `Config.ai` (`pricing`, `recentRuns`),
+  `createAgentRun`, the `AgentRunV1` contract types and helpers, and `Queue.agent`
+  / `Queue.isAgentJob`. `Queue.getJobLogs` accepts optional `start`/`end`; custom
+  `Queue` implementations should accept them too. GraphQL gains `Queue.agent`,
+  `Job.agentRuns`, `Query.agentRun`, `Query.agentsSummary`, `Query.agentRuns` and
+  `Query.agentConversation`.
+
+  See `docs/agent-runs.md` for the full contract.
+
+- 3cef839: follow a business item across queues: flows and traces
+
+  A **flow** is a pipeline that crosses several queues: one job enqueues the
+  next, sometimes in a fan-out, through a fallback or into an error queue. Flows
+  are declared in the monitor setup and the dashboard only reads them. A new
+  **Flows** screen shows each one in three tabs:
+
+  - **Flow**: KPIs over the window (entries, completed end to end, end-to-end
+    p50/p95, bottleneck, failures) and the flow as a graph or an indented table,
+    with live counts, throughput, processing p50/p95, queue wait and failure
+    rate per step, and a step panel with recent errors and a link to its jobs.
+  - **Trace**: the path of one execution, found by trace id, job id or business
+    key, as the highlighted graph or a timeline of queue wait and processing,
+    including steps that are still pending.
+  - **Config**: the definition as the monitor understood it (YAML, read only),
+    the `_trace` convention and the validation checks.
+
+  The sidebar group of a flow gets a `FLOW` badge.
+
+  Setup is `flows` on the monitor config (a step is a queue, optionally
+  restricted to some job names; `next` edges with `when`, fallback and `end`
+  branches; `onError`; `complete`; `trace.key` and `trace.aliases`), plus
+  optional `flowsOptions` (`recentTraces` 2000, `jobsPerTrace` 300,
+  `pendingScanLimit` 500 by default). The definition is validated at boot and
+  problems become warnings and checks on the Config tab, never an exception.
+
+  ```ts
+  new BullMonitorExpress({ queues, metrics: {}, flows: [CONTENT_INGEST] });
+  // worker
+  await nextQueue.add('fetch', withTrace(job, { itemId }));
+  ```
+
+  Workers carry the trace in `data._trace` with new helpers exported by
+  `@bull-horizon/root`: `startTrace` at the entries, `withTrace` on every
+  `queue.add`, `encodeTrace`/`continueTrace` across an HTTP or webhook hop, and
+  `readTrace`. They have no dependencies and never throw: a tracing problem
+  returns your data untouched.
+
+  Things to know:
+
+  - The Flow and Trace tabs need the metrics collector (`metrics: {}`); the
+    Config tab does not.
+  - Flow queues must keep finished jobs: `removeOnComplete`/`removeOnFail` set to
+    `true` delete the job before the collector reads it (counted as _lost_). Use
+    a number or an age.
+  - The trace index keeps `recentTraces` per flow; an older trace is not found
+    and the search says the index is full.
+  - The business key must be an opaque internal id, never personal data nor a
+    hash of it: the search runs on the dashboard route, which has no
+    authentication, with per-request limits.
+  - Flow metrics are not exported to the Prometheus endpoint.
+
+  **Agent jobs that skip on purpose.** An agent job that ends without calling the
+  model (content already fresh, message already answered) can now say so with
+  `recorder.skip(reason?)`, or `markAgentRunSkipped(job, { agent, reason })` when
+  no recorder exists. The attempt counts as _skipped_ instead of _unrecorded_.
+  The reason is a short id-like label (up to 120 chars), stored at any detail
+  level, so it must never carry content.
+
+  New in the public API: `Config.flows`, `Config.flowsOptions`, `startTrace`,
+  `withTrace`, `readTrace`, `encodeTrace`, `continueTrace`, the types
+  `FlowTraceV1`, `FlowConfig`, `FlowStepConfig`, `FlowNext`, `FlowTraceConfig`,
+  `FlowsOptions`, `FlowTraceParent` and `FlowTraceParentRef`, the constants
+  `FLOW_TRACE_FIELD`, `FLOW_TRACE_VERSION`, `FLOW_MAX_HOP` and
+  `DEFAULT_FLOWS_OPTIONS`; `recorder.skip`, `markAgentRunSkipped`,
+  `formatAgentRunSkipLine`, `parseAgentRunSkipLine`, `AGENT_RUN_SKIP_LOG_PREFIX`,
+  `AgentRunSkipV1` and `MarkAgentRunSkippedOptions`. GraphQL gains `Query.flows`,
+  `Query.flowSummary`, `Query.flowTrace` and `AgentsSummary.skipped`.
+  `defaultAgentRunAttempt` now delegates to a shared attempt helper, with no
+  change in behavior.
+
+  See `docs/flows.md` for the full contract.
+
+### Patch Changes
+
+- 64be374: read agent runs from the job's return value, and say when jobs finish without a run
+
+  Agent queues whose worker returns the run as the job's return value (an
+  `AgentRunV1`) now show up in the Agents screen even without the
+  `createAgentRun` log line, cut to the queue's declared detail when served
+  (`AgentRun.source` tells which path was used; failed attempts are only captured
+  by `createAgentRun`). Finished agent jobs with no run at all are counted as
+  `unrecorded` (`AgentsSummary.unrecorded`), and Metrics and Runs warn about them
+  instead of showing an empty screen.
+
+## 6.5.0-beta.2
+
+### Minor Changes
+
+- 3cef839: follow a business item across queues: flows and traces
+
+  A **flow** is a pipeline that crosses several queues: one job enqueues the
+  next, sometimes in a fan-out, through a fallback or into an error queue. Flows
+  are declared in the monitor setup and the dashboard only reads them. A new
+  **Flows** screen shows each one in three tabs:
+
+  - **Flow**: KPIs over the window (entries, completed end to end, end-to-end
+    p50/p95, bottleneck, failures) and the flow as a graph or an indented table,
+    with live counts, throughput, processing p50/p95, queue wait and failure
+    rate per step, and a step panel with recent errors and a link to its jobs.
+  - **Trace**: the path of one execution, found by trace id, job id or business
+    key, as the highlighted graph or a timeline of queue wait and processing,
+    including steps that are still pending.
+  - **Config**: the definition as the monitor understood it (YAML, read only),
+    the `_trace` convention and the validation checks.
+
+  The sidebar group of a flow gets a `FLOW` badge.
+
+  Setup is `flows` on the monitor config (a step is a queue, optionally
+  restricted to some job names; `next` edges with `when`, fallback and `end`
+  branches; `onError`; `complete`; `trace.key` and `trace.aliases`), plus
+  optional `flowsOptions` (`recentTraces` 2000, `jobsPerTrace` 300,
+  `pendingScanLimit` 500 by default). The definition is validated at boot and
+  problems become warnings and checks on the Config tab, never an exception.
+
+  ```ts
+  new BullMonitorExpress({ queues, metrics: {}, flows: [CONTENT_INGEST] });
+  // worker
+  await nextQueue.add('fetch', withTrace(job, { itemId }));
+  ```
+
+  Workers carry the trace in `data._trace` with new helpers exported by
+  `@bull-horizon/root`: `startTrace` at the entries, `withTrace` on every
+  `queue.add`, `encodeTrace`/`continueTrace` across an HTTP or webhook hop, and
+  `readTrace`. They have no dependencies and never throw: a tracing problem
+  returns your data untouched.
+
+  Things to know:
+
+  - The Flow and Trace tabs need the metrics collector (`metrics: {}`); the
+    Config tab does not.
+  - Flow queues must keep finished jobs: `removeOnComplete`/`removeOnFail` set to
+    `true` delete the job before the collector reads it (counted as _lost_). Use
+    a number or an age.
+  - The trace index keeps `recentTraces` per flow; an older trace is not found
+    and the search says the index is full.
+  - The business key must be an opaque internal id, never personal data nor a
+    hash of it: the search runs on the dashboard route, which has no
+    authentication, with per-request limits.
+  - Flow metrics are not exported to the Prometheus endpoint.
+
+  **Agent jobs that skip on purpose.** An agent job that ends without calling the
+  model (content already fresh, message already answered) can now say so with
+  `recorder.skip(reason?)`, or `markAgentRunSkipped(job, { agent, reason })` when
+  no recorder exists. The attempt counts as _skipped_ instead of _unrecorded_.
+  The reason is a short id-like label (up to 120 chars), stored at any detail
+  level, so it must never carry content.
+
+  New in the public API: `Config.flows`, `Config.flowsOptions`, `startTrace`,
+  `withTrace`, `readTrace`, `encodeTrace`, `continueTrace`, the types
+  `FlowTraceV1`, `FlowConfig`, `FlowStepConfig`, `FlowNext`, `FlowTraceConfig`,
+  `FlowsOptions`, `FlowTraceParent` and `FlowTraceParentRef`, the constants
+  `FLOW_TRACE_FIELD`, `FLOW_TRACE_VERSION`, `FLOW_MAX_HOP` and
+  `DEFAULT_FLOWS_OPTIONS`; `recorder.skip`, `markAgentRunSkipped`,
+  `formatAgentRunSkipLine`, `parseAgentRunSkipLine`, `AGENT_RUN_SKIP_LOG_PREFIX`,
+  `AgentRunSkipV1` and `MarkAgentRunSkippedOptions`. GraphQL gains `Query.flows`,
+  `Query.flowSummary`, `Query.flowTrace` and `AgentsSummary.skipped`.
+  `defaultAgentRunAttempt` now delegates to a shared attempt helper, with no
+  change in behavior.
+
+  See `docs/flows.md` for the full contract.
+
+## 6.5.0-beta.1
+
+### Patch Changes
+
+- 64be374: read agent runs from the job's return value, and say when jobs finish without a run
+
+  Agent queues whose worker returns the run as the job's return value (an
+  `AgentRunV1`) now show up in the Agents screen even without the
+  `createAgentRun` log line, cut to the queue's declared detail when served
+  (`AgentRun.source` tells which path was used; failed attempts are only captured
+  by `createAgentRun`). Finished agent jobs with no run at all are counted as
+  `unrecorded` (`AgentsSummary.unrecorded`), and Metrics and Runs warn about them
+  instead of showing an empty screen.
+
+## 6.5.0-beta.0
+
+### Minor Changes
+
+- cc8e14b: show AI agent jobs as runs: steps, tools, tokens and cost
+
+  Queues that run AI agents can now be declared as **agent queues**, and their
+  jobs open as an agent run instead of an opaque job with a wall of log lines:
+  each LLM step and tool call as a graph or a waterfall, with tokens, timing and
+  an estimated cost, one run per attempt so a failed attempt sits next to its
+  retry. A new **Agents** screen (shown only when an agent queue exists) adds
+  latency p50/p95, steps per run, tool stats (calls, duration, errors, empty
+  results), tokens and cost per model, how runs ended, and a filterable list of
+  recent runs. Runs that share an `input.conversationId` can be opened as a
+  **conversation**: every message of the chat with its own run, as a chat
+  transcript or as a list with the steps of the picked message.
+
+  Setup is one option next to `group` on the queue adapter, plus a price table on
+  the monitor:
+
+  ```ts
+  new BullAdapter(aiQueue, { group: 'AI', ai: { jobs: ['reply'], detail: 'basic' } });
+  // monitor config
+  ai: { pricing: { 'gemini-3.8-flash': { input: 0.75, output: 3.75 } } } // USD per 1M tokens
+  ```
+
+  Runs are recorded in your worker with the new `createAgentRun` helper exported
+  by `@bull-horizon/root`, wired to the AI SDK `generateText` callbacks. It
+  writes one structured line per attempt to `job.log`, has no dependencies, and
+  never throws or rejects, so tracing cannot fail a job or trigger a paid retry.
+
+  **Privacy by default.** The detail level is applied in your process, before
+  anything reaches Redis. `basic` (the default, and what `ai: true` gives) keeps
+  model, timing, tokens, tool names, durations and content-free summaries; tool
+  inputs/outputs, step texts and the final answer are only stored at `full`,
+  which is meant for test queues or dashboards behind authentication.
+
+  Things to know:
+
+  - Agent queues must keep finished jobs: `removeOnComplete`/`removeOnFail` set
+    to `true` delete the run with the job (counted as _lost_). Use a number or an
+    age.
+  - The Metrics and Runs tabs need the metrics collector (`metrics: {}`); the run
+    view of a single job does not.
+  - Cost is an estimate computed at read time; a model without a price shows "no
+    price", never `$0`.
+  - Agent aggregates are not exported to the Prometheus endpoint.
+  - The conversation view also needs the collector and is built from the
+    recent-runs index (`ai.recentRuns`), so a long or old conversation can be
+    incomplete (the screen says so). `conversationId` must be an opaque id, never
+    an email, phone number or a hash of one.
+
+  New in the public API: `QueueConfig.ai`, `Config.ai` (`pricing`, `recentRuns`),
+  `createAgentRun`, the `AgentRunV1` contract types and helpers, and `Queue.agent`
+  / `Queue.isAgentJob`. `Queue.getJobLogs` accepts optional `start`/`end`; custom
+  `Queue` implementations should accept them too. GraphQL gains `Queue.agent`,
+  `Job.agentRuns`, `Query.agentRun`, `Query.agentsSummary`, `Query.agentRuns` and
+  `Query.agentConversation`.
+
+  See `docs/agent-runs.md` for the full contract.
+
 ## 6.4.0
 
 ### Minor Changes

@@ -22,6 +22,7 @@
 - **Adapters de framework** (`packages/express`, `packages/koa`, `packages/fastify`) — cada um instancia seu próprio `@apollo/server` v4 e embrulha o schema GraphQL do `root` como middleware para o framework HTTP correspondente. `packages/hapi` permanece em `apollo-server-hapi` v3 (débito consciente, ver ADR-001).
 - **`packages/cli`** — binário standalone (`bin: bull-horizon`) que sobe um servidor Express próprio embutindo `@bull-horizon/express` + `@bull-horizon/root`, sem exigir integração em app existente.
 - **`packages/ui`** — frontend React 17 + MUI v5, build via Vite. Client GraphQL via `graphql-request` + `react-query`; estado local via `zustand`/`jotai`; edição de JSON via `codemirror`; gráficos de métricas via `recharts`. Possui modo demo (`VITE_ENABLE_MOCKS`) com mocks em `demo-mocks/` para o build publicado no GitHub Pages, sem dependência de Redis real.
+- **`packages/root/src/agent/`** (desde a task 004, ADR-004): contrato `AgentRunV1` + helper `createAgentRun()` que roda **dentro do worker do app consumidor**, não do monitor. Escreve o run como linha estruturada em `job.log`; o monitor lê essas linhas (run detail via GraphQL) e o collector as agrega numa série própria. Módulo isolado: não importa `gql/`, collector nem libs de terceiros.
 - Fluxo ponta a ponta: UI → GraphQL (via adapter no framework HTTP do usuário) → `root` data sources → Redis (via cliente Bull/BullMQ) → resposta GraphQL → UI.
 
 ## Resumo do Ecossistema (Memory State de Deps Principais)
@@ -103,11 +104,54 @@
 
 **Não fazer**: não remover `fixed` sem nova decisão de arquitetura (quebra o acoplamento root↔ui); não publicar sem `lerna run build` (o `dist/` dos pacotes de servidor e o `build/` da UI são gitignored mas entram no tarball npm — publish sem build gera pacote vazio e o npm não permite sobrescrever a versão).
 
+## 📐 ADR-004: Runs de agente IA: linha em `job.log`, helper no root, série própria no collector (2026-10-15)
+
+**Contexto**: task 004 (detalhes de implementação e armadilhas em `memorys/implementations/agent-runs.md`). Filas que rodam agentes de IA viram uma visão própria (run em grafo/waterfall, agregados, lista de runs). O piloto (brand-api) já monta o rastro (`AiTrace` v1) mas só manda linhas de texto ao Bull. A tentativa que falha relança o erro para o Bull tentar de novo e o job não retorna valor. Desenho completo em `docs/todo/004-agentes-ia/architecture.md`.
+
+**Decisão 1: o run vive numa linha estruturada de `job.log`** (`bull-horizon:agent-run <json>`), uma por tentativa, gravada no fim da tentativa. `returnvalue` perde as falhas; `job.update(data)` faz read-modify-write no payload do app e polui busca/edição; chave Redis própria desacopla o ciclo de vida do job (órfãs, TTL), acopla o helper ao esquema de chaves e não funciona no processor sandboxed do Bull. `job.log` tem API igual em Bull v3/v4 e BullMQ e some junto com o job. Custo aceito: fila de agente não pode usar `removeOnComplete/removeOnFail: true` (o collector conta como `lost` e a UI avisa).
+
+**Decisão 2: contrato `AgentRunV1` = `AiTrace` v1 + campos opcionais**, versionado por `v: 1`. Nível `basic | full` por fila, default `basic`, **cortado no processo do app pelo helper antes de gravar**; o servidor corta de novo ao servir (defesa em profundidade, não substitui o corte na origem).
+
+**Decisão 3: helper `createAgentRun()` em `packages/root/src/agent/`, exportado pelo índice do root**, sem importar nada do resto do pacote nem libs de terceiros (tipos do AI SDK são estruturais). Única exceção, decidida na 005: `packages/root/src/shared/attempt.ts` (numeração de tentativa Bull/BullMQ, puro e sem nenhum import), compartilhado com `flow/` e com o collector; `defaultAgentRunAttempt` delega para `currentAttempt` sem mudar comportamento. Nunca lança nem rejeita. Extraível para `@bull-horizon/agent` sem refactor se o peso do root no worker incomodar.
+
+**Decisão 4: agregados numa série própria do collector** (`<prefix><queueId>::ai` + camadas `::ai::r<everyMs>`), reaproveitando a retenção em camadas, que é extraída de `metrics-collector.ts` para uma `TieredSeries` genérica. Fonte: eventos terminais já existentes (`completed`/`failed`), lendo todas as linhas de run do job; ingestão idempotente por `ZADD NX` no índice de runs recentes (`::ai::runs` zset + `::ai::runs::data` hash, capado). Latência por **histograma de faixas fixas** (mesclável por soma, p50/p95 interpolados na leitura) em vez de t-digest: zero dependência, erro limitado à largura da faixa. Série esparsa (ponto só com runs). Pior caso ~9 MB raw + ~2 MB camadas por fila de agente.
+
+**Decisão 5: custo calculado na leitura**, a partir de tokens por modelo guardados nos rollups e de `Config.ai.pricing` (USD por 1M in/out). Trocar preço reprecifica o histórico; modelo sem preço devolve `null`, nunca `0`.
+
+**Decisão 6: a Conversa é montada do índice de runs recentes, sem chave nova.** A entrada do índice ganha `c` (`input.conversationId` recortado) e `Query.agentConversation` filtra o hash da fila, deduplica por job (fica a última tentativa), carrega no máximo 100 logs e corta o detalhe como o `agentRun`. Um índice secundário por conversa geraria chaves sem fim nem dono; o custo aceito é que conversa mais velha que o teto `recentRuns` fica incompleta, avisada por heurística (índice cheio e alcance anterior à primeira mensagem menor que a maior pausa da conversa, mínimo 30 min).
+
+**Não fazer**: não gravar o run em `job.data`/`returnvalue`; não gravar o `recorder.run` (completo) sem passar pelo corte de nível; não guardar custo nos rollups; não adicionar `ai`, t-digest ou similar como dependência do root; não expor métricas de agente no `/metrics` Prometheus sem reabrir com Security (nomes de tool/modelo como label em rota sem auth); não mudar `AGENT_LATENCY_BOUNDS_MS` sem incrementar a versão `h` do ponto.
+
+## 📐 ADR-005: Flows e traces: definição no setup, `_trace` no payload, série e índice por flow no collector (2026-10-16)
+
+**Status**: aprovada pelos defaults do Completeness Gate (2026-10-16, revisáveis; ver "Decisões do Completeness Gate" em `docs/todo/005-flows/spec.md`), implementada e ajustada após QA e Security (§ 7.1 de `docs/todo/005-flows/architecture.md`). Desenho completo em `docs/todo/005-flows/architecture.md`; piloto Vyral em `docs/todo/005-flows/vyral-flows.md`.
+
+**Contexto**: task 005 (módulo 05 do design, "Flows e traces"). Um item de negócio atravessa várias filas (uma enfileira a próxima, com leque, condição, fallback e fila de erro). O painel vê filas soltas e não liga um job ao seguinte.
+
+**Decisão 1: o flow é declarado em objeto TS na config do monitor (`Config.flows`)**, não em YAML como no design. Etapa = fila + nomes de job opcionais. Validação no boot nunca lança: problemas viram checks servidos na aba Config. Sem parser YAML no root; a UI mostra a definição renderizada em YAML.
+
+**Decisão 2: o trace viaja em `data._trace` (`FlowTraceV1`), escrito uma vez ao enfileirar** por helpers puros (`startTrace`, `withTrace`, `readTrace`, e `encodeTrace`/`continueTrace` para o elo por HTTP/webhook) em `packages/root/src/flow/`, com a mesma regra do `agent/`: sem I/O, sem dependência, nunca lança. Imports internos permitidos: só `shared/attempt.ts`, além do `crypto` do Node (id do trace). `opts` custom foi descartado (o BullMQ não preserva chaves desconhecidas em todas as versões); chave Redis própria foi descartada pelo mesmo motivo da 004 (ciclo de vida, sandbox, acoplamento ao esquema de chaves). A etapa é derivada no servidor, não declarada pelo worker.
+
+**Decisão 3: agregados por etapa não exigem `_trace`.** O collector agrega processamento, espera, falha, `lost` e `retried` por etapa a partir do job lido no evento terminal; o `_trace` acrescenta arestas observadas, fim a fim e o índice de busca. Série `TieredSeries` **por flow** (`<prefix>flow:<id>::flow`), esparsa, histogramas de faixas fixas `FLOW_DURATION_BOUNDS_MS` (versão `h`), quantil compartilhado com o agente.
+
+**Decisão 4: índice de traces em zsets lexicográficos por flow** (`::traces` com score = **hora de ingestão** do trace, não `startedAt`, para que um `startedAt` forjado ou adiantado não proteja o trace do despejo (S2/S4); o `startedAt` fica no `::traces::meta` só para exibição, recortado a agora + 5 min; `::traces::jobs` e `::traces::keys` com score 0 e prefixo `traceId\x00` / `key\x00`, `::traces::meta` hash). Escrita só com `ZADD`/`HSET` idempotentes (sem read-modify-write entre réplicas), teto `recentTraces` (default 2000) e `jobsPerTrace` (300, contando a faixa inteira do trace menos os marcadores), despejo que remove todos os membros do trace. Nenhuma chave por trace.
+
+**Decisão 5: etapas pendentes lidas na hora, em todas as etapas do flow** (G2: um irmão de leque numa etapa que já tem job concluído também está pendente), lendo waiting/active/delayed/paused (+ prioritized no BullMQ). Orçamento por request: teto `pendingScanLimit` por fila (500), no máximo 2000 jobs lidos por varredura e no máximo 2 varreduras por request (`flowTrace` memoizado por request); estourou = marca `partial`. `COMPLETED` exige zero pendentes no trace.
+
+**Decisão 6: toda falha é final (G1).** Nem Bull nem BullMQ emitem `failed` para tentativa que ainda terá retry, então o collector não filtra "tentativas restantes": `discard()`, `UnrecoverableError`, backoff `-1` e stalled contam como falha definitiva nos agregados e no índice. Tentativa terminal sempre por `terminalAttempts` em `shared/attempt.ts`.
+
+**Decisão 7: aresta para `onError` é implícita (G3).** Qualquer etapa → etapa `onError` sai como `declared: true` em `FlowSummary.edges` e não gera `undeclared-edge`; não entra em `Flow.edges` nem em `unseen-edge`.
+
+**Decisão 8: busca determinística com fallback limitado (G4 + S1).** Ordem: trace id no índice, job id nas filas do flow (no máximo 64), valor exato da chave; por último, trace id sem nada no índice (trace aberto, sem evento terminal) cai na varredura de pendentes, **só** quando a consulta tem o formato gerado (`tr_` + 16 hex) ou veio com `traceId` explícito, para que texto arbitrário na rota sem auth não dispare varredura de filas.
+
+**Não fazer**: não gravar trace por `job.update` nem em `opts`; não criar chave Redis por trace ou por chave de negócio; não aceitar expressão/jsonata na busca de trace; não expor flows no `/metrics` sem reabrir com Security; não mudar `FLOW_DURATION_BOUNDS_MS` sem incrementar `h`; não derivar tentativa sem `terminalAttempts`/`currentAttempt` de `shared/attempt.ts` (Bull 3 e BullMQ contam diferente); não aceitar chave de negócio com dado pessoal (nem hash dele) nos exemplos e na doc: a busca sem auth vira oráculo de existência.
+
 ## 🛡️ Modelo de Ameaças (Security Specialist)
 
 - **Sem autenticação/autorização nativa**: o middleware GraphQL exposto por qualquer adapter (e o CLI) não possui controle de acesso embutido. Qualquer requisição que alcance a rota montada tem acesso de leitura/escrita total às queues (dados de job, incluindo payloads que podem conter PII, e capacidade de retry/remoção de jobs).
 - **Superfície de ataque**: rota HTTP montada (GraphQL endpoint) + UI estática servida junto. Sem rate limiting, sem CSRF/CORS configurados nativamente nos adapters (verificar caso a caso ao tocar essa camada).
 - **Mitigação de referência**: fork comunitário (issue upstream `#82`) implementou Basic Auth via flags `--user`/`--password` no adapter Express — candidato a padrão inicial se a squad decidir endereçar isso.
+- **Runs de agente IA (task 004)**: em `full`, input/output de tool e textos do modelo (potencialmente PII/dado de saúde) ficam em `<job>:logs` no Redis e são legíveis por qualquer um que alcance o painel, inclusive pelo modal de Logs. Default é `basic`, cortado no processo do app. Texto vindo do LLM é renderizado só como texto na UI. Validado pelo Security em 2026-10-15 (`docs/todo/004-agentes-ia/security-review.md`, sem Critical/High). Residuais aceitos: em `basic` ficam `summary`, títulos de card e `error` do run (texto controlado pelo app; o `failedReason` do Bull já guarda a mesma mensagem, então sanear o erro é responsabilidade do app antes do `fail()` e do relançamento); `note()` não passa pelo corte de nível; `detailMismatch` corta ao servir mas não remove do Redis.
 - **Ação obrigatória**: qualquer task que toque os adapters (express/koa/hapi/fastify) ou o CLI deve acionar o **Security Specialist** para avaliação de auth/authz antes do release (regra do Manager: superfícies sensíveis).
 
 ## Segurança e Compliance

@@ -18,10 +18,13 @@ import QueuesFilter from './Filter';
 import QueuesSorter from './Sorter';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useQueuesQuery } from '@/hooks/use-queues-query';
+import { useActiveScreenStore } from '@/stores/active-screen';
+import { queuesForScreen } from './Queues/screen-scope';
 import isempty from 'lodash/isEmpty';
 import Alert from '@mui/material/Alert';
 import { LayoutConfig } from '@/config/layouts';
 import ScreenNav from './ScreenNav';
+import { useFlowsQuery } from '@/hooks/use-flows-query';
 import { useQuery } from 'react-query';
 import { useNetwork } from '@/hooks/use-network';
 import { QueryKeysConfig } from '@/config/query-keys';
@@ -80,7 +83,11 @@ export default function Drawer() {
   );
   const { onMouseDown: onDraggerMouseDown } = useDraggerEventHandlers();
   const queues = data?.queues;
-  const filteredQueues = useFilteredQueues(queues);
+  const screen = useActiveScreenStore((state) => state.screen);
+  const { data: flowsData } = useFlowsQuery();
+  // Before the text filter, so the Filter box and group counts see the same
+  // list the sidebar shows.
+  const filteredQueues = useFilteredQueues(queuesForScreen(queues, screen));
   const sortedQueues = useSortedQueues(filteredQueues);
 
   return (
@@ -111,6 +118,8 @@ export default function Drawer() {
         </div>
         <ScreenNav
           metricsEnabled={metricsEnabledData?.metricsEnabled ?? false}
+          hasAgents={!!queues?.some((queue) => !!queue.agent)}
+          hasFlows={!!flowsData?.flows.length}
         />
         <NetworkRequest error={error} status={status} refetch={refetch}>
           {isempty(queues) ? (

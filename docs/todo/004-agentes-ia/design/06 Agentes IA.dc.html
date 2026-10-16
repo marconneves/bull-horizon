@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=block" rel="stylesheet">
+<style>
+html,body{margin:0;background:#ebeae6;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#e9a23b}a:hover{color:#f3bd6a}
+input::placeholder{color:#8a8174}
+</style>
+</helmet>
+<div style="padding:28px 32px 64px;display:flex;flex-direction:column;gap:24px;color:#1d1b18">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="00%20Indice.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">Índice</a>
+    <a href="01%20Jobs.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">01 Jobs</a>
+    <a href="02%20Overview.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">02 Overview</a>
+    <a href="03%20Metrics%20history.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">03 Metrics history</a>
+    <a href="04%20Configuracoes.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">04 Configurações</a>
+    <a href="05%20Flows.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">05 Flows</a>
+    <a href="06%20Agentes%20IA.dc.html" style="padding:6px 14px;border-radius:16px;background:#1d1b18;border:1px solid #1d1b18;color:#fff;text-decoration:none;font-size:13px">06 Agentes IA</a>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#b06f0c">BULLHORIZON · FORK DO BULL-MONITOR · MÓDULO 06</div>
+    <div style="font-size:30px;font-weight:700;letter-spacing:-.01em">Agentes IA</div>
+    <div style="font-size:14px;color:#5b574f;max-width:820px;text-wrap:pretty">Quando o return do job segue o formato de run de agente (steps, tools, tokens, final), o painel mostra o raciocínio passo a passo, as tools com input e output, a latência e o custo. Também tem um painel com as métricas agregadas. Duas opções por tela: A e B.</div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+    <sc-for list="{{ frames }}" as="f" hint-placeholder-count="1">
+      <div id="{{ f.badge }}" style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;font-weight:700;background:#1d1b18;color:#fff;border-radius:4px;padding:3px 8px">{{ f.badge }}</span>
+          <span style="font-size:14px;font-weight:600">{{ f.caption }}</span>
+        </div>
+        <div style="position:relative;isolation:isolate;width:1440px;height:1000px;overflow:hidden;border-radius:8px;box-shadow:0 20px 50px rgba(0,0,0,.22);background:#1c1813;color:#ece6dc;display:flex;flex-direction:column;font-family:'IBM Plex Sans',sans-serif">
+
+          <header style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 12px;background:#36312b;box-shadow:0 2px 4px rgba(0,0,0,.35);position:relative;z-index:2">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:26px;height:26px;border-radius:5px;background:#57504a;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#b79cf7">pets</span></div>
+              <div style="font-size:15px;font-weight:700"><span style="color:#f4efe7">Bull</span><span style="color:#e9a23b">Horizon</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <a href="04%20Configuracoes.dc.html" title="Redis info" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e5484d;text-decoration:none"><span style="font-family:'Material Icons';font-size:22px;line-height:1">layers</span></a>
+              <span title="Share" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f4efe7;cursor:pointer"><span style="font-family:'Material Icons';font-size:21px;line-height:1">share</span></span>
+              <a href="04%20Configuracoes.dc.html" title="Settings" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f4efe7;text-decoration:none"><span style="font-family:'Material Icons';font-size:22px;line-height:1">settings</span></a>
+            </div>
+          </header>
+
+          <div style="flex:1;min-height:0;display:flex">
+            <aside style="width:220px;flex:none;background:#1f1b16;border-right:1px solid #2c2721;overflow-y:auto;padding-bottom:24px">
+              <nav style="display:flex;flex-direction:column;border-bottom:1px solid #2c2721">
+                <a href="01%20Jobs.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none" style-hover="background:#2a251f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">view_list</span>Jobs</a>
+                <a href="02%20Overview.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none" style-hover="background:#2a251f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">grid_view</span>Overview</a>
+                <a href="05%20Flows.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none" style-hover="background:#2a251f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">account_tree</span>Flows</a>
+                <a href="06%20Agentes%20IA.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none;background:#3b2f1f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">smart_toy</span>Agents</a>
+                <a href="03%20Metrics%20history.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none" style-hover="background:#2a251f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">show_chart</span>Metrics history</a>
+              </nav>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 10px 8px 0">
+                <input placeholder="Filter" style="flex:1;min-width:0;height:36px;background:transparent;border:1px solid #4a443c;border-left:0;border-radius:0 4px 4px 0;color:#ece6dc;font:inherit;font-size:15px;padding:0 8px;outline:none">
+                <span style="font-family:'Material Icons';font-size:22px;line-height:1;color:#ece6dc">sort</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;padding-top:6px">
+                <sc-for list="{{ f.groups }}" as="g">
+                  <div style="display:flex;flex-direction:column">
+                    <div style="display:flex;align-items:center;gap:6px;padding:8px 8px 8px 10px">
+                      <span style="font-family:'Material Icons';font-size:18px;line-height:1;color:#d8d0c4">expand_more</span>
+                      <span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#e9a23b;margin-right:10px">{{ g.icon }}</span>
+                      <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
+                        <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:14px;font-weight:600">{{ g.name }}</span><span style="font-size:11px;color:#a39a8c">{{ g.count }}</span></div>
+                        <div style="display:flex;gap:2px"><sc-for list="{{ g.badges }}" as="b"><span style="min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:{{ b.c }};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(255,255,255,.2) inset">{{ b.v }}</span></sc-for></div>
+                        <div style="display:flex;height:3px;margin-top:4px;overflow:hidden;background:#2c2721"><sc-for list="{{ g.bar }}" as="s"><div style="flex-grow:{{ s.v }};background:{{ s.c }}"></div></sc-for></div>
+                        <sc-if value="{{ g.agent }}"><span style="margin-top:6px;align-self:flex-start;display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.04em;color:#e9a23b;border:1px solid #6b4f22;border-radius:3px;padding:2px 6px"><span style="font-family:'Material Icons';font-size:12px;line-height:1">smart_toy</span>AGENT RUNS</span></sc-if>
+                      </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;margin-left:14px;border-left:1px solid #2f2a23">
+                      <sc-for list="{{ g.queues }}" as="q">
+                        <div style="padding:10px 8px 8px 14px;background:{{ q.bg }};display:flex;flex-direction:column;gap:4px">
+                          <div style="font-size:14px">{{ q.name }}</div>
+                          <div style="display:flex;gap:2px"><sc-for list="{{ q.badges }}" as="b"><span style="min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:{{ b.c }};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(255,255,255,.2) inset">{{ b.v }}</span></sc-for></div>
+                          <div style="display:flex;height:3px;margin-top:4px;overflow:hidden;background:#2c2721"><sc-for list="{{ q.bar }}" as="s"><div style="flex-grow:{{ s.v }};background:{{ s.c }}"></div></sc-for></div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </aside>
+
+            <main style="flex:1;min-width:0;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:12px;background:#2a2620;border-radius:4px;padding:10px">
+                <span style="background:#e9a23b;color:#1c1813;font-size:12px;padding:6px 11px;border-radius:14px">brand-app:ai</span>
+                <span style="font-family:'Material Icons';font-size:22px;line-height:1;cursor:pointer">add</span>
+              </div>
+
+              <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:10px 14px;display:flex;align-items:center;gap:16px">
+                <sc-if value="{{ f.isRun }}">
+                  <span onClick="{{ f.backToList }}" style="font-family:'Material Icons';font-size:20px;line-height:1;cursor:pointer;color:#d8d0c4">arrow_back</span>
+                  <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <span style="font-family:'IBM Plex Mono';font-size:14px;color:#cfc6b8">ai:run:fa1809e7</span>
+                      <span style="display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono';font-size:12px;font-weight:600;color:#3ad48f;background:rgba(58,212,143,.12);border:1px solid rgba(58,212,143,.35);border-radius:14px;padding:3px 10px"><span style="width:5px;height:5px;border-radius:50%;background:#3ad48f"></span>completed</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px"><span style="font-family:'IBM Plex Mono';font-size:11px;color:#7a7266">messageId fa1809e7-3e84-47e1-be15-6543d7efa460</span><span onClick="{{ f.openConv }}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#e9a23b;cursor:pointer"><span style="font-family:'Material Icons';font-size:13px;line-height:1">forum</span>conv_3c91a0 · mensagem 3 de 4</span></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ f.isConv }}">
+                  <span onClick="{{ f.backToList }}" style="font-family:'Material Icons';font-size:20px;line-height:1;cursor:pointer;color:#d8d0c4">arrow_back</span>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#e9a23b">forum</span><span style="font-family:'IBM Plex Mono';font-size:14px;color:#cfc6b8">conv_3c91a0</span><span style="font-size:12px;color:#a39a8c">Emanuelli</span></div>
+                    <span style="font-family:'IBM Plex Mono';font-size:11px;color:#7a7266">4 mensagens · cada mensagem é um job em brand-app:ai</span>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ f.isMetrics }}">
+                  <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">Agent runs</span><span style="font-family:'IBM Plex Mono';font-size:11px;color:#7a7266">brand-app:ai · return no formato v1</span></div>
+                </sc-if>
+                <div style="flex:1"></div>
+                <div style="display:flex;border-bottom:1px solid #2f2a23">
+                  <sc-for list="{{ f.tabs }}" as="t"><span onClick="{{ t.onClick }}" style="padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;color:{{ t.color }};border-bottom:2px solid {{ t.line }};margin-bottom:-1px">{{ t.label }}</span></sc-for>
+                </div>
+                <sc-if value="{{ f.isMetrics }}">
+                  <div style="display:flex;border:1px solid #3a342c;border-radius:3px;overflow:hidden">
+                    <sc-for list="{{ f.ranges }}" as="r"><span onClick="{{ r.onClick }}" style="border-right:1px solid #3a342c;background:{{ r.bg }};color:{{ r.color }};font-size:11px;padding:4px 9px;cursor:pointer">{{ r.label }}</span></sc-for>
+                  </div>
+                </sc-if>
+              </section>
+
+              <section style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px">
+                <sc-for list="{{ f.kpis }}" as="k">
+                  <div style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:11px 14px;display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:11px;color:#a39a8c">{{ k.label }}</span>
+                    <span style="font-size:19px;font-weight:600;color:{{ k.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.value }}</span>
+                    <span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#7a7266;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ k.sub }}</span>
+                  </div>
+                </sc-for>
+              </section>
+
+              <sc-if value="{{ f.isRunA }}">
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+                    <section style="background:#1a1712;border:1px solid #2f2a23;border-radius:4px;padding:14px">
+                      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Passos do agente</div>
+                      <div style="position:relative;width:880px;height:310px;margin:0 auto;background-image:radial-gradient(#2c2721 1px,transparent 1px);background-size:16px 16px">
+                        {{ f.edgesSvg }}
+                        <sc-for list="{{ f.edgeLabels }}" as="l"><span style="position:absolute;left:{{ l.x }};top:{{ l.y }};transform:translate(-50%,-50%);background:#1a1712;padding:1px 5px;font-family:'IBM Plex Mono';font-size:10px;color:#7a7266;white-space:nowrap">{{ l.t }}</span></sc-for>
+                        <sc-for list="{{ f.nodes }}" as="n">
+                          <div onClick="{{ n.onClick }}" style="position:absolute;left:{{ n.x }};top:{{ n.y }};width:{{ n.w }};height:{{ n.h }};background:{{ n.bg }};border:1px solid {{ n.border }};border-radius:6px;padding:9px 10px;box-shadow:{{ n.shadow }};cursor:pointer;display:flex;flex-direction:column;gap:5px;overflow:hidden">
+                            <div style="display:flex;align-items:center;gap:6px">
+                              <span style="font-family:'Material Icons';font-size:14px;line-height:1;color:{{ n.iconC }}">{{ n.icon }}</span>
+                              <span style="font-size:10px;font-weight:700;letter-spacing:.06em;color:{{ n.iconC }}">{{ n.kind }}</span>
+                              <span style="flex:1"></span>
+                              <span style="font-family:'IBM Plex Mono';font-size:10px;color:#a39a8c">{{ n.dur }}</span>
+                            </div>
+                            <span style="font-family:'IBM Plex Mono';font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.title }}</span>
+                            <sc-for list="{{ n.lines }}" as="ln"><span style="font-family:'IBM Plex Mono';font-size:10.5px;color:{{ ln.c }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ln.t }}</span></sc-for>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </section>
+                    <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:12px">
+                      <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;font-weight:600">Onde foi o tempo e os tokens</span><span style="font-family:'IBM Plex Mono';font-size:11px;color:#7a7266">14.8s · 10,591 tokens</span></div>
+                      <sc-for list="{{ f.splits }}" as="sp">
+                        <div style="display:grid;grid-template-columns:90px minmax(0,1fr);gap:12px;align-items:center">
+                          <span style="font-size:11px;color:#a39a8c">{{ sp.label }}</span>
+                          <div style="display:flex;height:22px;gap:2px">
+                            <sc-for list="{{ sp.segs }}" as="sg"><div title="{{ sg.t }}" style="flex-grow:{{ sg.v }};min-width:4px;background:{{ sg.c }};border-radius:2px;display:flex;align-items:center;padding:0 6px;font-family:'IBM Plex Mono';font-size:10px;color:#1c1813;font-weight:600;overflow:hidden;white-space:nowrap">{{ sg.l }}</div></sc-for>
+                          </div>
+                        </div>
+                      </sc-for>
+                      <div style="display:flex;gap:16px;font-size:11px;color:#a39a8c;padding-left:102px">
+                        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:8px;border-radius:2px;background:#b79cf7"></span>LLM</span>
+                        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:8px;border-radius:2px;background:#2bbfc9"></span>tool</span>
+                        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:8px;border-radius:2px;background:#6b635a"></span>overhead</span>
+                        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:8px;border-radius:2px;background:#e9a23b"></span>tokens in</span>
+                        <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:8px;border-radius:2px;background:#3ad48f"></span>tokens out</span>
+                      </div>
+                    </section>
+                    <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:12px">
+                      <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;font-weight:600">Esta mensagem</span><span onClick="{{ f.openConv }}" style="font-size:11px;font-weight:700;letter-spacing:.04em;color:#e9a23b;cursor:pointer">VER CONVERSA INTEIRA</span></div>
+                      <div style="display:flex;justify-content:flex-end"><div style="max-width:420px;background:#2e2922;border-radius:10px 10px 2px 10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">USER · 19:05:28</span><span style="font-family:'IBM Plex Mono';font-size:11.5px;color:#d8d0c4">messageId fa1809e7…</span><span style="font-size:11px;color:#7a7266">o texto do pedido não vem no payload</span></div></div>
+                      <div style="display:flex;gap:10px;align-items:flex-start">
+                        <span style="width:28px;height:28px;border-radius:50%;background:#3b2f1f;display:flex;align-items:center;justify-content:center;flex:none"><span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#e9a23b">smart_toy</span></span>
+                        <div style="max-width:560px;display:flex;flex-direction:column;gap:8px">
+                          <div style="background:#26221c;border:1px solid #3a342c;border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;line-height:1.5;display:flex;flex-direction:column;gap:6px">
+                            <span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">ASSISTANT · 19:05:43</span>
+                            <span>Emanuelli, separei uma opção deliciosa e prática de <b>crepioca recheada</b> para dar bastante energia à sua manhã.</span>
+                            <span>Dê uma olhada no card para conferir os ingredientes e o modo de preparo!</span>
+                          </div>
+                          <div style="border:1px solid #3a342c;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:12px;background:#1a1712">
+                            <span style="font-family:'Material Icons';font-size:20px;line-height:1;color:#e9a23b">restaurant</span>
+                            <div style="display:flex;flex-direction:column;gap:2px;flex:1"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">CARD · RECIPE</span><span style="font-size:13px;font-weight:600">Crepioca recheada</span><span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#7a7266">BREAKFAST · 220 kcal · 10 min · 1 porção</span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                  <aside style="width:330px;flex:none;background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:12px">
+                    <div style="display:flex;flex-direction:column;gap:3px">
+                      <span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">{{ f.panel.kicker }}</span>
+                      <span style="font-family:'IBM Plex Mono';font-size:14px;font-weight:600">{{ f.panel.title }}</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#2f2a23;border:1px solid #2f2a23;border-radius:4px;overflow:hidden">
+                      <sc-for list="{{ f.panel.metrics }}" as="m"><div style="background:#1f1b16;padding:8px 10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:#a39a8c">{{ m.k }}</span><span style="font-family:'IBM Plex Mono';font-size:12.5px;color:{{ m.c }}">{{ m.v }}</span></div></sc-for>
+                    </div>
+                    <sc-for list="{{ f.panel.blocks }}" as="bl">
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        <div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;font-weight:600;flex:1">{{ bl.title }}</span><span style="font-family:'Material Icons';font-size:15px;line-height:1;color:#a39a8c;cursor:pointer">content_copy</span></div>
+                        <div style="background:#1a1712;border:1px solid #2e2922;border-radius:4px;padding:8px 10px;font-family:'IBM Plex Mono';font-size:11px;line-height:1.55;max-height:360px;overflow:auto">
+                          <sc-for list="{{ bl.rows }}" as="w"><div style="display:flex;gap:4px;padding-left:{{ w.pad }}"><sc-if value="{{ w.k }}"><span style="color:#d8d0c4;flex:none">{{ w.k }}:</span></sc-if><span style="color:{{ w.c }};word-break:break-word">{{ w.v }}</span></div></sc-for>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </aside>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.isRunB }}">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:8px;align-items:start">
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:6px 0 10px">
+                    <div style="display:grid;grid-template-columns:250px minmax(0,1fr) 120px 70px;gap:12px;align-items:center;padding:8px 16px;border-bottom:1px solid #2f2a23">
+                      <span style="font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;color:#a39a8c">PASSO</span>
+                      <div style="position:relative;height:14px"><sc-for list="{{ f.wf.ticks }}" as="t"><span style="position:absolute;left:{{ t.x }};transform:translateX(-50%);font-family:'IBM Plex Mono';font-size:10px;color:#7a7266">{{ t.l }}</span></sc-for></div>
+                      <span style="font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;color:#a39a8c">TOKENS IN · OUT</span>
+                      <span style="font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;color:#a39a8c;text-align:right">TEMPO</span>
+                    </div>
+                    <sc-for list="{{ f.wf.rows }}" as="r">
+                      <div style="display:flex;flex-direction:column;border-bottom:1px solid #26221c">
+                        <div onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:250px minmax(0,1fr) 120px 70px;gap:12px;align-items:center;padding:0 16px;height:46px;cursor:pointer;background:{{ r.bg }}" style-hover="background:#231f19">
+                          <div style="display:flex;align-items:center;gap:8px;min-width:0;padding-left:{{ r.indent }}">
+                            <span style="font-family:'Material Icons';font-size:15px;line-height:1;color:{{ r.c }}">{{ r.icon }}</span>
+                            <div style="display:flex;flex-direction:column;min-width:0">
+                              <span style="font-family:'IBM Plex Mono';font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</span>
+                              <span style="font-size:10.5px;color:#7a7266;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</span>
+                            </div>
+                          </div>
+                          <div style="position:relative;height:46px">
+                            <sc-for list="{{ f.wf.ticks }}" as="t"><div style="position:absolute;top:0;bottom:0;left:{{ t.x }};border-left:1px dashed #2a251f"></div></sc-for>
+                            <div style="position:absolute;top:16px;height:14px;left:{{ r.l }};width:{{ r.w }};min-width:3px;background:{{ r.c }};border-radius:2px"></div>
+                          </div>
+                          <div style="display:flex;flex-direction:column;gap:3px">
+                            <div style="display:flex;height:5px;gap:1px"><div style="width:{{ r.tin }};background:#e9a23b;border-radius:1px"></div><div style="width:{{ r.tout }};background:#3ad48f;border-radius:1px"></div></div>
+                            <span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#a39a8c">{{ r.tok }}</span>
+                          </div>
+                          <span style="font-family:'IBM Plex Mono';font-size:11px;text-align:right">{{ r.dur }}</span>
+                        </div>
+                        <sc-if value="{{ r.open }}">
+                          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:4px 16px 14px 40px">
+                            <sc-for list="{{ r.blocks }}" as="bl">
+                              <div style="display:flex;flex-direction:column;gap:6px">
+                                <span style="font-size:11px;font-weight:600">{{ bl.title }}</span>
+                                <div style="background:#1a1712;border:1px solid #2e2922;border-radius:4px;padding:8px 10px;font-family:'IBM Plex Mono';font-size:11px;line-height:1.55;max-height:300px;overflow:auto">
+                                  <sc-for list="{{ bl.rows }}" as="w"><div style="display:flex;gap:4px;padding-left:{{ w.pad }}"><sc-if value="{{ w.k }}"><span style="color:#d8d0c4;flex:none">{{ w.k }}:</span></sc-if><span style="color:{{ w.c }};word-break:break-word">{{ w.v }}</span></div></sc-for>
+                                </div>
+                              </div>
+                            </sc-for>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </section>
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:12px">
+                    <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;font-weight:600">Esta mensagem</span><span onClick="{{ f.openConv }}" style="font-size:11px;font-weight:700;letter-spacing:.04em;color:#e9a23b;cursor:pointer">VER CONVERSA INTEIRA</span></div>
+                    <div style="align-self:flex-end;max-width:300px;background:#2e2922;border-radius:10px 10px 2px 10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">USER · 19:05:28</span><span style="font-family:'IBM Plex Mono';font-size:11px;color:#d8d0c4">messageId fa1809e7…</span><span style="font-size:11px;color:#7a7266">o texto do pedido não vem no payload</span></div>
+                    <div style="display:flex;flex-direction:column;gap:4px;padding-left:4px;border-left:2px solid #3a342c">
+                      <sc-for list="{{ f.wf.inline }}" as="i"><span style="font-family:'IBM Plex Mono';font-size:10.5px;color:{{ i.c }};padding-left:8px">{{ i.t }}</span></sc-for>
+                    </div>
+                    <div style="background:#26221c;border:1px solid #3a342c;border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;line-height:1.5;display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">ASSISTANT · 19:05:43</span>
+                      <span>Emanuelli, separei uma opção deliciosa e prática de <b>crepioca recheada</b> para dar bastante energia à sua manhã.</span>
+                      <span>Dê uma olhada no card para conferir os ingredientes e o modo de preparo!</span>
+                    </div>
+                    <div style="border:1px solid #3a342c;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;background:#1a1712">
+                      <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Material Icons';font-size:18px;line-height:1;color:#e9a23b">restaurant</span><span style="font-size:13px;font-weight:600;flex:1">Crepioca recheada</span><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">RECIPE</span></div>
+                      <span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#a39a8c">BREAKFAST · 220 kcal · 10 min · 1 porção</span>
+                      <div style="display:flex;flex-wrap:wrap;gap:4px"><span style="font-size:10.5px;padding:2px 7px;border:1px solid #3a342c;border-radius:10px;color:#d8d0c4">café da manhã</span><span style="font-size:10.5px;padding:2px 7px;border:1px solid #3a342c;border-radius:10px;color:#d8d0c4">prático</span><span style="font-size:10.5px;padding:2px 7px;border:1px solid #3a342c;border-radius:10px;color:#d8d0c4">energia</span></div>
+                    </div>
+                  </section>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.isConvA }}">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:8px;align-items:start">
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:18px 22px;display:flex;flex-direction:column;gap:22px">
+                    <sc-for list="{{ f.conv.turns }}" as="tu">
+                      <div style="display:flex;flex-direction:column;gap:8px">
+                        <div style="align-self:flex-end;max-width:520px;background:#2e2922;border-radius:10px 10px 2px 10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px">
+                          <span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">USER · {{ tu.time }}</span>
+                          <span style="font-size:13px;line-height:1.5">{{ tu.user }}</span>
+                        </div>
+                        <div onClick="{{ tu.onOpen }}" style="display:flex;align-items:center;gap:10px;padding:7px 10px;border:1px dashed {{ tu.stripBd }};border-radius:6px;cursor:pointer;background:{{ tu.stripBg }}" style-hover="border-color:#6b4f22">
+                          <span style="font-family:'Material Icons';font-size:15px;line-height:1;color:#a39a8c">work_outline</span>
+                          <span style="font-family:'IBM Plex Mono';font-size:11px;color:#cfc6b8">{{ tu.job }}</span>
+                          <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0;overflow:hidden">
+                            <sc-for list="{{ tu.chain }}" as="ch"><span style="display:flex;align-items:center;gap:4px;flex:none"><span style="font-family:'IBM Plex Mono';font-size:10px;padding:1px 6px;border-radius:3px;background:{{ ch.bg }};color:{{ ch.c }}">{{ ch.t }}</span><sc-if value="{{ ch.arrow }}"><span style="font-family:'Material Icons';font-size:12px;line-height:1;color:#5b544b">chevron_right</span></sc-if></span></sc-for>
+                          </div>
+                          <span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#a39a8c">{{ tu.meta }}</span>
+                          <span style="font-family:'Material Icons';font-size:15px;line-height:1;color:#a39a8c">open_in_new</span>
+                        </div>
+                        <div style="display:flex;gap:10px;align-items:flex-start">
+                          <span style="width:28px;height:28px;border-radius:50%;background:#3b2f1f;display:flex;align-items:center;justify-content:center;flex:none"><span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#e9a23b">smart_toy</span></span>
+                          <div style="max-width:560px;display:flex;flex-direction:column;gap:8px">
+                            <div style="background:#26221c;border:1px solid #3a342c;border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;line-height:1.5;display:flex;flex-direction:column;gap:4px">
+                              <span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">ASSISTANT · {{ tu.replyTime }}</span>
+                              <span>{{ tu.reply }}</span>
+                            </div>
+                            <sc-if value="{{ tu.card }}">
+                              <div style="border:1px solid #3a342c;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:12px;background:#1a1712">
+                                <span style="font-family:'Material Icons';font-size:20px;line-height:1;color:#e9a23b">{{ tu.card.icon }}</span>
+                                <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">CARD · {{ tu.card.type }}</span><span style="font-size:13px;font-weight:600">{{ tu.card.title }}</span><span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#7a7266">{{ tu.card.sub }}</span></div>
+                              </div>
+                            </sc-if>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </section>
+                  <aside style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:14px">
+                    <div style="display:flex;flex-direction:column;gap:3px"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">CONVERSA</span><span style="font-family:'IBM Plex Mono';font-size:13px;font-weight:600">conv_3c91a0</span></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#2f2a23;border:1px solid #2f2a23;border-radius:4px;overflow:hidden">
+                      <sc-for list="{{ f.conv.metrics }}" as="m"><div style="background:#1f1b16;padding:8px 10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:#a39a8c">{{ m.k }}</span><span style="font-family:'IBM Plex Mono';font-size:12.5px;color:{{ m.c }}">{{ m.v }}</span></div></sc-for>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                      <span style="font-size:11px;font-weight:600">Mensagens no tempo</span>
+                      <div style="position:relative;height:30px;background:#1a1712;border:1px solid #2e2922;border-radius:3px">
+                        <sc-for list="{{ f.conv.turns }}" as="tu"><div title="{{ tu.job }}" style="position:absolute;top:6px;height:16px;left:{{ tu.tl }};width:{{ tu.tw }};min-width:4px;background:{{ tu.tc }};border-radius:2px"></div></sc-for>
+                      </div>
+                      <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono';font-size:10px;color:#7a7266"><span>19:01</span><span>19:04</span><span>19:07</span><span>19:09</span></div>
+                      <span style="font-size:11px;color:#7a7266">Barras = tempo do run. O espaço entre elas é o tempo que o usuário levou para responder.</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:6px">
+                      <span style="font-size:11px;font-weight:600">Tools usadas</span>
+                      <sc-for list="{{ f.conv.tools }}" as="t"><div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="font-family:'IBM Plex Mono';flex:1">{{ t.name }}</span><span style="font-family:'IBM Plex Mono';color:#2bbfc9">{{ t.n }}×</span></div></sc-for>
+                    </div>
+                    <div style="display:flex;gap:8px;padding:10px;border-radius:3px;background:rgba(233,162,59,.08)">
+                      <span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#e9a23b">info_outline</span>
+                      <span style="font-size:11.5px;line-height:1.45;color:#d8d0c4;text-wrap:pretty">Os jobs são agrupados por input.conversationId e a fala do usuário vem de input.text. Esses dois campos precisam entrar no return (ou no payload) de cada mensagem.</span>
+                    </div>
+                  </aside>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.isConvB }}">
+                <div style="display:grid;grid-template-columns:400px minmax(0,1fr);gap:8px;align-items:start">
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:6px 0;display:flex;flex-direction:column">
+                    <sc-for list="{{ f.conv.turns }}" as="tu">
+                      <div onClick="{{ tu.onSelect }}" style="display:flex;gap:10px;padding:12px 14px;cursor:pointer;border-left:2px solid {{ tu.selLine }};background:{{ tu.selBg }};border-bottom:1px solid #26221c" style-hover="background:#231f19">
+                        <span style="font-family:'IBM Plex Mono';font-size:11px;color:#7a7266;width:16px;flex:none;padding-top:1px">{{ tu.n }}</span>
+                        <div style="display:flex;flex-direction:column;gap:5px;min-width:0;flex:1">
+                          <div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em;flex:1">USER · {{ tu.time }}</span><span style="width:6px;height:6px;border-radius:50%;background:{{ tu.sc }}"></span></div>
+                          <span style="font-size:12.5px;color:#ece6dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ tu.user }}</span>
+                          <span style="font-size:12px;color:#a39a8c;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ tu.reply }}</span>
+                          <span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#7a7266">{{ tu.meta }}</span>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </section>
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:14px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">MENSAGEM {{ f.conv.sel.n }}</span>
+                      <span style="font-family:'IBM Plex Mono';font-size:13px;font-weight:600">{{ f.conv.sel.job }}</span>
+                      <span style="flex:1"></span>
+                      <span onClick="{{ f.conv.sel.onOpen }}" style="font-size:11px;font-weight:700;letter-spacing:.04em;color:#e9a23b;cursor:pointer">ABRIR RUN</span>
+                    </div>
+                    <div style="align-self:flex-end;max-width:520px;background:#2e2922;border-radius:10px 10px 2px 10px;padding:10px 12px;font-size:13px;line-height:1.5">{{ f.conv.sel.user }}</div>
+                    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:#2f2a23;border:1px solid #2f2a23;border-radius:4px;overflow:hidden">
+                      <sc-for list="{{ f.conv.sel.metrics }}" as="m"><div style="background:#1f1b16;padding:8px 10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:#a39a8c">{{ m.k }}</span><span style="font-family:'IBM Plex Mono';font-size:12.5px;color:{{ m.c }}">{{ m.v }}</span></div></sc-for>
+                    </div>
+                    <div style="display:flex;flex-direction:column">
+                      <sc-for list="{{ f.conv.sel.flow }}" as="st">
+                        <div style="display:flex;gap:12px;padding-left:{{ st.indent }}">
+                          <div style="display:flex;flex-direction:column;align-items:center;width:22px;flex:none">
+                            <span style="width:22px;height:22px;border-radius:50%;background:{{ st.bg }};display:flex;align-items:center;justify-content:center;margin-top:6px;flex:none"><span style="font-family:'Material Icons';font-size:13px;line-height:1;color:{{ st.c }}">{{ st.icon }}</span></span>
+                            <span style="flex:1;width:1px;background:#3a342c;min-height:10px"></span>
+                          </div>
+                          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:8px 0 10px;border-bottom:1px solid #26221c">
+                            <div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
+                              <span style="font-family:'IBM Plex Mono';font-size:12px">{{ st.title }}</span>
+                              <span style="font-size:11px;color:#7a7266;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ st.sub }}</span>
+                            </div>
+                            <span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#a39a8c">{{ st.tok }}</span>
+                            <div style="width:160px;height:6px;background:#2c2721;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ st.w }};background:{{ st.c }}"></div></div>
+                            <span style="font-family:'IBM Plex Mono';font-size:11px;width:52px;text-align:right">{{ st.dur }}</span>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:flex-start">
+                      <span style="width:28px;height:28px;border-radius:50%;background:#3b2f1f;display:flex;align-items:center;justify-content:center;flex:none"><span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#e9a23b">smart_toy</span></span>
+                      <div style="max-width:560px;display:flex;flex-direction:column;gap:8px">
+                        <div style="background:#26221c;border:1px solid #3a342c;border-radius:10px 10px 10px 2px;padding:10px 12px;font-size:13px;line-height:1.5">{{ f.conv.sel.reply }}</div>
+                        <sc-if value="{{ f.conv.sel.card }}">
+                          <div style="border:1px solid #3a342c;border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:12px;background:#1a1712">
+                            <span style="font-family:'Material Icons';font-size:20px;line-height:1;color:#e9a23b">{{ f.conv.sel.card.icon }}</span>
+                            <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">CARD · {{ f.conv.sel.card.type }}</span><span style="font-size:13px;font-weight:600">{{ f.conv.sel.card.title }}</span></div>
+                          </div>
+                        </sc-if>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.isMetricsA }}">
+                <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:8px">
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:12px">
+                    <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px;font-weight:600">Latência por hora</span><span style="display:flex;gap:12px;font-size:11px;color:#a39a8c"><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:8px;background:#b79cf7;border-radius:2px"></span>p50</span><span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:8px;background:#4a3f6e;border-radius:2px"></span>p95</span></span></div>
+                    <div style="position:relative;height:170px;display:flex;align-items:flex-end;gap:4px;padding-left:30px">
+                      <sc-for list="{{ f.m.yl }}" as="y"><div style="position:absolute;left:30px;right:0;bottom:{{ y.b }};border-top:1px dashed #2f2a23"></div><span style="position:absolute;left:0;bottom:{{ y.b }};transform:translateY(50%);font-size:10px;color:#7a7266">{{ y.l }}</span></sc-for>
+                      <sc-for list="{{ f.m.lat }}" as="b"><div title="{{ b.t }}" style="position:relative;flex:1;height:{{ b.p95 }};background:#4a3f6e;border-radius:2px 2px 0 0"><div style="position:absolute;left:0;right:0;bottom:0;height:{{ b.rel }};background:#b79cf7;border-radius:2px 2px 0 0"></div></div></sc-for>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;padding-left:30px;font-family:'IBM Plex Mono';font-size:10px;color:#7a7266"><span>14:00</span><span>20:00</span><span>02:00</span><span>08:00</span><span>13:30</span></div>
+                  </section>
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:12px">
+                    <span style="font-size:13px;font-weight:600">Passos por run</span>
+                    <div style="display:flex;align-items:flex-end;gap:10px;height:150px">
+                      <sc-for list="{{ f.m.stepsHist }}" as="h"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end"><span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#d8d0c4">{{ h.p }}</span><div style="width:100%;height:{{ h.h }};background:{{ h.c }};border-radius:2px 2px 0 0"></div><span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#7a7266">{{ h.l }}</span></div></sc-for>
+                    </div>
+                    <span style="font-size:11px;color:#7a7266">Runs com 5 passos ou mais costumam bater em tools sem resultado</span>
+                  </section>
+                  <section style="grid-column:1 / -1;background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:6px 0 4px">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px"><span style="font-size:13px;font-weight:600">Tools</span><span style="font-size:11px;color:#7a7266">dados de exemplo</span></div>
+                    <div style="display:grid;grid-template-columns:200px 90px minmax(0,1fr) 90px 90px 110px;gap:12px;padding:8px 16px;font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;color:#a39a8c;border-bottom:1px solid #2f2a23"><span>TOOL</span><span style="text-align:right">CHAMADAS</span><span>USO</span><span style="text-align:right">MÉDIA</span><span style="text-align:right">ERRO</span><span style="text-align:right">SEM RESULTADO</span></div>
+                    <sc-for list="{{ f.m.tools }}" as="t">
+                      <div style="display:grid;grid-template-columns:200px 90px minmax(0,1fr) 90px 90px 110px;gap:12px;align-items:center;padding:0 16px;height:34px;border-bottom:1px solid #2a251f;font-size:12px">
+                        <span style="font-family:'IBM Plex Mono'">{{ t.name }}</span><span style="text-align:right;font-family:'IBM Plex Mono'">{{ t.calls }}</span>
+                        <div style="height:5px;background:#2c2721;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ t.w }};background:#2bbfc9"></div></div>
+                        <span style="text-align:right;font-family:'IBM Plex Mono';color:#d8d0c4">{{ t.avg }}</span><span style="text-align:right;font-family:'IBM Plex Mono';color:{{ t.errC }}">{{ t.err }}</span><span style="text-align:right;font-family:'IBM Plex Mono';color:{{ t.emptyC }}">{{ t.empty }}</span>
+                      </div>
+                    </sc-for>
+                  </section>
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:13px;font-weight:600">Tokens e custo por modelo</span>
+                    <sc-for list="{{ f.m.models }}" as="md">
+                      <div style="display:grid;grid-template-columns:150px minmax(0,1fr) 80px;gap:12px;align-items:center;font-size:12px">
+                        <span style="font-family:'IBM Plex Mono'">{{ md.name }}</span>
+                        <div style="display:flex;height:16px;gap:1px"><div style="width:{{ md.in }};background:#e9a23b;border-radius:2px 0 0 2px"></div><div style="width:{{ md.out }};background:#3ad48f;border-radius:0 2px 2px 0"></div></div>
+                        <span style="font-family:'IBM Plex Mono';text-align:right">{{ md.cost }}</span>
+                      </div>
+                    </sc-for>
+                    <span style="font-size:11px;color:#7a7266">Custo estimado pela tabela de preços em bullhorizon.agents.yaml</span>
+                  </section>
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                    <span style="font-size:13px;font-weight:600">Como os runs terminaram</span>
+                    <div style="display:flex;height:22px;gap:2px"><sc-for list="{{ f.m.finish }}" as="fi"><div style="flex-grow:{{ fi.v }};min-width:4px;background:{{ fi.c }};border-radius:2px"></div></sc-for></div>
+                    <sc-for list="{{ f.m.finish }}" as="fi"><div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:8px;height:8px;border-radius:2px;background:{{ fi.c }}"></span><span style="font-family:'IBM Plex Mono';flex:1">{{ fi.l }}</span><span style="font-family:'IBM Plex Mono';color:#d8d0c4">{{ fi.p }}</span></div></sc-for>
+                  </section>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.isMetricsB }}">
+                <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                  <sc-for list="{{ f.runFilters }}" as="c"><span onClick="{{ c.onClick }}" style="display:flex;align-items:center;gap:6px;padding:3px 10px;border-radius:14px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }};font-size:11px;font-weight:600;cursor:pointer">{{ c.label }}<span style="font-weight:500;opacity:.8">{{ c.count }}</span></span></sc-for>
+                  <span style="flex:1"></span>
+                  <span style="font-size:11px;color:#7a7266">ordenar por</span>
+                  <sc-for list="{{ f.sorts }}" as="so"><span onClick="{{ so.onClick }}" style="font-size:11px;font-weight:600;cursor:pointer;color:{{ so.color }}">{{ so.label }}</span></sc-for>
+                </section>
+                <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:4px 0">
+                  <div style="display:grid;grid-template-columns:70px 120px minmax(0,1fr) 60px 140px 80px 80px 90px;gap:12px;padding:8px 16px;font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;color:#a39a8c;border-bottom:1px solid #2f2a23"><span>HORA</span><span>MESSAGE</span><span>PASSOS E TOOLS</span><span style="text-align:right">STEPS</span><span>TOKENS IN · OUT</span><span style="text-align:right">TEMPO</span><span style="text-align:right">CUSTO</span><span>STATUS</span></div>
+                  <sc-for list="{{ f.runs }}" as="r">
+                    <div onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:70px 120px minmax(0,1fr) 60px 140px 80px 80px 90px;gap:12px;align-items:center;padding:0 16px;height:44px;border-bottom:1px solid #2a251f;font-size:12px;cursor:pointer;background:{{ r.bg }}" style-hover="background:#231f19">
+                      <span style="font-family:'IBM Plex Mono';color:#a39a8c">{{ r.time }}</span>
+                      <span style="font-family:'IBM Plex Mono'">{{ r.msg }}</span>
+                      <div style="display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden">
+                        <sc-for list="{{ r.chain }}" as="ch"><span style="display:flex;align-items:center;gap:4px;flex:none"><span style="font-family:'IBM Plex Mono';font-size:10.5px;padding:2px 6px;border-radius:3px;background:{{ ch.bg }};color:{{ ch.c }}">{{ ch.t }}</span><sc-if value="{{ ch.arrow }}"><span style="font-family:'Material Icons';font-size:12px;line-height:1;color:#5b544b">chevron_right</span></sc-if></span></sc-for>
+                      </div>
+                      <span style="text-align:right;font-family:'IBM Plex Mono'">{{ r.steps }}</span>
+                      <div style="display:flex;flex-direction:column;gap:3px"><div style="display:flex;height:5px;gap:1px"><div style="width:{{ r.tin }};background:#e9a23b;border-radius:1px"></div><div style="width:{{ r.tout }};background:#3ad48f;border-radius:1px"></div></div><span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#a39a8c">{{ r.tok }}</span></div>
+                      <span style="text-align:right;font-family:'IBM Plex Mono';color:{{ r.durC }}">{{ r.dur }}</span>
+                      <span style="text-align:right;font-family:'IBM Plex Mono';color:#d8d0c4">{{ r.cost }}</span>
+                      <span style="display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;color:{{ r.sc }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ r.sc }}"></span>{{ r.status }}</span>
+                    </div>
+                  </sc-for>
+                </section>
+              </sc-if>
+            </main>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Lado a lado&quot;,&quot;Navegável&quot;],&quot;default&quot;:&quot;Lado a lado&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tela&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;run&quot;,&quot;conversa&quot;,&quot;metricas&quot;],&quot;default&quot;:&quot;run&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegável&quot;},&quot;opcao&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A&quot;,&quot;B&quot;],&quot;default&quot;:&quot;A&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegável&quot;}}">
+const RUN = {
+  v: 1, model: 'gemini-3.8-flash', attempt: 1, startedAt: '2026-10-14T19:05:28.514Z', finishedAt: '2026-10-14T19:05:43.328Z', durationMs: 14814, inputTokens: 9534, outputTokens: 1057,
+  steps: [
+    { step: 1, startedAt: '2026-10-14T19:05:28.567Z', durationMs: 4086, finishReason: 'tool-calls', inputTokens: 2788, outputTokens: 154, text: '',
+      tools: [{ name: 'listRecipes', input: { meal: 'BREAKFAST' }, output: { recipes: [] }, summary: '0 resultados', ok: true, durationMs: 55 }] },
+    { step: 2, startedAt: '2026-10-14T19:05:32.657Z', durationMs: 7219, finishReason: 'tool-calls', inputTokens: 2962, outputTokens: 774, text: '',
+      tools: [{ name: 'proposeRecipe', input: { title: 'Crepioca recheada', meal: 'BREAKFAST', kcal: 220, prepMinutes: 10, servings: 1,
+        ingredients: ['1 ovo inteiro', '2 colheres de sopa de goma de tapioca', '1 fatia de queijo branco ou muçarela', '2 rodelas finas de tomate', '1 pitada de sal e orégano a gosto'],
+        steps: ['Em uma tigela pequena, bata bem o ovo com a tapioca e o sal até misturar tudo.', 'Aqueça uma frigideira antiaderente em fogo baixo.', 'Despeje a massa e espere firmar por cerca de 2 minutos.', 'Coloque o queijo, o tomate e o orégano em uma das metades e dobre a massa.', 'Deixe dourar dos dois lados até o queijo derreter e sirva.'],
+        tags: ['café da manhã', 'prático', 'energia'] }, output: { ok: true, message: 'Sugestão pronta. Apresente em 1 ou 2 frases, sem repetir o card.' }, summary: 'objeto (ok, message)', ok: true, durationMs: 0 }] },
+    { step: 3, startedAt: '2026-10-14T19:05:39.879Z', durationMs: 3431, finishReason: 'stop', inputTokens: 3784, outputTokens: 129,
+      text: 'Emanuelli, separei uma opção deliciosa e prática de **crepioca recheada** para dar bastante energia à sua manhã. \n\nDê uma olhada no card para conferir os ingredientes e o modo de preparo!', tools: [] },
+  ],
+  final: { text: 'Emanuelli, separei uma opção deliciosa e prática de **crepioca recheada** para dar bastante energia à sua manhã.\n\nDê uma olhada no card para conferir os ingredientes e o modo de preparo!', cards: [{ type: 'RECIPE', title: 'Crepioca recheada' }] },
+  error: null,
+};
+const PRICE = { in: 0.30, out: 2.50 };
+const cost = (i, o) => (i * PRICE.in + o * PRICE.out) / 1e6;
+const fmtCost = c => '$' + c.toFixed(4);
+const fmtMs = ms => ms < 1000 ? ms + 'ms' : (ms / 1000).toFixed(1) + 's';
+const n = v => v.toLocaleString('en-US');
+const pad = x => String(x).padStart(2, '0');
+const T0 = Date.parse(RUN.startedAt);
+const hhmmss = iso => { const d = new Date(Date.parse(iso)); return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${String(d.getUTCMilliseconds()).padStart(3, '0')}`; };
+
+function tree(v, depth, key, out) {
+  const p = (depth * 14) + 'px';
+  if (Array.isArray(v)) { out.push({ k: key, v: `Array(${v.length})`, c: '#7a7266', pad: p }); v.forEach((x, i) => tree(x, depth + 1, String(i), out)); }
+  else if (v && typeof v === 'object') { if (key != null) out.push({ k: key, v: `Object(${Object.keys(v).length})`, c: '#7a7266', pad: p }); Object.entries(v).forEach(([k, x]) => tree(x, key == null ? depth : depth + 1, k, out)); }
+  else if (typeof v === 'string') out.push({ k: key, v: JSON.stringify(v), c: '#efe6d6', pad: p });
+  else out.push({ k: key, v: String(v), c: typeof v === 'boolean' ? '#c792ea' : '#e9a23b', pad: p });
+  return out;
+}
+const T = o => tree(o, 0, null, []);
+
+const NODES = (() => {
+  const list = [{ id: 'req', kind: 'REQUEST', icon: 'call_received', col: 0, row: 0, title: 'brand-app:ai', dur: '53ms', lines: [{ t: 'messageId fa1809e7…', c: '#a39a8c' }, { t: RUN.model, c: '#a39a8c' }, { t: 'attempt 1', c: '#7a7266' }] }];
+  RUN.steps.forEach((s, i) => {
+    list.push({ id: 's' + s.step, kind: 'LLM · STEP ' + s.step, icon: 'psychology', col: i + 1, row: 0, title: s.finishReason, dur: fmtMs(s.durationMs),
+      lines: [{ t: `in ${n(s.inputTokens)} · out ${n(s.outputTokens)}`, c: '#d8d0c4' }, { t: fmtCost(cost(s.inputTokens, s.outputTokens)), c: '#a39a8c' }, { t: s.text ? 'texto: ' + s.text.slice(0, 22) + '…' : 'sem texto, só tool call', c: '#7a7266' }] });
+    s.tools.forEach(t => list.push({ id: 't' + s.step, kind: 'TOOL', icon: 'build', col: i + 1, row: 1, title: t.name, dur: fmtMs(t.durationMs), tool: true,
+      lines: [{ t: t.summary, c: t.summary.startsWith('0 ') ? '#e9a23b' : '#d8d0c4' }, { t: t.ok ? 'ok' : 'erro', c: t.ok ? '#3ad48f' : '#ff6b6b' }] }));
+  });
+  list.push({ id: 'res', kind: 'RESPONSE', icon: 'chat_bubble_outline', col: 4, row: 0, title: '1 card · RECIPE', dur: '18ms', lines: [{ t: 'Crepioca recheada', c: '#d8d0c4' }, { t: `${RUN.final.text.length} chars`, c: '#a39a8c' }, { t: 'error: null', c: '#7a7266' }] });
+  return list;
+})();
+const NX = c => c * 182, NYR = r => r === 0 ? 10 : 190, NW = 150;
+const nodeH = nd => nd.tool ? 92 : 118;
+
+const RUNS = [
+  ['19:07', 'd41e6b02', ['logMeal'], 2, 4980, 240, 5120, 'completed'],
+  ['19:05', 'fa1809e7', ['listRecipes', 'proposeRecipe'], 3, 9534, 1057, 14814, 'completed'],
+  ['19:04', '0c2b77a1', ['getUserProfile', 'listRecipes'], 3, 8120, 640, 9210, 'completed'],
+  ['19:02', 'b91e04dd', ['searchFoods', 'searchFoods', 'logMeal'], 4, 14210, 980, 18450, 'completed'],
+  ['19:01', '5f3ac219', [], 1, 2410, 210, 2980, 'completed'],
+  ['18:58', 'e7d40c66', ['searchFoods', 'searchFoods', 'searchFoods', 'searchFoods'], 6, 22480, 1520, 41200, 'failed'],
+  ['18:57', '2a9f81b3', ['listRecipes', 'proposeRecipe'], 3, 9310, 1110, 13980, 'completed'],
+  ['18:55', '7714cde0', ['getUserProfile'], 2, 5020, 340, 6120, 'completed'],
+  ['18:53', 'c03e9a58', ['listRecipes', 'listRecipes', 'proposeRecipe'], 4, 12880, 1201, 19870, 'completed'],
+  ['18:50', '91aa20f4', ['logMeal'], 2, 4810, 260, 5440, 'completed'],
+  ['18:49', '4be610c7', ['searchFoods', 'logMeal'], 3, 9920, 580, 11030, 'completed'],
+];
+const CONV = [
+  { n: 1, job: 'ai:run:5f3ac219', time: '19:01:40', replyTime: '19:01:43', user: 'Oi! Quero melhorar meu café da manhã', reply: 'Oi, Emanuelli! Você prefere algo doce ou salgado? E quanto tempo costuma ter de manhã?', ms: 2980, tin: 2410, tout: 210, status: 'completed', startMin: 0.67,
+    steps: [{ ms: 2930, tin: 2410, tout: 210, finish: 'stop', tools: [] }] },
+  { n: 2, job: 'ai:run:0c2b77a1', time: '19:04:51', replyTime: '19:05:00', user: 'Salgado. Tenho uns 10 minutos', reply: 'Perfeito. Vi no seu perfil que a meta é 1.800 kcal por dia, então vou mirar em algo entre 200 e 300 kcal.', ms: 9210, tin: 8120, tout: 640, status: 'completed', startMin: 3.85,
+    steps: [{ ms: 3100, tin: 2600, tout: 120, finish: 'tool-calls', tools: [{ name: 'getUserProfile', ms: 32, summary: 'objeto (goals, restrictions)' }] }, { ms: 2900, tin: 2720, tout: 110, finish: 'tool-calls', tools: [{ name: 'listRecipes', ms: 61, summary: '0 resultados' }] }, { ms: 3110, tin: 2800, tout: 410, finish: 'stop', tools: [] }] },
+  { n: 3, job: 'ai:run:fa1809e7', time: '19:05:28', replyTime: '19:05:43', user: 'Pode sugerir uma receita?', reply: 'Emanuelli, separei uma opção deliciosa e prática de crepioca recheada para dar bastante energia à sua manhã. Dê uma olhada no card para conferir os ingredientes e o modo de preparo!', ms: 14814, tin: 9534, tout: 1057, status: 'completed', startMin: 4.47, card: { icon: 'restaurant', type: 'RECIPE', title: 'Crepioca recheada', sub: 'BREAKFAST · 220 kcal · 10 min · 1 porção' }, real: true,
+    steps: RUN.steps.map(st => ({ ms: st.durationMs, tin: st.inputTokens, tout: st.outputTokens, finish: st.finishReason, tools: st.tools.map(t => ({ name: t.name, ms: t.durationMs, summary: t.summary })) })) },
+  { n: 4, job: 'ai:run:d41e6b02', time: '19:07:12', replyTime: '19:07:17', user: 'Coloca essa no meu plano de amanhã', reply: 'Pronto, deixei a crepioca recheada no seu plano de amanhã às 7h.', ms: 5120, tin: 4980, tout: 240, status: 'completed', startMin: 6.2,
+    steps: [{ ms: 2400, tin: 2390, tout: 140, finish: 'tool-calls', tools: [{ name: 'logMeal', ms: 95, summary: 'objeto (ok, mealId)' }] }, { ms: 2620, tin: 2590, tout: 100, finish: 'stop', tools: [] }] },
+];
+const TELAS = [
+  { k: 'run', o: 'A', label: 'Run em grafo de passos, com painel do passo', s: { view: 'run', layout: 'A', sel: 't2' } },
+  { k: 'run', o: 'B', label: 'Run em waterfall, com a conversa ao lado', s: { view: 'run', layout: 'B', open: 't2' } },
+  { k: 'conversa', o: 'A', label: 'Conversa inteira, cada mensagem com o seu run', s: { view: 'conversa', layout: 'A' } },
+  { k: 'conversa', o: 'B', label: 'Conversa em lista, com os passos da mensagem escolhida', s: { view: 'conversa', layout: 'B', turn: 3 } },
+  { k: 'metricas', o: 'A', label: 'Métricas agregadas dos agentes', s: { view: 'metricas', layout: 'A' } },
+  { k: 'metricas', o: 'B', label: 'Lista de runs com cadeia de tools', s: { view: 'metricas', layout: 'B' } },
+];
+
+class Component extends DCLogic {
+  state = { fs: {} };
+  frame(key, t, badge) {
+    const base = () => ({ view: 'run', layout: 'A', sel: 't2', open: null, range: '24h', runFilter: 'all', sort: 'recent', ...t.s });
+    const s = this.state.fs[key] || base();
+    const up = p => this.setState(st => { const cur = st.fs[key] || base(); return { fs: { ...st.fs, [key]: { ...cur, ...(typeof p === 'function' ? p(cur) : p) } } }; });
+    const isRun = s.view === 'run';
+    const groups = [
+      { name: 'App', count: 3, icon: 'folder_open', badges: [{ v: 99, c: '#e5484d' }, { v: 6, c: '#4a9cf0' }], bar: [{ v: 99, c: '#e5484d' }, { v: 6, c: '#4a9cf0' }], queues: [] },
+      { name: 'Assistentes IA', count: 1, icon: 'folder_open', agent: true, badges: [{ v: 30, c: '#3ad48f' }], bar: [{ v: 30, c: '#3ad48f' }],
+        queues: [{ name: 'brand-app:ai', bg: '#3a2f20', badges: [0, 0, 30, 0, 0, 0].map((v, i) => ({ v, c: ['#8b7cf0', '#2bbfc9', '#3ad48f', '#e5484d', '#4a9cf0', '#8a8070'][i] })), bar: [{ v: 30, c: '#3ad48f' }] }] },
+      { name: 'Mídia', count: 1, icon: 'folder_open', badges: [{ v: 50, c: '#3ad48f' }, { v: 2, c: '#4a9cf0' }], bar: [{ v: 50, c: '#3ad48f' }, { v: 2, c: '#4a9cf0' }], queues: [] },
+    ];
+    const tabs = [['run', 'Run'], ['conversa', 'Conversa'], ['metricas', 'Métricas']].map(([v, label]) => ({ label, color: s.view === v ? '#e9a23b' : '#a39a8c', line: s.view === v ? '#e9a23b' : 'transparent', onClick: () => up({ view: v }) }));
+    const totalCost = cost(RUN.inputTokens, RUN.outputTokens);
+    const toolCalls = RUN.steps.reduce((a, x) => a + x.tools.length, 0);
+    const isConv = s.view === 'conversa';
+    const ctot = CONV.reduce((a, x) => ({ ms: a.ms + x.ms, tin: a.tin + x.tin, tout: a.tout + x.tout, steps: a.steps + x.steps.length }), { ms: 0, tin: 0, tout: 0, steps: 0 });
+    const convKpis = [
+      { label: 'Mensagens', value: String(CONV.length), sub: CONV.length + ' jobs em brand-app:ai', color: '#ece6dc' },
+      { label: 'Duração da conversa', value: '5m37s', sub: '19:01:40 → 19:07:17', color: '#ece6dc' },
+      { label: 'Tempo de IA', value: fmtMs(ctot.ms), sub: 'média ' + fmtMs(Math.round(ctot.ms / CONV.length)) + ' por mensagem', color: '#b79cf7' },
+      { label: 'Tokens in · out', value: n(ctot.tin) + ' · ' + n(ctot.tout), sub: 'contexto cresce a cada mensagem', color: '#e9a23b' },
+      { label: 'Custo estimado', value: fmtCost(cost(ctot.tin, ctot.tout)), sub: RUN.model, color: '#ece6dc' },
+      { label: 'Passos', value: String(ctot.steps), sub: CONV.reduce((a, x) => a + x.steps.reduce((b, st) => b + st.tools.length, 0), 0) + ' tool calls', color: '#ece6dc' },
+    ];
+    const kpis = isConv ? convKpis : isRun ? [
+      { label: 'Duração', value: fmtMs(RUN.durationMs), sub: hhmmss(RUN.startedAt).slice(0, 8) + ' → ' + hhmmss(RUN.finishedAt).slice(0, 8), color: '#ece6dc' },
+      { label: 'Passos', value: String(RUN.steps.length), sub: `${toolCalls} tool calls`, color: '#ece6dc' },
+      { label: 'Tokens in', value: n(RUN.inputTokens), sub: 'cresce a cada passo', color: '#e9a23b' },
+      { label: 'Tokens out', value: n(RUN.outputTokens), sub: '73% no step 2', color: '#3ad48f' },
+      { label: 'Custo estimado', value: fmtCost(totalCost), sub: `${RUN.model}`, color: '#ece6dc' },
+      { label: 'Atenção', value: 'listRecipes vazia', sub: 'o modelo criou a receita', color: '#e9a23b' },
+    ] : [
+      { label: 'Runs 24h', value: '1,284', sub: '+8% vs ontem', color: '#ece6dc' },
+      { label: 'Latência p50 · p95', value: '9.8s · 21.4s', sub: 'step LLM = 94% do tempo', color: '#ece6dc' },
+      { label: 'Tokens in · out', value: '11.2M · 1.31M', sub: 'média 8.7k · 1.0k por run', color: '#e9a23b' },
+      { label: 'Custo estimado', value: '$6.64', sub: 'média $0.0052 por run', color: '#ece6dc' },
+      { label: 'Falhas', value: '1.2%', sub: '15 runs · maioria por limite de passos', color: '#ff6b6b' },
+      { label: 'Passos por run', value: '2.7', sub: 'tools vazias em 31% dos runs', color: '#ece6dc' },
+    ];
+
+    // A: graph
+    const posOf = id => { const nd = NODES.find(x => x.id === id); return { x: NX(nd.col), y: NYR(nd.row), w: NW, h: nodeH(nd) }; };
+    const nodes = NODES.map(nd => { const p = posOf(nd.id), sel = s.sel === nd.id;
+      const c = nd.tool ? '#2bbfc9' : nd.kind.startsWith('LLM') ? '#b79cf7' : '#e9a23b';
+      return { ...nd, x: p.x + 'px', y: p.y + 'px', w: p.w + 'px', h: p.h + 'px', iconC: c, bg: sel ? '#262016' : '#221e19', border: sel ? '#e9a23b' : '#3a342c', shadow: sel ? '0 0 0 2px rgba(233,162,59,.25)' : 'none', onClick: () => up({ sel: nd.id }) }; });
+    const e = React.createElement, paths = [], edgeLabels = [];
+    const link = (a, b, kind, label) => {
+      const pa = posOf(a), pb = posOf(b); let d, lx, ly;
+      if (kind === 'h') { const x1 = pa.x + pa.w, y1 = pa.y + 40, x2 = pb.x, y2 = pb.y + 40; d = `M${x1},${y1} L${x2},${y2}`; lx = (x1 + x2) / 2; ly = y1 - 10; }
+      else if (kind === 'down') { const x1 = pa.x + pa.w / 2 - 20, y1 = pa.y + pa.h, x2 = pb.x + pb.w / 2 - 20, y2 = pb.y; d = `M${x1},${y1} L${x2},${y2}`; lx = x1 - 2; ly = (y1 + y2) / 2; }
+      else { const x1 = pa.x + pa.w, y1 = pa.y + pa.h / 2, x2 = pb.x + pb.w / 2, y2 = pb.y + pb.h; d = `M${x1},${y1} C${x2},${y1} ${x2},${y1} ${x2},${y2}`; lx = x2 + 34; ly = (pb.y + pb.h + y1) / 2 - 18; }
+      paths.push(e('path', { key: a + b, d, fill: 'none', stroke: kind === 'down' || kind === 'back' ? '#2a7f86' : '#4f483f', strokeWidth: 1.5, strokeDasharray: kind === 'back' ? '4 4' : undefined, markerEnd: 'url(#ai' + key.replace(/\W/g, '') + ')' }));
+      if (label) edgeLabels.push({ x: lx + 'px', y: ly + 'px', t: label });
+    };
+    link('req', 's1', 'h', '');
+    link('s1', 't1', 'down', '');
+    link('t1', 's2', 'back', 'resultado');
+    link('s2', 't2', 'down', '');
+    link('t2', 's3', 'back', 'resultado');
+    link('s3', 'res', 'h', 'stop');
+    const mid = 'ai' + key.replace(/\W/g, '');
+    const edgesSvg = e('svg', { width: 880, height: 310, style: { position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' } },
+      e('defs', null, e('marker', { id: mid, viewBox: '0 0 8 8', refX: 7, refY: 4, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, e('path', { d: 'M0,0 L8,4 L0,8 z', fill: '#6b635a' }))), ...paths);
+
+    const panelFor = id => {
+      if (id === 'req') return { kicker: 'REQUEST', title: 'payload', metrics: [{ k: 'Modelo', v: RUN.model, c: '#ece6dc' }, { k: 'Attempt', v: '1', c: '#ece6dc' }, { k: 'Início', v: hhmmss(RUN.startedAt), c: '#ece6dc' }, { k: 'Overhead', v: '53ms', c: '#ece6dc' }], blocks: [{ title: 'data', rows: T({ messageId: 'fa1809e7-3e84-47e1-be15-6543d7efa460' }) }] };
+      if (id === 'res') return { kicker: 'RESPONSE', title: 'final', metrics: [{ k: 'Fim', v: hhmmss(RUN.finishedAt), c: '#ece6dc' }, { k: 'Cards', v: '1', c: '#ece6dc' }, { k: 'error', v: 'null', c: '#3ad48f' }, { k: 'Total', v: fmtMs(RUN.durationMs), c: '#ece6dc' }], blocks: [{ title: 'final', rows: T(RUN.final) }] };
+      const stepN = Number(id.slice(1)), st = RUN.steps[stepN - 1];
+      if (id[0] === 's') return { kicker: 'LLM · STEP ' + stepN, title: st.finishReason, metrics: [{ k: 'Início', v: hhmmss(st.startedAt), c: '#ece6dc' }, { k: 'Duração', v: fmtMs(st.durationMs), c: '#ece6dc' }, { k: 'Tokens in', v: n(st.inputTokens), c: '#e9a23b' }, { k: 'Tokens out', v: n(st.outputTokens), c: '#3ad48f' }, { k: 'Custo est.', v: fmtCost(cost(st.inputTokens, st.outputTokens)), c: '#ece6dc' }, { k: 'Tools', v: String(st.tools.length), c: '#2bbfc9' }],
+        blocks: [{ title: 'text', rows: st.text ? [{ k: '', v: st.text, c: '#efe6d6', pad: '0px' }] : [{ k: '', v: 'vazio, o passo só chamou tools', c: '#7a7266', pad: '0px' }] }] };
+      const tl = st.tools[0];
+      return { kicker: 'TOOL · STEP ' + stepN, title: tl.name, metrics: [{ k: 'Duração', v: fmtMs(tl.durationMs), c: '#ece6dc' }, { k: 'ok', v: String(tl.ok), c: tl.ok ? '#3ad48f' : '#ff6b6b' }, { k: 'Resumo', v: tl.summary, c: tl.summary.startsWith('0 ') ? '#e9a23b' : '#ece6dc' }, { k: 'Chamado por', v: 'step ' + stepN, c: '#b79cf7' }],
+        blocks: [{ title: 'input', rows: T(tl.input) }, { title: 'output', rows: T(tl.output) }] };
+    };
+    const splits = [
+      { label: 'Tempo', segs: [{ v: 53, c: '#6b635a', l: '', t: 'overhead 53ms' }, ...RUN.steps.flatMap(st => [{ v: st.durationMs - st.tools.reduce((a, x) => a + x.durationMs, 0), c: '#b79cf7', l: 'step ' + st.step + ' · ' + fmtMs(st.durationMs), t: 'LLM step ' + st.step }, ...st.tools.filter(x => x.durationMs).map(x => ({ v: Math.max(x.durationMs, 60), c: '#2bbfc9', l: '', t: x.name + ' ' + x.durationMs + 'ms' }))]), { v: 18, c: '#6b635a', l: '', t: 'overhead 18ms' }] },
+      { label: 'Tokens', segs: RUN.steps.flatMap(st => [{ v: st.inputTokens, c: '#e9a23b', l: 's' + st.step + ' in ' + n(st.inputTokens), t: '' }, { v: st.outputTokens, c: '#3ad48f', l: st.outputTokens > 500 ? 'out ' + n(st.outputTokens) : '', t: 'out ' + st.outputTokens }]) },
+      { label: 'Custo', segs: RUN.steps.map(st => ({ v: cost(st.inputTokens, st.outputTokens) * 1e6, c: '#d8d0c4', l: 's' + st.step + ' ' + fmtCost(cost(st.inputTokens, st.outputTokens)), t: '' })) },
+    ];
+
+    // B: waterfall
+    const span = RUN.durationMs, maxTok = 4000;
+    const wfRows = [];
+    const mk = (id, title, sub, icon, c, startMs, durMs, indent, tin, tout, blocks) => wfRows.push({ title, sub, icon, c, indent, l: (startMs / span * 100) + '%', w: (Math.max(durMs, 1) / span * 100) + '%', dur: fmtMs(durMs),
+      tin: tin ? (tin / maxTok * 60) + '%' : '0%', tout: tout ? (tout / maxTok * 60) + '%' : '0%', tok: tin ? `${n(tin)} · ${n(tout)}` : '', bg: s.open === id ? '#231f19' : 'transparent', open: s.open === id, onClick: () => up(cur => ({ open: cur.open === id ? null : id })), blocks });
+    mk('req', 'request', 'messageId fa1809e7…', 'call_received', '#e9a23b', 0, 53, '0px', 0, 0, [{ title: 'data', rows: T({ messageId: 'fa1809e7-3e84-47e1-be15-6543d7efa460' }) }, { title: 'run', rows: T({ v: 1, model: RUN.model, attempt: 1 }) }]);
+    let toolStart = 0;
+    RUN.steps.forEach(st => {
+      const st0 = Date.parse(st.startedAt) - T0;
+      mk('s' + st.step, 'LLM step ' + st.step, st.finishReason + (st.text ? ' · texto' : ' · sem texto'), 'psychology', '#b79cf7', st0, st.durationMs, '0px', st.inputTokens, st.outputTokens,
+        [{ title: 'text', rows: st.text ? [{ k: '', v: st.text, c: '#efe6d6', pad: '0px' }] : [{ k: '', v: 'vazio, o passo só chamou tools', c: '#7a7266', pad: '0px' }] }, { title: 'métricas', rows: T({ startedAt: st.startedAt, durationMs: st.durationMs, inputTokens: st.inputTokens, outputTokens: st.outputTokens, custo: fmtCost(cost(st.inputTokens, st.outputTokens)) }) }]);
+      st.tools.forEach(tl => { const ts = st0 + st.durationMs - Math.max(tl.durationMs, 1) - 4;
+        mk('t' + st.step, tl.name, tl.summary + (tl.ok ? ' · ok' : ' · erro'), 'build', '#2bbfc9', ts, tl.durationMs, '20px', 0, 0, [{ title: 'input', rows: T(tl.input) }, { title: 'output', rows: T(tl.output) }]); });
+    });
+    mk('res', 'response', '1 card · RECIPE', 'chat_bubble_outline', '#3ad48f', span - 18, 18, '0px', 0, 0, [{ title: 'final', rows: T(RUN.final) }, { title: 'error', rows: [{ k: '', v: 'null', c: '#3ad48f', pad: '0px' }] }]);
+    const wf = { ticks: [0, 3000, 6000, 9000, 12000].map(v => ({ x: (v / span * 100) + '%', l: v / 1000 + 's' })), rows: wfRows,
+      inline: [{ t: '↳ step 1 · listRecipes(meal: BREAKFAST) → 0 resultados', c: '#e9a23b' }, { t: '↳ step 2 · proposeRecipe("Crepioca recheada") → ok', c: '#2bbfc9' }, { t: '↳ step 3 · resposta final (stop)', c: '#b79cf7' }] };
+
+    // metrics A
+    let r = 7; const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647;
+    const lat = Array.from({ length: 24 }, (_, i) => { const p50 = 7 + rnd() * 5 + (i > 16 && i < 21 ? 3 : 0), p95 = p50 + 7 + rnd() * 10; return { p95: (p95 / 32 * 100) + '%', rel: (p50 / p95 * 100) + '%', t: `p50 ${p50.toFixed(1)}s · p95 ${p95.toFixed(1)}s` }; });
+    const hist = [['1', 18], ['2', 24], ['3', 41], ['4', 12], ['5+', 5]];
+    const tools = [['getUserProfile', 1240, '32ms', 0, 0], ['listRecipes', 1102, '48ms', 0, 31], ['proposeRecipe', 846, '1ms', 0, 0], ['searchFoods', 512, '210ms', 2.1, 12], ['logMeal', 388, '95ms', .5, 0]];
+    const m = {
+      lat, yl: [0, 10, 20, 30].map(v => ({ b: (v / 32 * 100) + '%', l: v + 's' })),
+      stepsHist: hist.map(([l, p]) => ({ l, p: p + '%', h: (p / 41 * 100) + '%', c: l === '5+' ? '#e5484d' : '#b79cf7' })),
+      tools: tools.map(([name, calls, avg, err, empty]) => ({ name, calls: n(calls), w: (calls / 1240 * 100) + '%', avg, err: err + '%', errC: err ? '#ff6b6b' : '#7a7266', empty: empty + '%', emptyC: empty > 20 ? '#e9a23b' : '#7a7266' })),
+      models: [['gemini-3.8-flash', 10.4, 1.18, '$5.89'], ['gemini-3.8-pro', .8, .13, '$0.75']].map(([name, i, o, c]) => ({ name, in: (i / 11.6 * 80) + '%', out: (o / 11.6 * 80 * 3) + '%', cost: c })),
+      finish: [['stop', 98.1, '#3ad48f'], ['max-steps', .7, '#e9a23b'], ['error', .5, '#e5484d'], ['length', .7, '#8b7cf0']].map(([l, v, c]) => ({ l, v, c, p: v + '%' })),
+    };
+
+    // metrics B
+    const filterDefs = [['all', 'Todos', RUNS.length], ['failed', 'Falhou', RUNS.filter(x => x[7] === 'failed').length], ['empty', 'Tool vazia', 3], ['slow', 'Mais de 15s', RUNS.filter(x => x[6] > 15000).length]];
+    let runs = RUNS.slice();
+    if (s.runFilter === 'failed') runs = runs.filter(x => x[7] === 'failed');
+    if (s.runFilter === 'slow') runs = runs.filter(x => x[6] > 15000);
+    if (s.runFilter === 'empty') runs = runs.filter(x => x[2].includes('listRecipes') || x[2].length > 3);
+    if (s.sort === 'slow') runs.sort((a, b) => b[6] - a[6]);
+    if (s.sort === 'cost') runs.sort((a, b) => cost(b[4], b[5]) - cost(a[4], a[5]));
+    const runRows = runs.map(([time, msg, tl, steps, ti, to, dur, status]) => {
+      const grouped = []; tl.forEach(x => { const last = grouped[grouped.length - 1]; if (last && last.name === x) last.n++; else grouped.push({ name: x, n: 1 }); });
+      const chain = [{ t: 'req', c: '#e9a23b', bg: '#2e2516' }, ...grouped.map(g => ({ t: g.n > 1 ? g.name + ' ×' + g.n : g.name, c: '#2bbfc9', bg: '#16292b' })), { t: status === 'failed' ? 'max-steps' : 'stop', c: status === 'failed' ? '#ff6b6b' : '#3ad48f', bg: status === 'failed' ? '#2a1714' : '#15271e' }];
+      return { time, msg, steps, chain: chain.map((c, i) => ({ ...c, arrow: i < chain.length - 1 })), tin: (ti / 22480 * 70) + '%', tout: (to / 22480 * 70 * 3) + '%', tok: `${n(ti)} · ${n(to)}`, dur: fmtMs(dur), durC: dur > 15000 ? '#e9a23b' : '#ece6dc', cost: fmtCost(cost(ti, to)), status, sc: status === 'failed' ? '#ff6b6b' : '#3ad48f', bg: msg === 'fa1809e7' ? '#221c12' : 'transparent', onClick: () => up({ view: 'run', layout: 'A', sel: 't2' }) };
+    });
+
+    return {
+      badge, caption: t.label, groups, tabs, kpis, isRun, isMetrics: s.view === 'metricas', isConv,
+      openConv: () => up({ view: 'conversa', layout: s.layout }),
+      isConvA: isConv && s.layout === 'A', isConvB: isConv && s.layout === 'B', conv: this.convVals(s, up),
+      backToList: () => up({ view: 'metricas', layout: 'B' }),
+      ranges: ['1h', '24h', '7d', '30d'].map(x => ({ label: x, bg: x === s.range ? '#4a443c' : 'transparent', color: x === s.range ? '#fff' : '#a39a8c', onClick: () => up({ range: x }) })),
+      isRunA: isRun && s.layout === 'A', isRunB: isRun && s.layout === 'B', isMetricsA: s.view === 'metricas' && s.layout === 'A', isMetricsB: s.view === 'metricas' && s.layout === 'B',
+      nodes, edgesSvg, edgeLabels, panel: panelFor(s.sel || 't2'), splits, wf, m,
+      runFilters: filterDefs.map(([k, label, count]) => { const on = s.runFilter === k; return { label, count, border: on ? '#e9a23b' : '#3a342c', bg: on ? '#3b2f1f' : 'transparent', color: on ? '#e9a23b' : '#c9c0b2', onClick: () => up({ runFilter: k }) }; }),
+      sorts: [['recent', 'recentes'], ['slow', 'mais lentos'], ['cost', 'mais caros']].map(([k, label]) => ({ label, color: s.sort === k ? '#e9a23b' : '#a39a8c', onClick: () => up({ sort: k }) })),
+      runs: runRows,
+    };
+  }
+  convVals(s, up) {
+    const span = 7.5;
+    const chainOf = x => { const c = [{ t: 'req', c: '#e9a23b', bg: '#2e2516' }, ...x.steps.flatMap(st => st.tools.map(t => ({ t: t.name, c: '#2bbfc9', bg: '#16292b' }))), { t: 'stop', c: '#3ad48f', bg: '#15271e' }]; return c.map((v, i) => ({ ...v, arrow: i < c.length - 1 })); };
+    const sel = CONV.find(x => x.n === (s.turn || 3)) || CONV[2];
+    const turns = CONV.map(x => ({ ...x, card: x.card || null, chain: chainOf(x), meta: `${x.steps.length} passos · ${n(x.tin)}/${n(x.tout)} tok · ${fmtMs(x.ms)} · ${fmtCost(cost(x.tin, x.tout))}`,
+      stripBd: x.real ? '#6b4f22' : '#3a342c', stripBg: x.real ? '#221c12' : 'transparent', sc: '#3ad48f',
+      selLine: x.n === sel.n ? '#e9a23b' : 'transparent', selBg: x.n === sel.n ? '#231e16' : 'transparent',
+      tl: (x.startMin / span * 100) + '%', tw: (x.ms / 60000 / span * 100) + '%', tc: x.real ? '#e9a23b' : '#b79cf7',
+      onOpen: () => up({ view: 'run', layout: 'A', sel: 't2' }), onSelect: () => up({ turn: x.n }) }));
+    const toolCount = {}; CONV.forEach(x => x.steps.forEach(st => st.tools.forEach(t => { toolCount[t.name] = (toolCount[t.name] || 0) + 1; })));
+    const ctot = CONV.reduce((a, x) => ({ ms: a.ms + x.ms, tin: a.tin + x.tin, tout: a.tout + x.tout }), { ms: 0, tin: 0, tout: 0 });
+    const maxMs = Math.max(...sel.steps.map(st => st.ms));
+    const flow = [{ icon: 'call_received', c: '#e9a23b', bg: '#2e2516', title: 'request', sub: 'messageId · conversationId', tok: '', w: '0%', dur: '', indent: '0px' }];
+    sel.steps.forEach((st, i) => {
+      flow.push({ icon: 'psychology', c: '#b79cf7', bg: '#2a2340', title: 'LLM step ' + (i + 1), sub: st.finish, tok: n(st.tin) + ' · ' + n(st.tout), w: (st.ms / maxMs * 100) + '%', dur: fmtMs(st.ms), indent: '0px' });
+      st.tools.forEach(t => flow.push({ icon: 'build', c: '#2bbfc9', bg: '#16292b', title: t.name, sub: t.summary, tok: '', w: Math.max(2, t.ms / maxMs * 100) + '%', dur: fmtMs(t.ms), indent: '28px' }));
+    });
+    flow.push({ icon: 'chat_bubble_outline', c: '#3ad48f', bg: '#15271e', title: 'response', sub: sel.card ? '1 card · ' + sel.card.type : 'texto', tok: '', w: '0%', dur: '', indent: '0px' });
+    return {
+      turns,
+      metrics: [{ k: 'Usuário', v: 'Emanuelli', c: '#ece6dc' }, { k: 'Mensagens', v: String(CONV.length), c: '#ece6dc' }, { k: 'Tempo de IA', v: fmtMs(ctot.ms), c: '#b79cf7' }, { k: 'Custo est.', v: fmtCost(cost(ctot.tin, ctot.tout)), c: '#ece6dc' }, { k: 'Tokens in', v: n(ctot.tin), c: '#e9a23b' }, { k: 'Tokens out', v: n(ctot.tout), c: '#3ad48f' }],
+      tools: Object.entries(toolCount).map(([name, c]) => ({ name, n: c })),
+      sel: { n: sel.n, job: sel.job, user: sel.user, reply: sel.reply, card: sel.card || null, flow, onOpen: () => up({ view: 'run', layout: 'A', sel: 't2' }),
+        metrics: [{ k: 'Passos', v: String(sel.steps.length), c: '#ece6dc' }, { k: 'Tempo', v: fmtMs(sel.ms), c: '#ece6dc' }, { k: 'Tokens in', v: n(sel.tin), c: '#e9a23b' }, { k: 'Tokens out', v: n(sel.tout), c: '#3ad48f' }, { k: 'Custo est.', v: fmtCost(cost(sel.tin, sel.tout)), c: '#ece6dc' }] },
+    };
+  }
+  renderVals() {
+    const mode = this.props.mode ?? 'Lado a lado';
+    const tela = this.props.tela ?? 'run';
+    const opcao = this.props.opcao ?? 'A';
+    const turn = { run: 1, metricas: 2, conversa: 3 };
+    const badgeOf = t => turn[t.k] + t.o.toLowerCase();
+    if (mode === 'Navegável') {
+      const t = TELAS.find(x => x.k === tela && x.o === opcao) || TELAS[0];
+      return { frames: [this.frame('N:' + t.k + t.o, { ...t, label: 'Protótipo navegável · ' + t.label }, badgeOf(t))] };
+    }
+    return { frames: TELAS.map(t => this.frame('L:' + t.k + t.o, t, badgeOf(t))) };
+  }
+}
+</script>
+</body>
+</html>

@@ -55,9 +55,20 @@ export const useAvailableTimeRanges = (): TTimeRange[] => {
   }, [retentionMs]);
 };
 
-export const useTimeRange = () => {
+type TControlledRange = {
+  label: string | null;
+  setLabel: (label: string) => void;
+};
+
+/**
+ * Pass `controlled` to keep the selected label somewhere that outlives the
+ * component (the agents screen persists it); without it the choice is local.
+ */
+export const useTimeRange = (controlled?: TControlledRange) => {
   const ranges = useAvailableTimeRanges();
-  const [label, setLabel] = useState<string | null>(null);
+  const [localLabel, setLocalLabel] = useState<string | null>(null);
+  const label = controlled ? controlled.label : localLabel;
+  const setLabel = controlled ? controlled.setLabel : setLocalLabel;
   // Default to 24h when it is available, otherwise the widest on offer.
   const range =
     ranges.find((r) => r.label === label) ??
@@ -65,7 +76,7 @@ export const useTimeRange = () => {
     ranges[ranges.length - 1];
   const changeRange = useCallback(
     (next: TTimeRange) => setLabel(next.label),
-    []
+    [setLabel]
   );
 
   // Quantized to the range's own resolution. react-query compares keys by

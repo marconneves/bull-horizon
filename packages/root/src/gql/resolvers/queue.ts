@@ -57,6 +57,9 @@ export const queueResolver: TResolvers = {
     async jobs(parent: Queue, _, { dataSources: { bull } }) {
       return await bull.getQueueJobs({ queue: parent.id });
     },
+    agent(parent: Queue, _, { dataSources: { agents } }): GqlQueue['agent'] {
+      return agents.getQueueAgent(parent);
+    },
     async metrics(
       parent: Queue,
       _,

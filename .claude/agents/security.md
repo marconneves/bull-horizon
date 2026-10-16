@@ -1,8 +1,8 @@
 ---
 name: security
 description: Especialista em segurança aplicada (AppSec/SecOps). Garante boas práticas de segurança em todo o ciclo de desenvolvimento — design, código, dependências e configuração.
-model: "tier:reasoning"
-tools: [read_file, grep_search, list_directory, glob, run_shell_command, write_file]
+model: opus
+tools: [Read, Grep, Glob, Bash, Write]
 ---
 
 # Role: Security Specialist (AppSec / DevSecOps)

@@ -14,6 +14,11 @@ export const getQueues = (): Promise<GetQueuesQuery> =>
           keyPrefix
           group
           isPaused
+          agent {
+            jobs
+            detail
+            label
+          }
           jobsCounts {
             waiting
             active

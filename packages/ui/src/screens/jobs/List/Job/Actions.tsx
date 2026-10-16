@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import MoreIcon from '@mui/icons-material/MoreHoriz';
 import InfoIcon from '@mui/icons-material/Info';
+import AgentRunIcon from '@mui/icons-material/SmartToy';
 import Tooltip from '@mui/material/Tooltip';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -18,6 +19,9 @@ import { useExportJobsMutation } from '@/hooks/use-export-jobs-mutation';
 import { useToggle } from '@/hooks/use-toggle';
 import { useShareJob } from '@/hooks/use-share';
 import { useCreateJobStore } from '@/stores/create-job';
+import { useAgentsStore } from '@/stores/agents';
+import { isAgentJob } from '@/services/agent-run-log';
+import { useQueueData } from '@/hooks/use-queue-data';
 import type { TJobIdentity } from '@/typings';
 import type { TJobProps } from './typings';
 
@@ -33,6 +37,8 @@ const JobActions = ({ job, queue, readonly }: TProps) => {
   const closeInfoPopover = () => setInfoOpen(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const shareJob = useShareJob();
+  const openAgentRun = useAgentsStore((state) => state.openRun);
+  const isAgentRunJob = isAgentJob(useQueueData(queue)?.agent, job.name);
 
   const handleClickMore = (event: React.MouseEvent<HTMLButtonElement>) =>
     setAnchorEl(event.currentTarget);
@@ -94,6 +100,17 @@ const JobActions = ({ job, queue, readonly }: TProps) => {
           <DeleteIcon />
         </IconButton>
       </Tooltip>
+      {isAgentRunJob && (
+        <Tooltip title="Agent run">
+          <IconButton
+            size="small"
+            aria-label="agent run"
+            onClick={() => openAgentRun({ queue, jobId: job.id }, 'jobs')}
+          >
+            <AgentRunIcon />
+          </IconButton>
+        </Tooltip>
+      )}
       <IconButton
         aria-haspopup="true"
         aria-owns={infoPopoverId}
@@ -194,7 +211,9 @@ const JobActions = ({ job, queue, readonly }: TProps) => {
         >
           Discard
         </MenuItem>
-        <MenuItem onClick={() => openJobLogs(sharedMutationArg)}>Logs</MenuItem>
+        <MenuItem onClick={() => openJobLogs(sharedMutationArg, job.name)}>
+          Logs
+        </MenuItem>
       </Menu>
     </>
   );

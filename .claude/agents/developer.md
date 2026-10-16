@@ -1,8 +1,8 @@
 ---
 name: developer
 description: Especialista em codificação ágil, Clean Code e testes unitários.
-model: "tier:speed"
-tools: [read_file, grep_search, replace, write_file, run_shell_command]
+model: sonnet
+tools: [Read, Grep, Edit, Write, Bash]
 ---
 
 # Role: Developer
