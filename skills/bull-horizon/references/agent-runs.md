@@ -7,8 +7,37 @@ O que aparece:
 - **Run view** (ação "Agent run" no job): grafo (request, passos, tools, resposta) e waterfall com tokens por passo. Uma linha por tentativa: falha e retry lado a lado.
 - **Tela Agents** na sidebar (só se houver fila `ai`): **Metrics** (latência p50/p95, passos por run, stats de tool, tokens e custo por modelo, desfechos), **Runs** (runs recentes com filtros e ordenação) e **Conversa**. Metrics/Runs/Conversa exigem o collector (`metrics`).
 
+## 0. O caminho certo: onde o run mora
+
+**O run vive no `job.log`, numa linha por tentativa, gravada pelo `createAgentRun`.** Esse é o mecanismo principal, e a tela Agents foi desenhada em cima dele. O resto do job só aponta para ele:
+
+| Parte do job | O que vai | O que **não** vai |
+|---|---|---|
+| `job.data` (input) | ids opacos: `{ messageId, conversationId }` | texto do usuário, prompt, dado pessoal |
+| `job.log` | 1 linha `bull-horizon:agent-run {...}` por tentativa, já cortada no nível da fila, mais linhas humanas sem conteúdo sensível | o rastro completo |
+| `returnvalue` | uma referência pequena: `{ messageId, conversationId, attempt, status }` | o run, o rastro, a resposta |
+| Seu banco | o rastro completo (`recorder.run`), se quiser guardar | |
+
+Por que log, e não `returnvalue`:
+
+- **Tentativa que falha só aparece no log.** O job relança o erro para o Bull tentar de novo, e o `returnvalue` não existe nesse caso. Justamente o run que mais interessa investigar se perderia.
+- **Retry fica lado a lado.** Cada tentativa anexa a sua linha.
+- **O corte de privacidade acontece antes do Redis.** O `createAgentRun` corta no processo do app. O `returnvalue` o Bull grava como vier, e o corte só valeria ao exibir.
+- **A API é a mesma no Bull e no BullMQ**, e a linha some junto com o job.
+
+O painel ainda lê um `AgentRunV1` do `returnvalue` quando não há linha no log, mas isso é **só compatibilidade** para workers antigos (aparece o chip "from return value" no run). Não desenhe um job novo assim.
+
+Checklist do job no padrão:
+
+1. `job.data` só com ids. O worker carrega o resto do banco.
+2. `createAgentRun({ job, model, agent: AI_AGENT })` no começo da tentativa. **Não passe `attempt`**: o helper deriva do job e trata a diferença entre Bull e BullMQ (o `attemptsMade` do BullMQ já vem incrementado).
+3. `await recorder.finish(...)` ou `await recorder.fail(err)` **antes** de o processor retornar ou relançar. Assim a linha chega antes do evento `completed`/`failed` que o monitor escuta.
+4. O processor retorna só a referência. Nunca o run.
+5. Verificação: no modal de Logs do job aparece "agent run (attempt N)" com Open run, e o run **não** tem o chip "from return value". Se aparecer o chip, ou o aviso "agent jobs finished without a run", algum worker ainda roda código antigo.
+
 ## Índice
 
+0. O caminho certo
 1. Checklist de decisão
 2. Config compartilhada
 3. Monitor
@@ -111,7 +140,15 @@ export class AiProcessor {
       onError: err => this.logger.warn(`trace do job ${job.id}: ${String(err)}`),
     });
     // O service chama finish/fail com await e relança o erro.
+    // Sem `attempt`: o helper deriva do job (Bull e BullMQ contam diferente).
     await this.replies.run(job.data.messageId, recorder);
+    // Retorno = só uma referência. O run mora no job.log.
+    return {
+      messageId: job.data.messageId,
+      conversationId: job.data.conversationId,
+      attempt: recorder.run.attempt,
+      status: 'replied',
+    };
   }
 }
 ```

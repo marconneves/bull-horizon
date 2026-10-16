@@ -81,6 +81,7 @@ Config do monitor (`new BullMonitorX({...})`): `queues` (obrigatório), `metrics
 8. **Mesmo `AgentQueueConfig` no monitor e no worker.** Um objeto exportado de um arquivo de constantes da fila.
 9. **Sem auth nativa.** Quem alcança a rota lê e altera tudo (inclusive logs de job e GraphQL). Proteja a rota com algo **antes** do router.
 10. **`await monitor.init()` antes de montar** o router/plugin.
+11. **Run de agente mora no `job.log`, gravado pelo `createAgentRun`.** `job.data` leva só ids, o processor dá `await` no `finish`/`fail` e retorna só uma referência, nunca o run. Ler o run do `returnvalue` é só compatibilidade com worker antigo (ver `references/agent-runs.md` § 0).
 
 ## Snippet mínimo (Express)
 
