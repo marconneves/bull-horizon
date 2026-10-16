@@ -3,6 +3,9 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import makeStyles from '@mui/styles/makeStyles';
 import clsx from 'clsx';
+import { alpha } from '@mui/material/styles';
+import WarningIcon from '@mui/icons-material/WarningAmberOutlined';
+import { unrecordedMessage } from './format';
 
 export const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
@@ -69,6 +72,24 @@ const useStyles = makeStyles((theme) => ({
     height: 8,
     borderRadius: 2,
     flexShrink: 0,
+  },
+  unrecorded: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: theme.spacing(1),
+    padding: theme.spacing(1.25, 1.5),
+    fontSize: 13,
+    lineHeight: 1.5,
+    textAlign: 'left',
+    color: theme.palette.text.primary,
+    border: `1px solid ${alpha(theme.palette.warning.main, 0.5)}`,
+    backgroundColor: alpha(theme.palette.warning.main, 0.08),
+    '& svg': {
+      fontSize: 18,
+      color: theme.palette.warning.main,
+      flex: 'none',
+      marginTop: 1,
+    },
   },
   legend: {
     display: 'flex',
@@ -153,6 +174,22 @@ export function Legend({
           {item.label}
         </span>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Agent jobs that finished with neither a run log line nor an AgentRunV1
+ * return value: usually a worker without the helper. Shown wherever runs
+ * would be, so an empty screen does not read as "no traffic".
+ */
+export function UnrecordedNotice({ count }: { count: number }) {
+  const cls = useStyles();
+  if (count <= 0) return null;
+  return (
+    <div className={cls.unrecorded} role="status">
+      <WarningIcon />
+      <span>{unrecordedMessage(count)}</span>
     </div>
   );
 }

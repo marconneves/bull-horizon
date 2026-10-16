@@ -118,6 +118,7 @@ export type AgentQueueConfig = {
 
 export type AgentRun = {
   v: Scalars['Int'];
+  source: AgentRunSource;
   detail: AgentRunDetail;
   /**
    * The recorded run carried more detail than the queue declares; the server
@@ -189,6 +190,21 @@ export type AgentRunListItem = {
   tools: Array<AgentRunToolLink>;
   error?: Maybe<Scalars['String']>;
 };
+
+/**
+ * Where the monitor found the run. Server-side only, not part of the written
+ * contract.
+ */
+export enum AgentRunSource {
+  /** A bull-horizon:agent-run line in the job log (createAgentRun). */
+  Log = 'log',
+  /**
+   * Compatibility path: the job's returnvalue carried the run (a worker
+   * without createAgentRun). Only the completed attempt; failed attempts are
+   * missing.
+   */
+  Returnvalue = 'returnvalue',
+}
 
 export type AgentRunStep = {
   step: Scalars['Int'];
@@ -285,6 +301,12 @@ export type AgentsSummary = {
    * removed non-agent jobs are counted as well.
    */
   lost: Scalars['Int'];
+  /**
+   * Finished agent jobs with no run at all: no run line in the log and no run
+   * in the returnvalue. Usually a worker not instrumented with createAgentRun
+   * (e.g. old code still consuming the queue). Distinct from lost.
+   */
+  unrecorded: Scalars['Int'];
   p50?: Maybe<Scalars['Float']>;
   p95?: Maybe<Scalars['Float']>;
   avgDurationMs?: Maybe<Scalars['Float']>;

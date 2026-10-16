@@ -1,6 +1,8 @@
 import { JsonService } from '../services/json';
 import { TieredSeries } from './tiered-series';
 import {
+  AGENT_RUN_MAX_READ_CHARS,
+  isAgentRunV1,
   applyAgentRunDetail,
   parseAgentRunLine,
   recordedAgentRunDetail,
@@ -42,6 +44,12 @@ export type TAgentPoint = {
   failed: number;
   /** Job removed before the collector could read its logs. */
   lost: number;
+  /**
+   * Finished agent job with no run at all: no run line in its log and no run
+   * in its returnvalue (e.g. a worker without `createAgentRun`). Absent on
+   * points written before it existed: read as 0.
+   */
+  unrecorded?: number;
   /** Runs with at least one empty tool result. */
   emptyRuns: number;
   durSum: number;
@@ -104,6 +112,7 @@ export const emptyAgentPoint = (timestamp = 0, windowMs = 0): TAgentPoint => ({
   runs: 0,
   failed: 0,
   lost: 0,
+  unrecorded: 0,
   emptyRuns: 0,
   durSum: 0,
   durMax: 0,
@@ -233,6 +242,7 @@ export function mergeAgentPoints(
     runs: base.runs + next.runs,
     failed: base.failed + next.failed,
     lost: base.lost + next.lost,
+    unrecorded: (base.unrecorded ?? 0) + (next.unrecorded ?? 0),
     emptyRuns: base.emptyRuns + next.emptyRuns,
     durSum: base.durSum + next.durSum,
     durMax: Math.max(base.durMax, next.durMax),
@@ -336,6 +346,44 @@ export function agentRunIndexEntry(
     entry.c = clipId(conversationId);
   }
   return entry;
+}
+
+/**
+ * Compatibility source: a worker that predates `createAgentRun` may return
+ * the whole run (AiTrace v1) as the job's returnvalue instead of logging it.
+ * Accepted only if it passes the same shape guard and read cap as a log line.
+ * It only covers the attempt that completed (failed attempts return nothing).
+ * Without `attempt`, it is the job's attempt count. Never throws.
+ */
+export function agentRunFromReturnValue(job: {
+  returnvalue: unknown;
+  attemptsMade: number;
+}): AgentRunV1 | null {
+  try {
+    let value: unknown = job.returnvalue;
+    if (value == null) return null;
+    if (typeof value === 'string') {
+      if (value.length > AGENT_RUN_MAX_READ_CHARS) return null;
+      value = JSON.parse(value);
+    } else {
+      const json = JSON.stringify(value);
+      if (!json || json.length > AGENT_RUN_MAX_READ_CHARS) return null;
+    }
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return null;
+    }
+    const record = value as Record<string, unknown>;
+    const candidate =
+      record.attempt === undefined
+        ? {
+            ...record,
+            attempt: Math.max(Math.floor(Number(job.attemptsMade) || 0), 1),
+          }
+        : record;
+    return isAgentRunV1(candidate) ? candidate : null;
+  } catch {
+    return null;
+  }
 }
 
 const warnedDetailMismatch = new Set<string>();
@@ -453,18 +501,38 @@ export class AgentMetrics {
       const { logs } = await queue.getJobLogs(jobId, -AGENT_LOG_TAIL, -1);
       const processedOn = job.processedOn;
       let currentSeen = false;
+      const attempts = new Set<number>();
       for (const line of logs ?? []) {
         const parsed = parseAgentRunLine(line);
         if (!parsed) continue;
         checkAgentDetailMismatch(queue.name, agent.detail, parsed);
         const run = applyAgentRunDetail(parsed, agent.detail);
         await this._ingest(queue, jobId, job.name, run);
+        attempts.add(run.attempt);
         if (isCurrentAttemptRun(run, processedOn)) currentSeen = true;
       }
       // Earlier attempts' lines can be new on this event (no lib emits a
       // global event on retry), so "something was ingested" does not mean
       // the attempt that just ended has its line: re-read until it shows.
-      if (!currentSeen && !isReread) this._scheduleReread(queue, jobId);
+      if (!currentSeen && !isReread) {
+        this._scheduleReread(queue, jobId);
+        return;
+      }
+      // Still no line for this attempt: fall back to the returnvalue (old
+      // workers), unless a line already covers that attempt.
+      const fallback = agentRunFromReturnValue(job);
+      if (fallback && !attempts.has(fallback.attempt)) {
+        checkAgentDetailMismatch(queue.name, agent.detail, fallback);
+        await this._ingest(
+          queue,
+          jobId,
+          job.name,
+          applyAgentRunDetail(fallback, agent.detail)
+        );
+      } else if (!fallback && !attempts.size) {
+        this._accumulator(queue.id).unrecorded =
+          (this._accumulator(queue.id).unrecorded ?? 0) + 1;
+      }
     } catch (e) {
       console.error('[bull-horizon] agent metrics ingestion error: ', e);
     }
@@ -472,7 +540,7 @@ export class AgentMetrics {
 
   /**
    * Hands the tick's accumulators over as points, one per queue that saw a
-   * run or a lost job. Sparse on purpose: idle minutes write nothing.
+   * run, a lost job or an unrecorded one. Sparse on purpose: idle minutes write nothing.
    */
   public drain(
     queues: Queue[],
@@ -483,7 +551,10 @@ export class AgentMetrics {
     const ids = new Set(queues.map((queue) => queue.id));
     const out: Array<{ queue: string; point: TAgentPoint }> = [];
     this._pending.forEach((point, queue) => {
-      if (ids.has(queue) && point.runs + point.lost > 0) {
+      if (
+        ids.has(queue) &&
+        point.runs + point.lost + (point.unrecorded ?? 0) > 0
+      ) {
         out.push({ queue, point: { ...point, timestamp, windowMs } });
       }
     });

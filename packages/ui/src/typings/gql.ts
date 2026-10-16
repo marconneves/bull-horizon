@@ -27,10 +27,13 @@ export type AgentConversation = {
    */
   messages: Array<AgentConversationMessage>;
   /**
-   * Heuristic: true when the queue's recent runs index is at its cap
-   * (recentRuns), so older runs, possibly of this conversation, were evicted,
-   * or when the conversation has more than 100 messages and only the newest
-   * are listed. False means every message the index ever held is here.
+   * Heuristic. True when the conversation has more than 100 messages (only the
+   * newest are listed), or when the queue's recent runs index is at its cap
+   * (recentRuns, so its oldest runs were evicted) and it reaches back from the
+   * first message no further than the conversation's largest pause between
+   * two messages (at least 30 minutes): an older message may have been
+   * evicted. When the index reaches further back, an older message would most
+   * likely still be in it, so false.
    */
   maybeIncomplete: Scalars['Boolean'];
   totals: AgentConversationTotals;
@@ -115,6 +118,7 @@ export type AgentQueueConfig = {
 
 export type AgentRun = {
   v: Scalars['Int'];
+  source: AgentRunSource;
   detail: AgentRunDetail;
   /**
    * The recorded run carried more detail than the queue declares; the server
@@ -186,6 +190,21 @@ export type AgentRunListItem = {
   tools: Array<AgentRunToolLink>;
   error?: Maybe<Scalars['String']>;
 };
+
+/**
+ * Where the monitor found the run. Server-side only, not part of the written
+ * contract.
+ */
+export enum AgentRunSource {
+  /** A bull-horizon:agent-run line in the job log (createAgentRun). */
+  Log = 'log',
+  /**
+   * Compatibility path: the job's returnvalue carried the run (a worker
+   * without createAgentRun). Only the completed attempt; failed attempts are
+   * missing.
+   */
+  Returnvalue = 'returnvalue',
+}
 
 export type AgentRunStep = {
   step: Scalars['Int'];
@@ -282,6 +301,12 @@ export type AgentsSummary = {
    * removed non-agent jobs are counted as well.
    */
   lost: Scalars['Int'];
+  /**
+   * Finished agent jobs with no run at all: no run line in the log and no run
+   * in the returnvalue. Usually a worker not instrumented with createAgentRun
+   * (e.g. old code still consuming the queue). Distinct from lost.
+   */
+  unrecorded: Scalars['Int'];
   p50?: Maybe<Scalars['Float']>;
   p95?: Maybe<Scalars['Float']>;
   avgDurationMs?: Maybe<Scalars['Float']>;
@@ -733,6 +758,7 @@ export type AgentRunFieldsFragment = Pick<
   | 'v'
   | 'detail'
   | 'detailMismatch'
+  | 'source'
   | 'model'
   | 'attempt'
   | 'startedAt'
@@ -1055,6 +1081,7 @@ export type GetAgentsSummaryQuery = {
       | 'runs'
       | 'failed'
       | 'lost'
+      | 'unrecorded'
       | 'p50'
       | 'p95'
       | 'avgDurationMs'

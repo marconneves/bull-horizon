@@ -61,3 +61,9 @@ export const fmtClock = (iso: string | null | undefined, ms = true): string => {
 
 export const plural = (count: number, one: string, many = `${one}s`) =>
   `${count.toLocaleString('en-US')} ${count === 1 ? one : many}`;
+
+/** Notice for agent jobs that finished without a recorded run. */
+export const unrecordedMessage = (count: number) =>
+  `${plural(count, 'agent job')} finished without a run in this window. ` +
+  'Make sure the worker records runs with createAgentRun (or returns an ' +
+  'AgentRunV1). See docs/agent-runs.md.';

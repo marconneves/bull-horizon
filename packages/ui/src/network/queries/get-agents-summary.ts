@@ -25,6 +25,7 @@ export const getAgentsSummary = (
           runs
           failed
           lost
+          unrecorded
           p50
           p95
           avgDurationMs

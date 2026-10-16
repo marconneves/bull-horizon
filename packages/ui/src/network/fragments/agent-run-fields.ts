@@ -6,6 +6,7 @@ export const AGENT_RUN_FIELDS_FRAG = gql`
     v
     detail
     detailMismatch
+    source
     model
     attempt
     startedAt

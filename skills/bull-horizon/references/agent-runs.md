@@ -210,6 +210,10 @@ await queue.add('reply', data, { attempts: 2, removeOnComplete: 500, removeOnFai
 
 `true` remove o job e seus logs no mesmo script Redis que emite o evento terminal: o collector chega tarde e conta `lost`. Numa fila mista, dê retenção numérica também aos jobs que não são de agente (job removido conta como `lost` antes de o nome ser checado). O run vive exatamente o tempo do job: reduzir N também reduz o tempo que conteúdo `full` fica exposto.
 
+### Compatibilidade: run no returnvalue
+
+Worker antigo que devolve o trace (AiTrace v1) no `return` em vez de usar `createAgentRun`: o monitor aceita o returnvalue como run da tentativa que completou (`source: returnvalue` no GraphQL), se passar no mesmo check de formato e no teto de 512 KB, e nunca duplica uma tentativa que já tem linha no log. É caminho de compatibilidade: **não registra tentativas que falharam** e o Bull grava o returnvalue como está, então **conteúdo `full` vai para o Redis seja qual for o `detail`** (o corte só vale ao servir e no índice). O caminho recomendado continua sendo `createAgentRun`, sem devolver o trace. Job de agente sem linha e sem returnvalue válido conta como `unrecorded`.
+
 ## 7. Conversa (opcional)
 
 Para agrupar os runs de uma conversa (aba Conversa, botão "View whole conversation" no run):

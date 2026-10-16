@@ -185,3 +185,19 @@ Residual (Info, não bloqueia): `_toListItem` repassa `entry.e` sem recorte de l
 |---|---|---|---|
 | B1 | Low | `job.progress({ label })` recebe `toolThinkingLabel(toolName, toolCall.input)`, que interpola argumentos que o LLM gerou a partir da conversa (`Buscando exercícios: ${query.slice(0, 40)}`, `bodyTerm`, dias). Isso vai para o hash do job no Redis em `basic`, fora do corte de nível. É anterior ao commit e transitório (o último passo sobrescreve com `WRITING`), mas persiste se a tentativa falhar no meio de uma tool. | No `sink.progress`, usar rótulo fixo por tool (sem argumentos) e manter o rótulo detalhado só no `thinking` do banco. |
 | B2 | Info | Títulos de card vão para o Redis em `basic` duas vezes: na linha do run e na linha `[fim] ... (WORKOUT: Glúteo em casa)`. A decisão (b) aceitou isso. Hoje são nomes de treino e receita, sem diagnóstico. | Se algum tipo de card puder levar condição de saúde no título, usar título genérico (recomendação da decisão b). |
+
+## Fallback returnvalue
+
+**Por:** 🔒 Security Specialist, 2026-10-16. Escopo: `agentRunFromReturnValue` (`metrics/agent-metrics.ts`), uso no collector e em `gql/data-sources/agents/index.ts`, `AgentRun.source`, `AgentsSummary.unrecorded`, `docs/agent-runs.md` § Compatibility.
+
+**Veredito: APROVADO.** `npx jest packages/root`: 210 testes passando.
+
+Verificado:
+- **Corte de nível:** o run do returnvalue segue o mesmo caminho da linha de log. Ao servir, passa por `_toView` → `applyAgentRunDetail` (whitelist, nível declarado pela fila; sem `detail` conta como `full` e é cortado numa fila `basic`), o que cobre `agentRun`, `Job.agentRuns` e `agentConversation`. No collector, `applyAgentRunDetail(fallback, agent.detail)` roda antes de `_ingest`, então o índice (`agentRuns`) nunca tem texto. Um returnvalue que se declara `basic` mas carrega `text` também é cortado pela whitelist.
+- **Tamanho:** string acima de 512 KB é descartada antes do `JSON.parse`. Objeto (já desserializado pelo Bull) é medido via `JSON.stringify` com o mesmo teto. Tudo dentro de `try/catch`, e a mesma guarda de forma `isAgentRunV1` se aplica.
+- **Protótipo:** o spread `{ ...record }` copia `__proto__` vindo de `JSON.parse` como propriedade própria. Os agregados usam os records sem protótipo da correção F1.
+- **clipId:** aplicado no corte (`applyAgentRunDetail`) e na entrada do índice, como na linha de log.
+- **Avisos:** só o `checkAgentDetailMismatch` existente (nome da fila e níveis, sem conteúdo). `unrecorded` é só contador.
+- **Doc:** diz explicitamente que o Bull guarda o returnvalue como veio e que o corte vale só ao servir e no índice, e recomenda `createAgentRun` para tirar o conteúdo do Redis.
+
+Info (sem ação obrigatória): o campo existente `Job.returnvalue` (GraphQL e "Return value" no painel) continua expondo o returnvalue bruto, como em qualquer job. Sugestão de doc: citar esse campo na frase "full content ... is in Redis" para o integrador não achar que o corte cobre o painel inteiro.

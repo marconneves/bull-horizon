@@ -15,7 +15,7 @@ import { useAgentsStore } from '@/stores/agents';
 import NetworkRequest from '@/components/NetworkRequest';
 import { AgentRunsFilter, AgentRunsSort } from '@/typings/gql';
 import type { GetAgentRunsQuery } from '@/typings/gql';
-import { MONO } from './shared';
+import { MONO, UnrecordedNotice } from './shared';
 import { outcomeColor, useAgentColors } from './colors';
 import { fmtCost, fmtInt, fmtMs, plural } from './format';
 import ToolChain from './ToolChain';
@@ -246,8 +246,17 @@ function RunsTab({ queues, since }: TProps) {
     );
   const { data: queuesData } = useQueuesQuery();
   const {
-    queries: { getAgentRuns },
+    queries: { getAgentRuns, getAgentsSummary },
   } = useNetwork();
+  // Only for `unrecorded`: jobs that finished without a run never reach the
+  // runs index, so the list alone cannot tell "no traffic" from "not wired".
+  const summaryArgs = { queues, since, maxPoints: 1 };
+  const { data: summaryData } = useQuery(
+    [QueryKeysConfig.agentsSummary, summaryArgs],
+    () => getAgentsSummary(summaryArgs),
+    { refetchInterval: getPollingInterval(), keepPreviousData: true }
+  );
+  const unrecorded = summaryData?.agentsSummary?.unrecorded ?? 0;
   const args = {
     queues,
     since,
@@ -314,6 +323,7 @@ function RunsTab({ queues, since }: TProps) {
         ))}
       </Paper>
       <NetworkRequest status={status} error={error} refetch={refetch}>
+        {!!page?.items.length && <UnrecordedNotice count={unrecorded} />}
         <Paper elevation={0} className={cls.list}>
           <div className={`${cls.row} ${cls.head}`}>
             <span>TIME</span>
@@ -326,7 +336,13 @@ function RunsTab({ queues, since }: TProps) {
             <span>STATUS</span>
           </div>
           {!page?.items.length && (
-            <div className={cls.empty}>No runs match in this window.</div>
+            <div className={cls.empty}>
+              {unrecorded > 0 ? (
+                <UnrecordedNotice count={unrecorded} />
+              ) : (
+                'No runs match in this window.'
+              )}
+            </div>
           )}
           {page?.items.map((item) => {
             const slow = (item.durationMs ?? 0) >= SLOW_MS;

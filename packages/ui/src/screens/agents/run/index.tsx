@@ -20,7 +20,7 @@ import { useAgentsStore } from '@/stores/agents';
 import type { TAgentRunRef, TAgentsBackTo } from '@/stores/agents';
 import NetworkRequest from '@/components/NetworkRequest';
 import JobStatusChip from '@/components/JobStatusChip';
-import { AgentRunDetail } from '@/typings/gql';
+import { AgentRunDetail, AgentRunSource } from '@/typings/gql';
 import type { GetAgentJobQuery } from '@/typings/gql';
 import { Card, Kpis, MONO } from '../shared';
 import type { TKpi } from '../shared';
@@ -415,6 +415,17 @@ function AgentRunView() {
                 variant="outlined"
                 className={cls.detailChip}
                 label={`${run.detail} detail`}
+              />
+            </Tooltip>
+          )}
+          {run?.source === AgentRunSource.Returnvalue && (
+            <Tooltip title="Recorded from the job's return value (compatibility path; failed attempts are not captured)">
+              <Chip
+                size="small"
+                variant="outlined"
+                color="warning"
+                className={cls.detailChip}
+                label="from return value"
               />
             </Tooltip>
           )}

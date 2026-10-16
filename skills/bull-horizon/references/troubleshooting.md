@@ -41,6 +41,12 @@ Formato: sintoma, causas prováveis em ordem, como confirmar, correção.
 
 Sem collector: as queries retornam `NO_COLLECTOR` e as abas somem. Correção: `metrics: {}`.
 
+## Agents vazio (Metrics/Runs sem dados), mas os jobs completam
+
+1. **Worker sem `createAgentRun`**: o código que consome a fila é antigo (deploy do worker não saiu, ou outra instância/versão ainda pega jobs). Confirme: o resumo de Metrics mostra `unrecorded` > 0 (job de agente terminou sem linha de run e sem run no returnvalue), e o modal de Logs do job não tem `bull-horizon:agent-run`. Correção: deploy do worker com `createAgentRun` e desligar as instâncias antigas.
+2. **Worker antigo que devolve o trace no `return`**: o painel usa o returnvalue como fallback (`source: returnvalue` no run). Funciona, mas sem as tentativas que falharam e com o conteúdo completo gravado no Redis pelo Bull, seja qual for o `detail`. Correção: mesma do item 1.
+3. **Collector ligado há pouco**: nada é retroativo; só conta o que terminou com o monitor no ar.
+
 ## O run não aparece no job
 
 1. **`finish`/`fail` não foram chamados** (ou o processo caiu antes): a tentativa fica como job comum. Confira que o service chama `await recorder.finish(...)` no sucesso e `await recorder.fail(...)` no catch.
@@ -50,6 +56,10 @@ Sem collector: as queries retornam `NO_COLLECTOR` e as abas somem. Correção: `
 5. **`finish` sem `await`**: em geral resolve com a releitura de 2 s do collector, mas pode chegar depois do evento. Correção: `await` antes de retornar/relançar.
 6. Linha acima de 512 KB (só se `limits` foi muito aumentado) é ignorada na leitura.
 7. Confira no modal de Logs do job se existe a linha `bull-horizon:agent-run {...}`.
+
+## Contagem `unrecorded` nas métricas de agente
+
+`unrecorded` = job de agente que terminou sem nenhum run: nem linha `bull-horizon:agent-run` no log, nem run válido no returnvalue. Diferente de `lost` (job já removido). Causa quase sempre: worker sem `createAgentRun` (ver "Agents vazio"). Também conta se `ai.jobs` inclui um nome de job que o worker não instrumenta.
 
 ## Contagem `lost` nas métricas de agente
 

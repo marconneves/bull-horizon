@@ -48,6 +48,7 @@ type TPoint = {
   runs: number;
   failed: number;
   lost: number;
+  unrecorded: number;
   emptyRuns: number;
   durSum: number;
   /** p50/p95 weighted by runs, so summing then dividing keeps them sane. */
@@ -61,7 +62,13 @@ type TPoint = {
   models: Record<string, { r: number; i: number; o: number }>;
 };
 
-type TMinute = { runs: number; failed: number; empty: number; lost: number };
+type TMinute = {
+  runs: number;
+  failed: number;
+  empty: number;
+  lost: number;
+  unrecorded: number;
+};
 
 /**
  * One count per minute over the longest tier, newest first (index 0 = the
@@ -77,6 +84,7 @@ const genMinutes = (now: number, rnd: () => number): TMinute[] => {
     failed: 0,
     empty: 0,
     lost: 0,
+    unrecorded: 0,
   }));
   const minuteOf = (at: number) => Math.floor((now - at) / MINUTE_MS);
   const { index } = agentMock();
@@ -107,6 +115,11 @@ const genMinutes = (now: number, rnd: () => number): TMinute[] => {
     }
     // Runs that started but never wrote a record (not in the index).
     minutes[m].lost = rnd() < 0.0015 ? 1 : 0;
+    // Jobs a worker without the helper finished (no log line, no returned
+    // AgentRunV1). Only older than two days, so 24h is clean and 7d shows
+    // the notice. Hashed on the minute so the other draws stay put.
+    minutes[m].unrecorded =
+      m >= 2 * (DAY_MS / MINUTE_MS) && (m * 2654435761) % 997 === 0 ? 1 : 0;
   }
   return minutes;
 };
@@ -134,6 +147,7 @@ const genSeries = (): TPoint[] => {
       let failed = 0;
       let emptyRuns = 0;
       let lost = 0;
+      let unrecorded = 0;
       for (let m = first; m < first + span; m += 1) {
         const minute = minutes[m];
         if (!minute) continue;
@@ -141,8 +155,9 @@ const genSeries = (): TPoint[] => {
         failed += minute.failed;
         emptyRuns += minute.empty;
         lost += minute.lost;
+        unrecorded += minute.unrecorded;
       }
-      if (runs === 0 && lost === 0) continue;
+      if (runs === 0 && lost === 0 && unrecorded === 0) continue;
       const hour = new Date(timestamp).getHours();
       const p50 = 7000 + rnd() * 5000 + (hour >= 18 && hour <= 21 ? 3000 : 0);
       const p95 = p50 + 7000 + rnd() * 10000;
@@ -170,6 +185,7 @@ const genSeries = (): TPoint[] => {
         runs,
         failed,
         lost,
+        unrecorded,
         emptyRuns,
         durSum,
         p50w: p50 * runs,
@@ -225,6 +241,7 @@ export const getAgentsSummaryMock = async (
     runs: 0,
     failed: 0,
     lost: 0,
+    unrecorded: 0,
     emptyRuns: 0,
     durSum: 0,
     p50w: 0,
@@ -240,6 +257,7 @@ export const getAgentsSummaryMock = async (
     total.runs += p.runs;
     total.failed += p.failed;
     total.lost += p.lost;
+    total.unrecorded += p.unrecorded;
     total.emptyRuns += p.emptyRuns;
     total.durSum += p.durSum;
     total.p50w += p.p50w;
@@ -295,6 +313,7 @@ export const getAgentsSummaryMock = async (
       runs,
       failed: total.failed,
       lost: total.lost,
+      unrecorded: total.unrecorded,
       p50: ratio(total.p50w, runs),
       p95: ratio(total.p95w, runs),
       avgDurationMs: ratio(total.durSum, runs),

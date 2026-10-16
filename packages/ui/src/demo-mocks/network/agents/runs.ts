@@ -2,7 +2,7 @@
 // one recorded run per attempt, the runs index the collector keeps and the
 // aggregated series. Pure generation with a seeded RNG — no import of the
 // shared mock store, which imports this module.
-import { AgentRunDetail, JobStatus } from '@/typings/gql';
+import { AgentRunDetail, AgentRunSource, JobStatus } from '@/typings/gql';
 import type { AgentRunFieldsFragment, GetAgentRunsQuery } from '@/typings/gql';
 import {
   DESIGN_RUN,
@@ -134,6 +134,7 @@ type TRunSpec = {
   conversationId?: string;
   userText?: string;
   reply?: string;
+  source?: AgentRunSource;
 };
 
 /** The design's conversation: messages 1 to 4 are the jobs below. */
@@ -234,6 +235,7 @@ export const makeRun = (spec: TRunSpec): TRun => {
     v: 1,
     detail: AgentRunDetail.Full,
     detailMismatch: false,
+    source: spec.source ?? AgentRunSource.Log,
     model,
     attempt: spec.attempt,
     startedAt: iso(startedAt),
@@ -329,6 +331,11 @@ type TJobSpec = {
   detail?: AgentRunDetail;
   /** An earlier attempt that failed and was retried. */
   retried?: boolean;
+  /**
+   * Recorded by a worker that returns the AgentRunV1 instead of logging it
+   * (compatibility path): no log line, `source: returnvalue`.
+   */
+  fromReturnValue?: boolean;
   /** A turn of the design's conversation `c-7f21`. */
   turn?: { userText: string; reply: string };
 };
@@ -423,6 +430,7 @@ const JOB_SPECS: TJobSpec[] = [
     inputTokens: 5020,
     outputTokens: 340,
     durationMs: 6120,
+    fromReturnValue: true,
   },
   {
     id: 'c03e9a58',
@@ -495,6 +503,7 @@ const buildJobs = (now: number): TAgentMockJob[] =>
         conversationId: spec.turn ? DEMO_CONVERSATION_ID : undefined,
         userText: spec.turn?.userText,
         reply: spec.turn?.reply,
+        source: spec.fromReturnValue ? AgentRunSource.Returnvalue : undefined,
       });
     }
     const runs: TRun[] = [last];
@@ -520,7 +529,8 @@ const buildJobs = (now: number): TAgentMockJob[] =>
     const logs: string[] = [];
     runs.forEach((run) => {
       logs.push(`reply: attempt ${run.attempt} started`);
-      logs.push(toLogLine(run));
+      // A returned run never reaches the job log.
+      if (run.source === AgentRunSource.Log) logs.push(toLogLine(run));
     });
     return {
       id: spec.id,

@@ -12,6 +12,7 @@ import {
   AGENT_MAX_TOOLS,
   AGENT_OTHER_KEY,
   AGENT_STEPS_BUCKETS,
+  agentRunFromReturnValue,
   agentRunOutcome,
   checkAgentDetailMismatch,
   emptyAgentPoint,
@@ -20,6 +21,7 @@ import {
   mergeAgentPoints,
 } from '../../../metrics/agent-metrics';
 import { DEFAULT_AGENTS_CONFIG } from '../../../constants';
+import { AgentRunSource } from '../../../typings/gql';
 import type { MetricsCollector } from '../../../metrics-collector';
 import type {
   TAgentPoint,
@@ -107,17 +109,27 @@ export class AgentsDataSource {
     const agent = queue.agent;
     if (!agent || !queue.isAgentJob(job.name)) return [];
     const { logs } = await queue.getJobLogs(job.id, -AGENT_LOG_TAIL, -1);
-    const runs = (logs ?? [])
+    const runs: Array<{ run: AgentRunV1; source: AgentRunSource }> = (
+      logs ?? []
+    )
       .map(parseAgentRunLine)
-      .filter((run): run is AgentRunV1 => !!run);
-    return runs.map((run, i) =>
-      this._toView(
+      .filter((run): run is AgentRunV1 => !!run)
+      .map((run) => ({ run, source: AgentRunSource.Log }));
+    // Old workers return the run instead of logging it: used only for an
+    // attempt no line covers, so it never duplicates one.
+    const fallback = agentRunFromReturnValue(job);
+    if (fallback && !runs.some(({ run }) => run.attempt === fallback.attempt)) {
+      runs.push({ run: fallback, source: AgentRunSource.Returnvalue });
+    }
+    return runs.map(({ run, source }, i) => ({
+      ...this._toView(
         run,
         agent.detail,
         i === runs.length - 1 ? job : null,
         queue.name
-      )
-    );
+      ),
+      source,
+    }));
   }
 
   public async getRun(
@@ -195,6 +207,7 @@ export class AgentsDataSource {
         stepsWeight
       ),
       runsWithEmptyTool: total.emptyRuns,
+      unrecorded: total.unrecorded ?? 0,
       latency: this._downsample(series, maxPoints).map(
         (point): AgentLatencyPoint => ({
           timestamp: point.timestamp,
@@ -466,7 +479,7 @@ export class AgentsDataSource {
     declared: AgentRunDetail,
     lastAttemptJob: Job | null,
     queueName: string
-  ): AgentRun {
+  ): Omit<AgentRun, 'source'> {
     const recorded = recordedAgentRunDetail(stored);
     const detailMismatch = checkAgentDetailMismatch(
       queueName,

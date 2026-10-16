@@ -2,7 +2,7 @@
 // recorded at `full` detail so the demo shows every block. Relative,
 // type-only imports keep it usable from the root jest setup.
 import type { AgentRunFieldsFragment } from '../../../typings/gql';
-import { AgentRunDetail } from '../../../typings/gql';
+import { AgentRunDetail, AgentRunSource } from '../../../typings/gql';
 
 /** USD per 1M tokens. Mirrors `config.ai.pricing`; the demo has no server. */
 export const DEMO_PRICING: Record<string, { input: number; output: number }> = {
@@ -61,6 +61,7 @@ export const DESIGN_RUN: AgentRunFieldsFragment = {
   v: 1,
   detail: AgentRunDetail.Full,
   detailMismatch: false,
+  source: AgentRunSource.Log,
   model: MODEL,
   attempt: 1,
   startedAt: '2026-10-14T19:05:28.514Z',

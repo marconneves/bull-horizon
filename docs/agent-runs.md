@@ -643,6 +643,37 @@ monitor replicas do not double count.
 
 A queue in `metrics.blacklist` gets no agent aggregates either.
 
+A finished agent job with no run at all (no run line in its log and no run in
+its returnvalue, see below) is counted as **unrecorded** (`unrecorded` on
+`agentsSummary`). It usually means the worker consuming the queue is not
+instrumented with `createAgentRun` (old code still deployed). It is distinct
+from `lost` (job already removed).
+
+### Compatibility: run in the job's returnvalue
+
+Workers written before `createAgentRun` may return the whole trace (AiTrace
+v1) as the job's return value instead of logging it. When a finished job has
+no run line for an attempt, and its returnvalue (an object or a JSON string)
+passes the same shape check and the same 512 KB read cap as a log line, the
+monitor uses it as the run of that attempt (`attempt` from the run, or the
+job's attempt count). It is never used for an attempt a log line already
+covers. In GraphQL these runs have `source: returnvalue` (log runs have
+`source: log`); the field is the server's, not part of the written contract.
+
+This is a compatibility path, not the recommended one:
+
+- **Failed attempts are missing.** A job only has a returnvalue when an
+  attempt completes; `createAgentRun` records every attempt.
+- **The detail cut only applies when serving.** Bull stores the returnvalue
+  as is, so full content returned by the job (user text, answers, tool
+  input/output) is in Redis whatever the queue's `detail`. The monitor cuts
+  it to the declared level when serving and in the recent runs index, and
+  flags `detailMismatch` when a run without `detail` lands on a `basic` queue.
+  The cut does not reach the job itself: the job's "Return value" in the
+  dashboard (and `Job.returnvalue` in GraphQL) still shows the raw value. To
+  keep content out of Redis, record with `createAgentRun` and stop returning
+  the trace.
+
 ## Conversation view
 
 Runs that share an `input.conversationId` in the same queue form a
@@ -745,6 +776,8 @@ Computed by the server when serving:
   not when they ran (the difference is the retry backoff).
 - **Agent metrics are not exported to Prometheus.** The `/metrics` endpoint is
   unauthenticated, and tool and model names would become label values.
+- Runs recovered from a job's returnvalue (compatibility path) only cover the
+  completed attempt, and their full content is stored in Redis by Bull.
 - Jobs removed by `removeOnComplete: true` / `removeOnFail: true` are counted
   as `lost`, with no run data. `lost` means "terminal event whose job was
   already gone": neither Bull nor BullMQ put the job name in the event, so in

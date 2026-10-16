@@ -1,4 +1,4 @@
-import { fmtCost, plural } from '../format';
+import { fmtCost, plural, unrecordedMessage } from '../format';
 
 describe('plural (m4)', () => {
   it('uses the singular for exactly one', () => {
@@ -18,5 +18,16 @@ describe('fmtCost', () => {
   it('never shows a missing price as $0', () => {
     expect(fmtCost(null)).toBe('no price');
     expect(fmtCost(0)).toBe('$0');
+  });
+});
+
+describe('unrecordedMessage', () => {
+  it('counts the jobs and points at the helper and the docs', () => {
+    const one = unrecordedMessage(1);
+    expect(one.startsWith('1 agent job finished without a run')).toBe(true);
+    expect(unrecordedMessage(7).startsWith('7 agent jobs finished')).toBe(true);
+    expect(one).toContain('createAgentRun');
+    expect(one).toContain('AgentRunV1');
+    expect(one).toContain('docs/agent-runs.md');
   });
 });

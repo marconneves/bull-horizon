@@ -12,7 +12,7 @@ import NetworkRequest from '@/components/NetworkRequest';
 import type { GetAgentsSummaryQuery } from '@/typings/gql';
 import { chartTooltipProps } from '../shared/chart-tooltip';
 import type { TTimeRange } from '../shared/time-range';
-import { Card, Kpis, Legend, MONO } from './shared';
+import { Card, Kpis, Legend, MONO, UnrecordedNotice } from './shared';
 import type { TKpi } from './shared';
 import { outcomeColor, useAgentColors } from './colors';
 import type { TAgentColors } from './colors';
@@ -508,7 +508,11 @@ function MetricsTab({ queues, since, range }: TProps) {
 
   return (
     <NetworkRequest status={status} error={error} refetch={refetch}>
-      {!summary || summary.runs + summary.lost === 0 ? (
+      {summary &&
+      summary.runs + summary.lost === 0 &&
+      summary.unrecorded > 0 ? (
+        <UnrecordedNotice count={summary.unrecorded} />
+      ) : !summary || summary.runs + summary.lost === 0 ? (
         <div className={cls.empty}>
           No agent runs finished in this window. Runs are recorded while the
           monitor process is running; history from before it started is not
@@ -516,6 +520,7 @@ function MetricsTab({ queues, since, range }: TProps) {
         </div>
       ) : (
         <div className={cls.root}>
+          <UnrecordedNotice count={summary.unrecorded} />
           <Kpis items={summaryKpis(summary, previous?.agentsSummary, colors)} />
           <div className={cls.grid}>
             <Card
