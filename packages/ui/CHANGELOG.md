@@ -1,5 +1,114 @@
 # Change Log
 
+## 6.4.0
+
+### Minor Changes
+
+- a049915: add Overview and Metrics history screens, remove the per-queue metrics screen
+
+  Two new screens: **Overview**, a grid of every queue's status breakdown as a
+  stacked bar, grouped into sections by `Queue.group` and filterable by status;
+  and **Metrics history**, the throughput of all queues aggregated, with a
+  per-queue table showing runs, completions and failure rate. Clicking a card or a
+  table row opens that queue's job list on the status you were looking at. A
+  collapsible throughput chart also sits above each queue's job list — collapsed,
+  it stops polling.
+
+  Charts plot a **rate per minute** rather than a raw counter. Points come from
+  whichever retention tier covers the selected window, so a 12-hour bucket and a
+  one-minute bucket both arrive as "a point"; charting their raw counts would make
+  the older end of the series tower over the recent end and silently change what
+  the Y axis means as you switch ranges. The failure share sits next to the total
+  instead of on a second axis, which would have made the failure line's shape
+  readable at the cost of making its magnitude incomparable.
+
+  The range selector offers exactly the windows the server says it can answer for
+  (`Query.metricsInfo`), rather than a hardcoded list.
+
+  **Removed: the per-queue metrics screen.** Its `Clear` / `Clear all` buttons moved
+  to Metrics history — they were the only UI for the `clearMetrics` /
+  `clearAllMetrics` mutations. The data is untouched: `Query.metrics` still returns
+  per-status counts and processing time, and the Prometheus endpoint still exports
+  duration. A persisted `screen: 'metrics'` in localStorage now falls back to the
+  job list instead of rendering blank.
+
+  Navigation moved out of the AppBar toggle into the sidebar, with `Jobs` listed
+  explicitly so returning to it is always one click.
+
+  Also in this release:
+
+  - The chart tooltip follows the theme. Recharts renders a white box with dark
+    text by default, which was wrong in both themes and had been papered over with
+    a hardcoded black label color.
+  - Job Data / Return Value / Stacktrace panels gained **expand all** and **copy**
+    buttons. Copy re-serializes so the clipboard gets formatted JSON rather than
+    the single-line blob the API returns, and falls back to `execCommand` because
+    `navigator.clipboard` does not exist over plain http — which is how the
+    dashboard is usually reached on a LAN.
+  - The queue list stops polling while the browser tab is in the background, and
+    keeps its previous data instead of blanking into a loading state on every
+    refetch.
+  - Picking a queue from the sidebar while an all-queue screen was open changed the
+    selection but left the screen looking identical. It now opens that queue's job
+    list.
+
+- c0c10c4: record real job throughput, with tiered retention and a Prometheus endpoint
+
+  The metrics collector now counts `completed`/`failed` queue events per collection
+  window instead of only snapshotting job counts. `counts.completed` is the size of
+  the `completed` set in Redis — it shrinks with `removeOnComplete` and disappears
+  when a queue is cleaned, so it was never a usable throughput signal. The new
+  counters come from queue events and behave identically on Bull and BullMQ, which
+  BullMQ's own `getMetrics()` API could not do (it does not exist on Bull at all,
+  nor on the BullMQ v1 range this project supports).
+
+  Collection stays **opt-in**: nothing is recorded until you pass a `metrics`
+  config. `metrics: {}` is enough to enable it with the defaults below.
+
+  **Retention is tiered**, so detail decays with age instead of history being
+  truncated: 3 days minute-by-minute, 30 days hourly, 90 days in 12-hour buckets.
+  Points are folded into the coarser tiers as they are written, which is what makes
+  the long window affordable — 90 days stored raw at one-minute resolution would be
+  ~36MB of Redis per queue, against ~1.5MB for all three tiers. Every tier is
+  configurable in both resolution and depth via `metrics.retention`, and reads pick
+  the finest tier that covers the requested window.
+
+  **Changed defaults:** `metrics.collectInterval` is now `{ minutes: 1 }` (was
+  `{ hours: 1 }`) and the raw tier keeps 4320 points (was `maxMetrics: 100`). An
+  hourly interval cannot express throughput. If you were relying on the old
+  interval, set it explicitly — otherwise upgrading increases how often the
+  collector writes to Redis. `maxMetrics` still works as an alias for
+  `retention.raw`. Existing series are kept and simply carry no throughput data for
+  points collected before this release.
+
+  An optional Prometheus/OpenMetrics endpoint (`prometheus: true`, or
+  `--prometheus` on the CLI) exposes queue depth, paused state, throughput counters
+  and processing time. It is **disabled by default**: it is an unauthenticated
+  route on the same threat model as the GraphQL endpoint, and it publishes queue
+  names as label values. One endpoint covers Prometheus, Grafana Alloy and Grafana
+  Cloud, since all three scrape the same format — see `examples/grafana` for scrape
+  configs and an importable dashboard.
+
+  New in the GraphQL schema: `Query.metricsSummary` (cross-queue throughput
+  aggregated server-side), `Query.metricsInfo` (collect interval and how far back
+  the tiers reach), `since`/`maxPoints` arguments on `Query.metrics`, and
+  `completed`/`failed`/`windowMs` on `QueueMetrics`.
+
+  Performance, along the way: `Query.metrics` reads a bounded tail of the series
+  instead of the whole list on every poll, and the `Queue` type's seven per-status
+  count fields now resolve from a single `getJobCounts()` call memoized per
+  request, instead of one Redis round-trip per field per queue.
+
+### Patch Changes
+
+- fix: add new metrics
+
+## 6.3.1
+
+### Patch Changes
+
+- 8d48f39: fix: atualizar layout e filters
+
 ## 6.3.0
 
 ### Minor Changes
