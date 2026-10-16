@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=block" rel="stylesheet">
+<style>
+html,body{margin:0;background:#ebeae6;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#e9a23b}a:hover{color:#f3bd6a}
+input::placeholder{color:#8a8174}
+</style>
+</helmet>
+<div style="padding:28px 32px 64px;display:flex;flex-direction:column;gap:24px;color:#1d1b18">
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="00%20Indice.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">Índice</a>
+    <a href="01%20Jobs.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">01 Jobs</a>
+    <a href="02%20Overview.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">02 Overview</a>
+    <a href="03%20Metrics%20history.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">03 Metrics history</a>
+    <a href="04%20Configuracoes.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">04 Configurações</a>
+    <a href="05%20Flows.dc.html" style="padding:6px 14px;border-radius:16px;background:#1d1b18;border:1px solid #1d1b18;color:#fff;text-decoration:none;font-size:13px">05 Flows</a>
+    <a href="06%20Agentes%20IA.dc.html" style="padding:6px 14px;border-radius:16px;background:#fff;border:1px solid #d9d6cf;color:#1d1b18;text-decoration:none;font-size:13px">06 Agentes IA</a>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:#b06f0c">BULLHORIZON · FORK DO BULL-MONITOR · MÓDULO 05</div>
+    <div style="font-size:30px;font-weight:700;letter-spacing:-.01em">Flows e traces</div>
+    <div style="font-size:14px;color:#5b574f;max-width:820px;text-wrap:pretty">O flow é declarado no código (bullhorizon.flows.yaml) e o painel só lê. Ao abrir uma pasta, aparece a árvore de etapas com contadores, gargalo, tempo entre etapas e falhas. Buscando por trace id, o painel mostra o caminho e os horários do evento. Duas opções por tela: A e B.</div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+    <sc-for list="{{ frames }}" as="f" hint-placeholder-count="1">
+      <div id="{{ f.anchor }}" style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:12px;font-weight:700;background:#1d1b18;color:#fff;border-radius:4px;padding:3px 8px">{{ f.badge }}</span>
+          <span style="font-size:14px;font-weight:600">{{ f.caption }}</span>
+        </div>
+        <div style="position:relative;isolation:isolate;width:1440px;height:1180px;overflow:hidden;border-radius:8px;box-shadow:0 20px 50px rgba(0,0,0,.22);background:#1c1813;color:#ece6dc;display:flex;flex-direction:column;font-family:'IBM Plex Sans',sans-serif">
+
+          <header style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 12px;background:#36312b;box-shadow:0 2px 4px rgba(0,0,0,.35);position:relative;z-index:2">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:26px;height:26px;border-radius:5px;background:#57504a;display:flex;align-items:center;justify-content:center"><span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#b79cf7">pets</span></div>
+              <div style="font-size:15px;font-weight:700"><span style="color:#f4efe7">Bull</span><span style="color:#e9a23b">Horizon</span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <a href="04%20Configuracoes.dc.html" title="Redis info" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e5484d;text-decoration:none"><span style="font-family:'Material Icons';font-size:22px;line-height:1">layers</span></a>
+              <span title="Share" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f4efe7;cursor:pointer"><span style="font-family:'Material Icons';font-size:21px;line-height:1">share</span></span>
+              <a href="04%20Configuracoes.dc.html" title="Settings" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#f4efe7;text-decoration:none"><span style="font-family:'Material Icons';font-size:22px;line-height:1">settings</span></a>
+            </div>
+          </header>
+
+          <div style="flex:1;min-height:0;display:flex">
+            <aside style="width:220px;flex:none;background:#1f1b16;border-right:1px solid #2c2721;overflow-y:auto;padding-bottom:24px">
+              <nav style="display:flex;flex-direction:column;border-bottom:1px solid #2c2721">
+                <a href="01%20Jobs.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none" style-hover="background:#2a251f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">view_list</span>Jobs</a>
+                <a href="02%20Overview.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none" style-hover="background:#2a251f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">grid_view</span>Overview</a>
+                <a href="05%20Flows.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none;background:#3b2f1f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">account_tree</span>Flows</a>
+                <a href="06%20Agentes%20IA.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none" style-hover="background:#2a251f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">smart_toy</span>Agents</a>
+                <a href="03%20Metrics%20history.dc.html" style="display:flex;align-items:center;gap:12px;height:32px;padding:0 8px;font-size:13px;color:#ece6dc;text-decoration:none" style-hover="background:#2a251f"><span style="font-family:'Material Icons';font-size:19px;line-height:1">show_chart</span>Metrics history</a>
+              </nav>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 10px 8px 0">
+                <input placeholder="Filter" style="flex:1;min-width:0;height:36px;background:transparent;border:1px solid #4a443c;border-left:0;border-radius:0 4px 4px 0;color:#ece6dc;font:inherit;font-size:15px;padding:0 8px;outline:none">
+                <span style="font-family:'Material Icons';font-size:22px;line-height:1;color:#ece6dc">sort</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px;padding-top:6px">
+                <sc-for list="{{ f.groups }}" as="g">
+                  <div style="display:flex;flex-direction:column;background:{{ g.bg }}">
+                    <div onClick="{{ g.toggle }}" style="display:flex;align-items:center;gap:6px;padding:8px 8px 8px 10px;cursor:pointer">
+                      <span style="font-family:'Material Icons';font-size:18px;line-height:1;color:#d8d0c4">{{ g.chev }}</span>
+                      <span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#e9a23b;margin-right:10px">{{ g.icon }}</span>
+                      <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
+                        <div style="display:flex;align-items:baseline;gap:5px"><span style="font-size:14px;font-weight:600">{{ g.name }}</span><span style="font-size:11px;color:#a39a8c">{{ g.count }}</span></div>
+                        <div style="display:flex;gap:2px"><sc-for list="{{ g.badges }}" as="b"><span style="min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:{{ b.c }};color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 1px rgba(255,255,255,.2) inset">{{ b.v }}</span></sc-for></div>
+                        <div style="display:flex;height:3px;margin-top:4px;overflow:hidden;background:#2c2721"><sc-for list="{{ g.bar }}" as="s"><div style="flex-grow:{{ s.v }};background:{{ s.c }}"></div></sc-for></div>
+                        <sc-if value="{{ g.flow }}"><span style="margin-top:6px;align-self:flex-start;display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.04em;color:#e9a23b;border:1px solid #6b4f22;border-radius:3px;padding:2px 6px"><span style="font-family:'Material Icons';font-size:12px;line-height:1">account_tree</span>FLOW · content-ingest</span></sc-if>
+                      </div>
+                    </div>
+                    <sc-if value="{{ g.open }}">
+                      <div style="display:flex;flex-direction:column;margin-left:14px;border-left:1px solid #2f2a23">
+                        <sc-for list="{{ g.queues }}" as="q">
+                          <div style="padding:7px 8px 6px 14px;display:flex;flex-direction:column;gap:3px">
+                            <div style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ q.name }}</div>
+                            <div style="display:flex;height:3px;overflow:hidden;background:#2c2721"><sc-for list="{{ q.bar }}" as="s"><div style="flex-grow:{{ s.v }};background:{{ s.c }}"></div></sc-for></div>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </aside>
+
+            <main style="flex:1;min-width:0;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:12px;background:#2a2620;border-radius:4px;padding:10px">
+                <span style="display:flex;align-items:center;gap:6px;background:#e9a23b;color:#1c1813;font-size:12px;padding:6px 11px;border-radius:14px"><span style="font-family:'Material Icons';font-size:14px;line-height:1">account_tree</span>content-ingest</span>
+                <span style="font-family:'Material Icons';font-size:22px;line-height:1;cursor:pointer">add</span>
+              </div>
+
+              <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:12px 14px;display:flex;align-items:center;gap:16px">
+                <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;font-weight:600">Ingestão de conteúdo</span><span style="font-family:'IBM Plex Mono';font-size:11px;color:#a39a8c">content-ingest</span></div>
+                  <div style="font-family:'IBM Plex Mono';font-size:11px;color:#7a7266">16 queues · bullhorizon.flows.yaml · read only</div>
+                </div>
+                <div style="flex:1"></div>
+                <div style="display:flex;border-bottom:1px solid #2f2a23">
+                  <sc-for list="{{ f.tabs }}" as="t"><span onClick="{{ t.onClick }}" style="padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;color:{{ t.color }};border-bottom:2px solid {{ t.line }};margin-bottom:-1px">{{ t.label }}</span></sc-for>
+                </div>
+                <div style="display:flex;align-items:center;gap:0;border:1px solid {{ f.searchBorder }};border-radius:3px;height:34px;width:330px">
+                  <span style="font-family:'Material Icons';font-size:18px;line-height:1;color:#a39a8c;padding:0 8px">route</span>
+                  <input value="{{ f.q }}" onChange="{{ f.onQ }}" onKeyDown="{{ f.onKey }}" placeholder="Trace id, job id ou videoId" style="flex:1;min-width:0;height:100%;background:transparent;border:0;color:#ece6dc;font-family:'IBM Plex Mono';font-size:12px;outline:none">
+                  <span onClick="{{ f.runTrace }}" style="height:100%;display:flex;align-items:center;padding:0 12px;background:#3b2f1f;color:#e9a23b;font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;border-left:1px solid #6b4f22">TRACE</span>
+                </div>
+              </section>
+
+              <sc-if value="{{ f.showKpis }}">
+                <section style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px">
+                  <sc-for list="{{ f.kpis }}" as="k">
+                    <div style="background:#1f1b16;border:1px solid {{ k.border }};border-radius:4px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+                      <span style="font-size:11px;color:#a39a8c">{{ k.label }}</span>
+                      <span style="font-size:20px;font-weight:600;color:{{ k.color }}">{{ k.value }}</span>
+                      <span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#7a7266">{{ k.sub }}</span>
+                    </div>
+                  </sc-for>
+                </section>
+              </sc-if>
+
+              <sc-if value="{{ f.isTrace }}">
+                <section style="background:#221c12;border:1px solid #6b4f22;border-radius:4px;padding:12px 14px;display:flex;align-items:center;gap:24px">
+                  <span style="font-family:'Material Icons';font-size:20px;line-height:1;color:#e9a23b">route</span>
+                  <div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">TRACE</span><span style="font-family:'IBM Plex Mono';font-size:13px;font-weight:600;color:#e9a23b">tr_9f2c41e7b0</span></div>
+                  <sc-for list="{{ f.traceStats }}" as="s"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">{{ s.k }}</span><span style="font-size:13px;color:{{ s.c }}">{{ s.v }}</span></div></sc-for>
+                  <div style="flex:1"></div>
+                  <span onClick="{{ f.clearTrace }}" style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;letter-spacing:.04em;cursor:pointer;color:#d8d0c4"><span style="font-family:'Material Icons';font-size:16px;line-height:1">close</span>CLEAR TRACE</span>
+                </section>
+              </sc-if>
+
+              <sc-if value="{{ f.isGraph }}">
+                <div style="display:flex;gap:8px;align-items:flex-start">
+                  <section style="flex:1;min-width:0;background:#1a1712;border:1px solid #2f2a23;border-radius:4px;padding:10px;overflow:auto">
+                    <div style="position:relative;width:896px;height:{{ f.canvasH }};margin:0 auto;background-image:radial-gradient(#2c2721 1px,transparent 1px);background-size:16px 16px">
+                      {{ f.edgesSvg }}
+                      <sc-for list="{{ f.edgeLabels }}" as="l"><span style="position:absolute;left:{{ l.x }};top:{{ l.y }};transform:translate(-50%,-50%);background:#1a1712;padding:1px 5px;font-family:'IBM Plex Mono';font-size:10px;color:{{ l.c }};border-radius:3px;white-space:nowrap">{{ l.t }}</span></sc-for>
+                      <sc-for list="{{ f.nodes }}" as="n">
+                        <div onClick="{{ n.onClick }}" title="{{ n.q }}" style="position:absolute;left:{{ n.x }};top:{{ n.y }};width:{{ n.w }};height:{{ n.h }};background:{{ n.bg }};border:1px solid {{ n.border }};border-style:{{ n.bstyle }};border-radius:6px;padding:8px 10px;opacity:{{ n.op }};box-shadow:{{ n.shadow }};cursor:pointer;display:flex;flex-direction:column;gap:4px;overflow:hidden">
+                          <div style="display:flex;align-items:center;gap:6px">
+                            <span style="font-family:'Material Icons';font-size:13px;line-height:1;color:{{ n.iconC }}">{{ n.icon }}</span>
+                            <span style="font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ n.short }}</span>
+                            <sc-if value="{{ n.tag }}"><span style="font-size:9px;font-weight:700;letter-spacing:.04em;padding:1px 5px;border-radius:3px;background:{{ n.tagBg }};color:{{ n.tagC }}">{{ n.tag }}</span></sc-if>
+                          </div>
+                          <div style="font-size:10.5px;color:{{ n.subC }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:{{ n.subF }}">{{ n.sub }}</div>
+                          <sc-if value="{{ n.hasStats }}">
+                            <div style="display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono';font-size:10.5px">
+                              <sc-for list="{{ n.stats }}" as="s"><span style="display:flex;align-items:center;gap:3px;color:{{ s.c }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ s.c }}"></span>{{ s.v }}</span></sc-for>
+                              <span style="flex:1"></span><span style="color:#a39a8c">{{ n.tput }}</span>
+                            </div>
+                          </sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </section>
+
+                  <aside style="width:300px;flex:none;background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:14px">
+                    <sc-if value="{{ f.panelStep }}">
+                      <div style="display:flex;flex-direction:column;gap:4px">
+                        <span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">STEP</span>
+                        <span style="font-family:'IBM Plex Mono';font-size:13px;font-weight:600;word-break:break-all">{{ f.panelStep.q }}</span>
+                        <span style="font-size:12px;color:#a39a8c">{{ f.panelStep.desc }}</span>
+                      </div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#2f2a23;border:1px solid #2f2a23;border-radius:4px;overflow:hidden">
+                        <sc-for list="{{ f.panelStep.metrics }}" as="m"><div style="background:#1f1b16;padding:8px 10px;display:flex;flex-direction:column;gap:2px"><span style="font-size:10px;color:#a39a8c">{{ m.k }}</span><span style="font-family:'IBM Plex Mono';font-size:13px;color:{{ m.c }}">{{ m.v }}</span></div></sc-for>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        <span style="font-size:11px;font-weight:600">Throughput 24h</span>
+                        <div style="display:flex;align-items:flex-end;gap:2px;height:44px"><sc-for list="{{ f.panelStep.spark }}" as="b"><div style="flex:1;height:{{ b.h }};background:{{ b.c }};border-radius:1px"></div></sc-for></div>
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        <span style="font-size:11px;font-weight:600">Erros recentes</span>
+                        <sc-for list="{{ f.panelStep.errors }}" as="e">
+                          <a href="01%20Jobs.dc.html" style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:#2a1714;border:1px solid #5a2620;border-radius:3px;text-decoration:none;color:#f1e7e3">
+                            <span style="font-family:'IBM Plex Mono';font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ e.msg }}</span>
+                            <span style="font-family:'IBM Plex Mono';font-size:11px;color:#ff6b6b">{{ e.n }}</span>
+                            <span style="font-family:'Material Icons';font-size:14px;line-height:1;color:#a39a8c">open_in_new</span>
+                          </a>
+                        </sc-for>
+                        <sc-if value="{{ f.panelStep.noErrors }}"><span style="font-size:11px;color:#7a7266">Nenhum erro nas últimas 24h</span></sc-if>
+                      </div>
+                      <a href="01%20Jobs.dc.html" style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border:1px solid #6b4f22;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.04em;text-decoration:none;color:#e9a23b">VER JOBS DA FILA</a>
+                    </sc-if>
+                    <sc-if value="{{ f.panelTrace }}">
+                      <div style="display:flex;flex-direction:column;gap:4px">
+                        <span style="font-size:10px;color:#a39a8c;letter-spacing:.06em">CAMINHO DO EVENTO</span>
+                        <span style="font-size:12px;color:#a39a8c">Clique numa etapa para ver o job</span>
+                      </div>
+                      <div style="display:flex;flex-direction:column">
+                        <sc-for list="{{ f.panelTrace.steps }}" as="s">
+                          <div onClick="{{ s.onClick }}" style="display:flex;gap:10px;cursor:pointer;padding:0 6px;border-radius:3px;background:{{ s.bg }}">
+                            <div style="display:flex;flex-direction:column;align-items:center;width:10px;flex:none">
+                              <span style="width:9px;height:9px;border-radius:50%;margin-top:7px;background:{{ s.c }};flex:none"></span>
+                              <span style="flex:1;width:1px;background:#3a342c"></span>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:1px;padding:3px 0 8px;min-width:0;flex:1">
+                              <span style="font-family:'IBM Plex Mono';font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.short }}</span>
+                              <span style="font-family:'IBM Plex Mono';font-size:10px;color:#7a7266">{{ s.time }} · {{ s.dur }}</span>
+                            </div>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <sc-if value="{{ f.panelTrace.sel }}">
+                        <div style="background:#1a1712;border:1px solid #2e2922;border-radius:4px;padding:10px;font-family:'IBM Plex Mono';font-size:10.5px;display:flex;flex-direction:column;gap:4px">
+                          <span style="color:#a39a8c">job {{ f.panelTrace.sel.jobId }}</span>
+                          <sc-for list="{{ f.panelTrace.sel.rows }}" as="w"><div style="display:flex;gap:4px"><span style="color:#d8d0c4">{{ w.k }}:</span><span style="color:{{ w.c }};word-break:break-all">{{ w.v }}</span></div></sc-for>
+                        </div>
+                      </sc-if>
+                    </sc-if>
+                  </aside>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ f.isTable }}">
+                <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:6px 0 4px">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) 64px 56px 64px 150px 110px 170px 64px;align-items:center;gap:12px;padding:8px 16px;font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;color:#a39a8c;border-bottom:1px solid #2f2a23">
+                    <span>ETAPA</span><span style="text-align:right">WAITING</span><span style="text-align:right">ACTIVE</span><span style="text-align:right">FAILED</span><span>THROUGHPUT /MIN</span><span style="text-align:right">P50 · P95</span><span>ESPERA NA FILA</span><span style="text-align:right">FALHA</span>
+                  </div>
+                  <sc-for list="{{ f.rows }}" as="r">
+                    <div style="display:flex;flex-direction:column;border-bottom:1px solid #2a251f;background:{{ r.bg }}">
+                      <div onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:minmax(0,1fr) 64px 56px 64px 150px 110px 170px 64px;align-items:center;gap:12px;padding:0 16px;height:44px;cursor:pointer;font-size:12px" style-hover="background:#231f19">
+                        <div style="display:flex;align-items:center;gap:6px;min-width:0;padding-left:{{ r.indent }}">
+                          <sc-if value="{{ r.elbow }}"><span style="width:12px;height:22px;margin-top:-22px;border-left:1px solid {{ r.lineC }};border-bottom:1px solid {{ r.lineC }};border-bottom-left-radius:4px;flex:none"></span></sc-if>
+                          <span style="font-family:'Material Icons';font-size:14px;line-height:1;color:{{ r.iconC }}">{{ r.icon }}</span>
+                          <div style="display:flex;flex-direction:column;min-width:0">
+                            <span style="font-family:'IBM Plex Mono';font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.short }}</span>
+                            <span style="font-size:10.5px;color:#7a7266;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.desc }}</span>
+                          </div>
+                          <sc-if value="{{ r.tag }}"><span style="font-size:9px;font-weight:700;letter-spacing:.04em;padding:1px 5px;border-radius:3px;background:{{ r.tagBg }};color:{{ r.tagC }};flex:none">{{ r.tag }}</span></sc-if>
+                        </div>
+                        <span style="text-align:right;font-family:'IBM Plex Mono';color:{{ r.wC }}">{{ r.w }}</span>
+                        <span style="text-align:right;font-family:'IBM Plex Mono';color:#2bbfc9">{{ r.a }}</span>
+                        <a href="01%20Jobs.dc.html" style="text-align:right;font-family:'IBM Plex Mono';color:{{ r.fC }};text-decoration:none">{{ r.f }}</a>
+                        <div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:5px;background:#2c2721;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ r.tputW }};background:#3ad48f"></div></div><span style="font-family:'IBM Plex Mono';font-size:11px;width:34px;text-align:right">{{ r.tput }}</span></div>
+                        <span style="text-align:right;font-family:'IBM Plex Mono';font-size:11px;color:#d8d0c4">{{ r.p }}</span>
+                        <div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:5px;background:#2c2721;border-radius:3px;overflow:hidden"><div style="height:100%;width:{{ r.waitW }};background:{{ r.waitC }}"></div></div><span style="font-family:'IBM Plex Mono';font-size:11px;width:44px;text-align:right;color:{{ r.waitT }}">{{ r.wait }}</span></div>
+                        <span style="text-align:right;font-family:'IBM Plex Mono';font-size:11px;color:{{ r.rateC }}">{{ r.rate }}</span>
+                      </div>
+                      <sc-if value="{{ r.open }}">
+                        <div style="display:grid;grid-template-columns:260px minmax(0,1fr) 260px;gap:16px;padding:6px 16px 14px 48px">
+                          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:600">Throughput 24h</span><div style="display:flex;align-items:flex-end;gap:2px;height:40px"><sc-for list="{{ r.spark }}" as="b"><div style="flex:1;height:{{ b.h }};background:{{ b.c }};border-radius:1px"></div></sc-for></div></div>
+                          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:600">Erros recentes</span>
+                            <sc-for list="{{ r.errors }}" as="e"><a href="01%20Jobs.dc.html" style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#2a1714;border:1px solid #5a2620;border-radius:3px;text-decoration:none;color:#f1e7e3;font-family:'IBM Plex Mono';font-size:11px"><span style="flex:1">{{ e.msg }}</span><span style="color:#ff6b6b">{{ e.n }}</span><span style="font-family:'Material Icons';font-size:14px;line-height:1;color:#a39a8c">open_in_new</span></a></sc-for>
+                            <sc-if value="{{ r.noErrors }}"><span style="font-size:11px;color:#7a7266">Nenhum erro nas últimas 24h</span></sc-if>
+                          </div>
+                          <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:11px;font-weight:600">Próximas etapas</span><div style="display:flex;flex-wrap:wrap;gap:4px"><sc-for list="{{ r.next }}" as="x"><span style="font-family:'IBM Plex Mono';font-size:10.5px;padding:2px 6px;border:1px solid #3a342c;border-radius:3px;color:#d8d0c4">{{ x }}</span></sc-for></div></div>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </section>
+              </sc-if>
+
+              <sc-if value="{{ f.isGantt }}">
+                <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:6px 0 10px">
+                  <div style="display:grid;grid-template-columns:330px minmax(0,1fr) 90px;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid #2f2a23">
+                    <span style="font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;color:#a39a8c">ETAPA · INÍCIO</span>
+                    <div style="position:relative;height:14px"><sc-for list="{{ f.gantt.ticks }}" as="t"><span style="position:absolute;left:{{ t.x }};transform:translateX(-50%);font-family:'IBM Plex Mono';font-size:10px;color:#7a7266">{{ t.l }}</span></sc-for></div>
+                    <span style="font-family:'IBM Plex Mono';font-size:10px;letter-spacing:.06em;color:#a39a8c;text-align:right">DURAÇÃO</span>
+                  </div>
+                  <sc-for list="{{ f.gantt.rows }}" as="r">
+                    <div style="display:flex;flex-direction:column;border-bottom:1px solid #26221c;background:{{ r.bg }}">
+                      <div onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:330px minmax(0,1fr) 90px;align-items:center;gap:12px;padding:0 16px;height:36px;cursor:pointer" style-hover="background:#231f19">
+                        <div style="display:flex;align-items:center;gap:8px;min-width:0;padding-left:{{ r.indent }}">
+                          <span style="width:8px;height:8px;border-radius:50%;background:{{ r.c }};flex:none"></span>
+                          <span style="font-family:'IBM Plex Mono';font-size:11.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.short }}</span>
+                          <span style="font-family:'IBM Plex Mono';font-size:10.5px;color:#7a7266">{{ r.time }}</span>
+                        </div>
+                        <div style="position:relative;height:36px">
+                          <sc-for list="{{ f.gantt.ticks }}" as="t"><div style="position:absolute;top:0;bottom:0;left:{{ t.x }};border-left:1px dashed #2a251f"></div></sc-for>
+                          <div title="espera na fila" style="position:absolute;top:13px;height:10px;left:{{ r.wl }};width:{{ r.ww }};background:repeating-linear-gradient(135deg,{{ r.wc }} 0 3px,transparent 3px 6px);border-radius:2px 0 0 2px"></div>
+                          <div title="processamento" style="position:absolute;top:11px;height:14px;left:{{ r.pl }};width:{{ r.pw }};min-width:3px;background:{{ r.c }};border-radius:2px"></div>
+                        </div>
+                        <span style="font-family:'IBM Plex Mono';font-size:11px;text-align:right;color:{{ r.durC }}">{{ r.dur }}</span>
+                      </div>
+                      <sc-if value="{{ r.open }}">
+                        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:4px 16px 14px 32px">
+                          <div style="background:#1a1712;border:1px solid #2e2922;border-radius:4px;padding:10px;font-family:'IBM Plex Mono';font-size:10.5px;display:flex;flex-direction:column;gap:4px"><span style="color:#a39a8c">data._trace</span><sc-for list="{{ r.traceRows }}" as="w"><div style="display:flex;gap:4px"><span style="color:#d8d0c4">{{ w.k }}:</span><span style="color:{{ w.c }};word-break:break-all">{{ w.v }}</span></div></sc-for></div>
+                          <div style="background:#1a1712;border:1px solid #2e2922;border-radius:4px;padding:10px;font-family:'IBM Plex Mono';font-size:10.5px;display:flex;flex-direction:column;gap:4px"><span style="color:#a39a8c">timing</span><sc-for list="{{ r.timing }}" as="w"><div style="display:flex;gap:4px"><span style="color:#d8d0c4">{{ w.k }}:</span><span style="color:#e9a23b">{{ w.v }}</span></div></sc-for></div>
+                          <div style="background:{{ r.outBg }};border:1px solid {{ r.outBd }};border-radius:4px;padding:10px;font-family:'IBM Plex Mono';font-size:10.5px;display:flex;flex-direction:column;gap:6px"><span style="color:#a39a8c">{{ r.outTitle }}</span><span style="color:#f1e7e3;white-space:pre-wrap">{{ r.out }}</span><a href="01%20Jobs.dc.html" style="font-size:10.5px;font-weight:600">Abrir job</a></div>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                  <div style="display:flex;gap:18px;padding:12px 16px 0;font-size:11px;color:#a39a8c">
+                    <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:8px;background:repeating-linear-gradient(135deg,#6b635a 0 3px,transparent 3px 6px)"></span>espera na fila</span>
+                    <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:8px;background:#3ad48f;border-radius:2px"></span>processamento</span>
+                    <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:8px;background:#e5484d;border-radius:2px"></span>falhou</span>
+                    <span style="display:flex;align-items:center;gap:6px"><span style="width:18px;height:8px;background:#8b7cf0;border-radius:2px"></span>fallback</span>
+                  </div>
+                </section>
+              </sc-if>
+
+              <sc-if value="{{ f.isConfig }}">
+                <div style="display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:8px;align-items:start">
+                  <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;overflow:hidden">
+                    <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #2f2a23">
+                      <span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#a39a8c">description</span>
+                      <span style="font-family:'IBM Plex Mono';font-size:12px;font-weight:600;flex:1">bullhorizon.flows.yaml</span>
+                      <span style="font-size:10px;font-weight:700;letter-spacing:.04em;color:#a39a8c;border:1px solid #3a342c;border-radius:3px;padding:2px 6px">READ ONLY</span>
+                      <span style="font-family:'Material Icons';font-size:16px;line-height:1;color:#a39a8c;cursor:pointer">content_copy</span>
+                    </div>
+                    <div style="background:#263238;padding:10px 0;font-family:'IBM Plex Mono';font-size:12px;line-height:19px;max-height:860px;overflow:auto">
+                      <sc-for list="{{ f.yaml }}" as="l"><div style="display:flex"><span style="width:40px;flex:none;text-align:right;padding-right:12px;color:#546e7a">{{ l.n }}</span><span style="white-space:pre;color:#89ddff">{{ l.ind }}</span><span style="white-space:pre;color:{{ l.kc }}">{{ l.k }}</span><span style="white-space:pre;color:{{ l.vc }}">{{ l.v }}</span></div></sc-for>
+                    </div>
+                  </section>
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                      <span style="font-size:14px;font-weight:600">Convenção de trace do fork</span>
+                      <span style="font-size:12px;color:#a39a8c;line-height:1.5;text-wrap:pretty">Todo job do flow carrega data._trace. O helper withTrace(job, data) copia o traceId do job pai, grava o step atual e o parentJobId ao enfileirar a próxima etapa. O painel monta o caminho só com esses campos.</span>
+                      <div style="background:#1a1712;border:1px solid #2e2922;border-radius:4px;padding:10px 12px;font-family:'IBM Plex Mono';font-size:11.5px;line-height:18px">
+                        <sc-for list="{{ f.traceDoc }}" as="l"><div style="white-space:pre"><span style="color:#d8d0c4">{{ l.k }}</span><span style="color:{{ l.c }}">{{ l.v }}</span></div></sc-for>
+                      </div>
+                      <div style="background:#1a1712;border:1px solid #2e2922;border-radius:4px;padding:10px 12px;font-family:'IBM Plex Mono';font-size:11.5px;line-height:18px;color:#d8d0c4;white-space:pre">await next.add(name, withTrace(job, { videoId }))</div>
+                    </section>
+                    <section style="background:#1f1b16;border:1px solid #2f2a23;border-radius:4px;padding:14px;display:flex;flex-direction:column;gap:8px">
+                      <span style="font-size:14px;font-weight:600">Validação da config</span>
+                      <sc-for list="{{ f.checks }}" as="c">
+                        <div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:3px;background:{{ c.bg }}">
+                          <span style="font-family:'Material Icons';font-size:16px;line-height:1;color:{{ c.c }}">{{ c.icon }}</span>
+                          <span style="font-size:12px;line-height:1.45;text-wrap:pretty">{{ c.t }}</span>
+                        </div>
+                      </sc-for>
+                    </section>
+                  </div>
+                </div>
+              </sc-if>
+            </main>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Lado a lado&quot;,&quot;Navegável&quot;],&quot;default&quot;:&quot;Lado a lado&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tela&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;grafo&quot;,&quot;trace&quot;,&quot;config&quot;],&quot;default&quot;:&quot;grafo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegável&quot;},&quot;opcao&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A&quot;,&quot;B&quot;],&quot;default&quot;:&quot;A&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navegável&quot;}}">
+const pad = n => String(n).padStart(2, '0');
+const COL = { waiting:'#8b7cf0', active:'#2bbfc9', completed:'#3ad48f', failed:'#e5484d', delayed:'#4a9cf0' };
+const NW = 210, NH = 74, COLX = [24, 343, 662], ROWY = r => 14 + r * 94;
+const S = {
+  verify:   { q:'content:VerifyIfVideoExist', desc:'já existe? atualiza números, novo segue', c:1, r:0, w:2, a:1, f:6, done:18420, tput:12.8, p50:'84ms', p95:'310ms', wait:'0.4s', waitS:.4 },
+  exists:   { q:'só atualiza números', desc:'fim do flow para vídeo existente', c:2, r:0, terminal:true },
+  extract:  { q:'content:ExtractTiktokVideoInfo', desc:'capa, url, duração, autor', c:1, r:1, w:5, a:3, f:41, done:9210, tput:6.4, p50:'1.9s', p95:'6.2s', wait:'1.1s', waitS:1.1 },
+  setup:    { q:'content:SetupVideoContent', desc:'grava vyral.video e snapshot de números', c:1, r:2, w:0, a:1, f:3, done:9170, tput:6.4, p50:'220ms', p95:'780ms', wait:'0.3s', waitS:.3 },
+  comments: { q:'content:IndexComments', desc:'comentários (RapidAPI + DeepSeek)', c:0, r:3, w:18, a:4, f:112, done:8890, tput:6.1, p50:'7.4s', p95:'21s', wait:'4.2s', waitS:4.2 },
+  idxVideo: { q:'content:IndexVideoTypesense', desc:'indexa busca', c:1, r:3, w:0, a:0, f:2, done:9168, tput:6.4, p50:'140ms', p95:'400ms', wait:'0.2s', waitS:.2 },
+  clean:    { q:'content:CleanTempImportContentItem', desc:'limpa item temporário', c:1, r:4, w:0, a:0, f:0, done:9166, tput:6.4, p50:'60ms', p95:'190ms', wait:'0.2s', waitS:.2 },
+  category: { q:'content:SelectCategory', desc:'categoria', c:2, r:3, w:1, a:1, f:8, done:9160, tput:6.4, p50:'2.1s', p95:'5.8s', wait:'0.6s', waitS:.6 },
+  product:  { q:'content:SetupProduct', desc:'produto + IndexProductTypesense', c:2, r:4, w:0, a:1, f:14, done:9140, tput:6.3, p50:'640ms', p95:'2.4s', wait:'0.4s', waitS:.4 },
+  author:   { q:'content:SetupAuthor', desc:'autor + IndexAuthorTypesense', c:2, r:5, w:0, a:0, f:9, done:9122, tput:6.3, p50:'410ms', p95:'1.6s', wait:'0.3s', waitS:.3 },
+  transcr:  { q:'content:TranscriptionApi', desc:'transcrição', c:2, r:6, w:412, a:8, f:96, done:8410, tput:5.1, p50:'38s', p95:'2m10s', wait:'9m40s', waitS:580, bottleneck:true },
+  download: { q:'content:DownloadVideoTiktok', desc:'fallback: baixa o vídeo', c:1, r:6, w:3, a:2, f:21, done:690, tput:.5, p50:'12s', p95:'41s', wait:'2.0s', waitS:2, alt:true },
+  whisper:  { q:'content:SendWhisper', desc:'transcreve via Whisper', c:1, r:7, w:6, a:2, f:37, done:651, tput:.5, p50:'54s', p95:'3m02s', wait:'3.1s', waitS:3.1, alt:true },
+  saveTr:   { q:'contentSaveTranscription', desc:'salva transcrição', c:1, r:8, w:0, a:0, f:0, done:648, tput:.5, p50:'90ms', p95:'300ms', wait:'0.2s', waitS:.2, alt:true },
+  translate:{ q:'content:TranslateTranscriptionToPTBR', desc:'tradução, se não for pt-BR', c:2, r:8, w:2, a:1, f:18, done:6120, tput:4.6, p50:'3.2s', p95:'9.1s', wait:'0.8s', waitS:.8 },
+  reindex:  { q:'content:Reindex*Typesense', desc:'reindexa vídeo, produto e autor', c:2, r:9, w:0, a:0, f:5, done:9020, tput:6.2, p50:'180ms', p95:'520ms', wait:'0.3s', waitS:.3 },
+  error:    { q:'content:SaveErrorState', desc:'erro em qualquer etapa', c:0, r:8, w:0, a:0, f:0, done:347, tput:.2, p50:'40ms', p95:'120ms', wait:'0.1s', waitS:.1, err:true },
+};
+const EDGES = [
+  ['verify','extract','novo','cond'], ['verify','exists','já existe','cond'], ['extract','setup'], ['setup','comments'], ['setup','idxVideo'], ['setup','category'],
+  ['idxVideo','clean'], ['category','product'], ['product','author'], ['author','transcr'], ['author','download','fallback','alt'],
+  ['transcr','translate'], ['download','whisper',null,'alt'], ['whisper','saveTr',null,'alt'], ['saveTr','translate',null,'alt'], ['translate','reindex'],
+];
+const ERRORS = {
+  comments: [['RapidAPI 429 Too Many Requests', 84], ['DeepSeek timeout 30000ms', 28]],
+  transcr: [['TranscriptionApi 429 rate limit', 71], ['audio longer than 600s', 25]],
+  whisper: [['ECONNRESET upload whisper', 37]], extract: [['TikTok video unavailable', 41]],
+  download: [['403 Forbidden cdn tiktok', 21]], translate: [['DeepSeek 503', 18]], product: [['Missing lock for job', 14]],
+};
+const ORDER = [['verify',0],['exists',1,'branch'],['extract',0],['setup',0],['comments',1],['idxVideo',1],['clean',2],['category',1],['product',1],['author',1],['transcr',1],['download',2],['whisper',2],['saveTr',2],['translate',1],['reindex',1],['error',0]];
+const T0 = new Date(2026, 9, 15, 13, 2, 11, 400).getTime();
+const TRACE = [
+  ['verify', 0, .3, .08, 'ok'], ['extract', .4, 1.0, 2.1, 'ok'], ['setup', 3.5, .3, .2, 'ok'],
+  ['comments', 4.0, 4.4, 8.2, 'ok'], ['idxVideo', 4.0, .2, .14, 'ok'], ['clean', 4.35, .2, .06, 'ok'], ['category', 4.0, .5, 2.3, 'ok'],
+  ['product', 6.8, .4, .7, 'ok'], ['author', 7.9, .3, .4, 'ok'], ['transcr', 8.6, 540, 31, 'fail'], ['error', 579.7, .1, .05, 'err'],
+  ['download', 579.8, 2, 11, 'alt'], ['whisper', 592.8, 3, 49, 'alt'], ['saveTr', 644.8, .2, .09, 'alt'], ['translate', 645.1, .7, 3.4, 'ok'], ['reindex', 649.2, .3, .2, 'ok'],
+];
+const TRACE_EDGES = new Set(['verify>extract','extract>setup','setup>comments','setup>idxVideo','setup>category','idxVideo>clean','category>product','product>author','author>transcr','author>download','download>whisper','whisper>saveTr','saveTr>translate','translate>reindex']);
+const TOTAL = 649.7;
+const fmtT = s => { const d = new Date(T0 + s * 1000); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${Math.floor(d.getMilliseconds() / 100)}`; };
+const fmtD = s => s < 1 ? Math.round(s * 1000) + 'ms' : s < 60 ? s.toFixed(1).replace('.0', '') + 's' : `${Math.floor(s / 60)}m${pad(Math.round(s % 60))}s`;
+const short = q => q.replace(/^content:/, '');
+const spark = (k, scale) => { let r = k.length * 977 + 13; const rnd = () => (r = (r * 16807) % 2147483647) / 2147483647; return Array.from({ length: 32 }, (_, i) => { const v = .35 + rnd() * .6 + (i > 26 ? .1 : 0); return { h: Math.round(v * 100) + '%', c: S[k].bottleneck && i > 22 ? '#e9a23b' : '#3ad48f' }; }); };
+const TELAS = [
+  { k:'grafo', o:'A', label:'Árvore do flow em grafo, com painel da etapa', s:{ view:'grafo', layout:'A', sel:'transcr' } },
+  { k:'grafo', o:'B', label:'Árvore do flow em tabela indentada', s:{ view:'grafo', layout:'B', open:'transcr' } },
+  { k:'trace', o:'A', label:'Trace destacando o caminho no grafo', s:{ view:'trace', layout:'A', sel:'transcr', q:'tr_9f2c41e7b0' } },
+  { k:'trace', o:'B', label:'Trace em timeline (gantt)', s:{ view:'trace', layout:'B', open:'transcr', q:'tr_9f2c41e7b0' } },
+  { k:'config', o:'A', label:'Definição do flow lida do código', s:{ view:'config', layout:'A' } },
+];
+const YAML = `flows:
+  content-ingest:
+    label: Ingestão de conteúdo
+    folder: Content
+    trace:
+      id: data._trace.traceId
+      key: data.videoId
+    entry: content:VerifyIfVideoExist
+    onError: content:SaveErrorState
+    steps:
+      content:VerifyIfVideoExist:
+        next:
+          - to: content:ExtractTiktokVideoInfo
+            when: novo
+          - end: só atualiza números
+            when: já existe
+      content:ExtractTiktokVideoInfo:
+        next: content:SetupVideoContent
+      content:SetupVideoContent:
+        next:
+          - content:IndexComments
+          - content:IndexVideoTypesense
+          - content:SelectCategory
+      content:IndexVideoTypesense:
+        next: content:CleanTempImportContentItem
+      content:SelectCategory:
+        next: content:SetupProduct
+      content:SetupProduct:
+        sidecars: [content:IndexProductTypesense]
+        next: content:SetupAuthor
+      content:SetupAuthor:
+        sidecars: [content:IndexAuthorTypesense]
+        next: content:TranscriptionApi
+        fallback: content:DownloadVideoTiktok
+      content:DownloadVideoTiktok:
+        next: content:SendWhisper
+      content:SendWhisper:
+        next: contentSaveTranscription
+      contentSaveTranscription:
+        next: content:TranslateTranscriptionToPTBR
+      content:TranscriptionApi:
+        next: content:TranslateTranscriptionToPTBR
+      content:TranslateTranscriptionToPTBR:
+        when: language != pt-BR
+        next: content:Reindex*Typesense`;
+const YAML_LINES = YAML.split('\n').map((ln, i) => {
+  const m = ln.match(/^(\s*)(- )?([^:]*:(?=\s|$))?(.*)$/);
+  const ind = m[1] + (m[2] || '');
+  return { n: i + 1, ind, k: m[3] || '', v: m[4] || '', kc: '#f07178', vc: /^\s*(\[|content|só|novo|já|data|Ingest|Content|language)/.test(m[4] || '') ? '#c3e88d' : '#eeffff' };
+});
+const TRACE_DOC = [['{', ''], ['  "videoId": ', '"7428801239912",'], ['  "_trace": {', ''], ['    "traceId": ', '"tr_9f2c41e7b0",'], ['    "flow": ', '"content-ingest",'], ['    "step": ', '"content:SetupProduct",'], ['    "parentJobId": ', '"content:SelectCategory:88213",'], ['    "attempt": ', '1,'], ['    "enqueuedAt": ', '1792087318200'], ['  }', ''], ['}', '']].map(([k, v]) => ({ k, v, c: /^"/.test(v) ? '#efe6d6' : '#e9a23b' }));
+const CHECKS = [
+  ['check_circle', '#3ad48f', 'rgba(58,212,143,.07)', '16 filas declaradas encontradas no Redis'],
+  ['check_circle', '#3ad48f', 'rgba(58,212,143,.07)', 'data._trace presente em 98,7% dos jobs das últimas 24h'],
+  ['warning', '#e9a23b', 'rgba(233,162,59,.08)', 'contentSaveTranscription não usa o prefixo content: e aparece fora da pasta Content'],
+  ['warning', '#e9a23b', 'rgba(233,162,59,.08)', 'IndexProductTypesense e IndexAuthorTypesense rodam como sidecar, sem parentJobId no trace'],
+];
+
+class Component extends DCLogic {
+  state = { fs: {} };
+  frame(key, t, badge) {
+    const base = () => ({ view:'grafo', layout:'A', sel:null, open:null, q:'', tsel:null, gopen:{ Content:true }, ...t.s });
+    const s = this.state.fs[key] || base();
+    const up = p => this.setState(st => { const cur = st.fs[key] || base(); return { fs: { ...st.fs, [key]: { ...cur, ...(typeof p === 'function' ? p(cur) : p) } } }; });
+    const isTrace = s.view === 'trace', isConfig = s.view === 'config';
+    const tr = {}; TRACE.forEach(([k, st, w, d, kind]) => { tr[k] = { st, w, d, kind }; });
+    const trC = kind => ({ ok:'#3ad48f', fail:'#e5484d', alt:'#8b7cf0', err:'#e9a23b' })[kind];
+
+    const contentKeys = Object.keys(S).filter(k => !S[k].terminal);
+    const cagg = { waiting:0, active:0, completed:0, failed:0 };
+    contentKeys.forEach(k => { cagg.waiting += S[k].w; cagg.active += S[k].a; cagg.failed += S[k].f; cagg.completed += Math.round(S[k].done / 100); });
+    const groups = [
+      { name:'App', count:3, icon:'folder_open', badges:[{ v:99, c:COL.failed }, { v:6, c:COL.delayed }], bar:[{ v:99, c:COL.failed }, { v:6, c:COL.delayed }] },
+      { name:'Content', count:contentKeys.length, icon:'account_tree', flow:true, badges:[{ v:cagg.waiting, c:COL.waiting }, { v:cagg.active, c:COL.active }, { v:cagg.failed, c:COL.failed }], bar:[{ v:cagg.waiting, c:COL.waiting }, { v:cagg.active, c:COL.active }, { v:cagg.completed, c:COL.completed }, { v:cagg.failed, c:COL.failed }],
+        queues: contentKeys.map(k => ({ name: S[k].q, bar: [{ v:S[k].w, c:COL.waiting }, { v:S[k].a, c:COL.active }, { v:S[k].done / 50, c:COL.completed }, { v:S[k].f, c:COL.failed }].filter(x => x.v) })) },
+      { name:'Mídia', count:1, icon:'folder_open', badges:[{ v:50, c:COL.completed }, { v:2, c:COL.delayed }], bar:[{ v:50, c:COL.completed }, { v:2, c:COL.delayed }] },
+    ].map(g => ({ queues: [], ...g, open: !!s.gopen[g.name], chev: s.gopen[g.name] ? 'expand_more' : 'chevron_right', bg: g.flow ? '#241f17' : 'transparent', toggle: () => up(c => ({ gopen: { ...c.gopen, [g.name]: !c.gopen[g.name] } })) }));
+
+    const tabs = [['grafo', 'Flow'], ['trace', 'Trace'], ['config', 'Config']].map(([v, label]) => ({ label, color: s.view === v ? '#e9a23b' : '#a39a8c', line: s.view === v ? '#e9a23b' : 'transparent', onClick: () => up({ view: v, q: v === 'trace' ? 'tr_9f2c41e7b0' : s.q }) }));
+    const runTrace = () => up({ view: 'trace', q: s.q || 'tr_9f2c41e7b0', sel: 'transcr', open: 'transcr' });
+
+    const kpis = [
+      { label:'Entradas 24h', value:'18,426', sub:'VerifyIfVideoExist', color:'#ece6dc', border:'#2f2a23' },
+      { label:'Concluídos fim a fim', value:'9,020', sub:'49% eram vídeos novos', color:'#3ad48f', border:'#2f2a23' },
+      { label:'Tempo médio fim a fim', value:'11m02s', sub:'p95 24m18s', color:'#ece6dc', border:'#2f2a23' },
+      { label:'Gargalo', value:'TranscriptionApi', sub:'412 waiting · espera 9m40s', color:'#e9a23b', border:'#6b4f22' },
+      { label:'Falhas 24h', value:'347', sub:'SaveErrorState · 1.9%', color:'#ff6b6b', border:'#2f2a23' },
+    ];
+
+    // graph
+    const pos = k => ({ x: COLX[S[k].c], y: ROWY(S[k].r), w: S[k].terminal ? 150 : NW, h: S[k].terminal ? 56 : NH });
+    const nodes = Object.keys(S).map(k => {
+      const n = S[k], p = pos(k), inT = !!tr[k], sel = (isTrace ? s.tsel || s.sel : s.sel) === k;
+      let border = n.bottleneck ? '#b07a2a' : n.err ? '#7a2e28' : n.alt ? '#4b4470' : '#3a342c', bg = '#221e19', shadow = 'none', op = 1, tag = '', tagBg = '', tagC = '';
+      if (n.bottleneck) { tag = 'GARGALO'; tagBg = '#4a3818'; tagC = '#e9a23b'; shadow = '0 0 0 3px rgba(233,162,59,.12)'; }
+      if (n.alt) { tag = 'FALLBACK'; tagBg = '#2e2a48'; tagC = '#b3a8f5'; }
+      if (n.err) { tag = 'ON ERROR'; tagBg = '#3a1a17'; tagC = '#ff8a80'; }
+      let sub = n.desc, subC = '#a39a8c', subF = "'IBM Plex Sans'";
+      if (isTrace) {
+        op = inT || (k === 'exists' ? .25 : .25); if (inT) op = 1;
+        if (inT) { const x = tr[k]; border = trC(x.kind); bg = x.kind === 'fail' ? '#2a1714' : '#221c12'; sub = `${fmtT(x.st + x.w)} · ${fmtD(x.d)}${x.kind === 'fail' ? ' · falhou' : ''}`; subC = x.kind === 'fail' ? '#ff8a80' : '#d8d0c4'; subF = "'IBM Plex Mono'"; shadow = 'none'; tag = x.kind === 'fail' ? 'FALHOU' : tag; if (x.kind === 'fail') { tagBg = '#3a1a17'; tagC = '#ff8a80'; } }
+      }
+      if (sel) shadow = '0 0 0 2px #e9a23b';
+      return {
+        q: n.q, short: n.terminal ? n.q : short(n.q), sub, subC, subF, x: p.x + 'px', y: p.y + 'px', w: p.w + 'px', h: p.h + 'px',
+        bg: n.terminal ? 'transparent' : bg, border: n.terminal ? '#4a443c' : border, bstyle: n.terminal || n.err ? 'dashed' : 'solid', op, shadow, tag, tagBg, tagC,
+        icon: n.terminal ? 'flag' : n.err ? 'report' : n.alt ? 'alt_route' : 'inbox', iconC: n.err ? '#ff8a80' : n.alt ? '#b3a8f5' : n.terminal ? '#7a7266' : '#a39a8c',
+        hasStats: !n.terminal && !isTrace,
+        stats: n.terminal ? [] : [{ v: n.w, c: COL.waiting }, { v: n.a, c: COL.active }, { v: n.f, c: COL.failed }],
+        tput: n.terminal ? '' : n.tput + '/min',
+        onClick: n.terminal ? () => {} : () => up(isTrace ? { tsel: k } : { sel: k }),
+      };
+    });
+    const e = React.createElement, paths = [], edgeLabels = [];
+    EDGES.forEach(([a, b, label, kind]) => {
+      const pa = pos(a), pb = pos(b), inT = TRACE_EDGES.has(a + '>' + b);
+      let d, lx, ly;
+      if (S[a].r === S[b].r) {
+        const right = pb.x > pa.x; const x1 = right ? pa.x + pa.w : pa.x, x2 = right ? pb.x : pb.x + pb.w, y = pa.y + pa.h / 2, y2 = pb.y + pb.h / 2;
+        d = `M${x1},${y} C${(x1 + x2) / 2},${y} ${(x1 + x2) / 2},${y2} ${x2},${y2}`; lx = (x1 + x2) / 2; ly = (y + y2) / 2 - 10;
+      } else {
+        const x1 = pa.x + pa.w / 2, y1 = pa.y + pa.h, x2 = pb.x + pb.w / 2, y2 = pb.y, my = (y1 + y2) / 2;
+        d = `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`; lx = (x1 + x2) / 2; ly = my;
+      }
+      let stroke = kind === 'alt' ? '#6b62a8' : kind === 'cond' ? '#7a7266' : '#4f483f', op = 1, sw = 1.5;
+      if (isTrace) { if (inT) { stroke = kind === 'alt' ? '#8b7cf0' : '#e9a23b'; sw = 2; } else op = .2; }
+      paths.push(e('path', { key: a + b, d, fill: 'none', stroke, strokeWidth: sw, opacity: op, strokeDasharray: kind === 'alt' || kind === 'cond' ? '5 4' : undefined, markerEnd: 'url(#ar' + key.replace(/\W/g, '') + ')' }));
+      const tl = isTrace ? (inT && tr[b] ? '+' + fmtD(tr[b].w) : '') : (label ? label + ' · ' : '') + (S[b].terminal ? '' : 'avg ' + S[b].wait);
+      if (tl && (isTrace || label || S[b].waitS >= 1)) edgeLabels.push({ x: lx + 'px', y: ly + 'px', t: label && !isTrace ? (S[b].terminal ? label : label + ' · avg ' + S[b].wait) : tl, c: isTrace ? (tr[b] && tr[b].w > 60 ? '#e9a23b' : '#a39a8c') : S[b].waitS > 60 ? '#e9a23b' : '#7a7266' });
+    });
+    const mid = 'ar' + key.replace(/\W/g, '');
+    const edgesSvg = e('svg', { width: 896, height: 960, style: { position: 'absolute', inset: 0, overflow: 'visible', pointerEvents: 'none' } },
+      e('defs', null, e('marker', { id: mid, viewBox: '0 0 8 8', refX: 7, refY: 4, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, e('path', { d: 'M0,0 L8,4 L0,8 z', fill: '#6b635a' }))),
+      ...paths);
+
+    const stepPanel = k => {
+      const n = S[k]; if (!n) return null;
+      const errs = (ERRORS[k] || []).map(([msg, c]) => ({ msg, n: c }));
+      const rate = n.f / (n.done + n.f) * 100;
+      return { q: n.q, desc: n.desc, spark: spark(k), errors: errs, noErrors: !errs.length,
+        metrics: [{ k:'Throughput', v:n.tput + '/min', c:'#ece6dc' }, { k:'Concluídos 24h', v:n.done.toLocaleString('en-US'), c:'#3ad48f' }, { k:'p50 · p95', v:n.p50 + ' · ' + n.p95, c:'#ece6dc' }, { k:'Espera média', v:n.wait, c:n.waitS > 60 ? '#e9a23b' : '#ece6dc' }, { k:'Waiting · active', v:n.w + ' · ' + n.a, c:'#b3a8f5' }, { k:'Falhas', v:n.f + ' · ' + rate.toFixed(1) + '%', c:n.f ? '#ff6b6b' : '#ece6dc' }] };
+    };
+    const tsel = s.tsel || s.sel;
+    const traceRows = k => {
+      const x = tr[k]; if (!x) return [];
+      const idx = TRACE.findIndex(r => r[0] === k);
+      const parent = idx > 0 ? (k === 'download' || k === 'error' ? 'transcr' : k === 'translate' ? 'saveTr' : k === 'clean' ? 'idxVideo' : ['comments','idxVideo','category'].includes(k) ? 'setup' : TRACE[idx - 1][0]) : null;
+      return [{ k:'traceId', v:'"tr_9f2c41e7b0"', c:'#efe6d6' }, { k:'step', v:'"' + S[k].q + '"', c:'#efe6d6' }, { k:'parentJobId', v: parent ? '"' + S[parent].q + ':' + (88200 + idx) + '"' : 'null', c: parent ? '#efe6d6' : '#e9a23b' }, { k:'attempt', v: x.kind === 'fail' ? '2' : '1', c:'#e9a23b' }];
+    };
+    const panelTrace = isTrace ? {
+      steps: TRACE.map(([k, st, w, d, kind]) => ({ short: short(S[k].q), time: fmtT(st + w), dur: fmtD(d), c: trC(kind), bg: tsel === k ? '#2a251f' : 'transparent', onClick: () => up({ tsel: k }) })),
+      sel: tr[tsel] ? { jobId: S[tsel].q + ':' + (88200 + TRACE.findIndex(r => r[0] === tsel)), rows: traceRows(tsel) } : null,
+    } : null;
+
+    // table B
+    const maxT = 12.8, maxW = Math.log10(581);
+    const rows = ORDER.map(([k, depth, kind]) => {
+      const n = S[k], open = s.open === k, terminal = n.terminal;
+      const errs = (ERRORS[k] || []).map(([msg, c]) => ({ msg, n: c }));
+      const rate = terminal ? 0 : n.f / (n.done + n.f) * 100;
+      return {
+        short: terminal ? 'já existe → ' + n.q : short(n.q), desc: n.desc, indent: (depth * 22) + 'px', elbow: depth > 0, lineC: n.alt ? '#4b4470' : '#3a342c',
+        icon: terminal ? 'flag' : n.err ? 'report' : n.alt ? 'alt_route' : 'inbox', iconC: n.err ? '#ff8a80' : n.alt ? '#b3a8f5' : '#a39a8c',
+        tag: n.bottleneck ? 'GARGALO' : n.alt ? 'FALLBACK' : n.err ? 'ON ERROR' : '', tagBg: n.bottleneck ? '#4a3818' : n.alt ? '#2e2a48' : '#3a1a17', tagC: n.bottleneck ? '#e9a23b' : n.alt ? '#b3a8f5' : '#ff8a80',
+        w: terminal ? '' : n.w, wC: n.w > 50 ? '#e9a23b' : '#b3a8f5', a: terminal ? '' : n.a, f: terminal ? '' : n.f, fC: n.f ? '#ff6b6b' : '#7a7266',
+        tput: terminal ? '' : n.tput, tputW: terminal ? '0%' : (n.tput / maxT * 100) + '%',
+        p: terminal ? '' : n.p50 + ' · ' + n.p95, wait: terminal ? '' : n.wait, waitW: terminal ? '0%' : Math.max(2, Math.log10(n.waitS * 10 + 1) / (maxW + 1) * 100) + '%',
+        waitC: n.waitS > 60 ? '#e9a23b' : '#6b635a', waitT: n.waitS > 60 ? '#e9a23b' : '#d8d0c4',
+        rate: terminal ? '' : rate.toFixed(1) + '%', rateC: rate > 1 ? '#ff6b6b' : '#a39a8c',
+        bg: n.bottleneck ? '#221c12' : 'transparent', open: open && !terminal,
+        onClick: () => up(c => ({ open: c.open === k ? null : k })),
+        spark: terminal ? [] : spark(k), errors: errs, noErrors: !errs.length,
+        next: EDGES.filter(x => x[0] === k).map(x => short(S[x[1]].q)).concat(k === 'error' ? [] : []),
+      };
+    });
+
+    // gantt B
+    const ticks = [0, 120, 240, 360, 480, 600].map(v => ({ x: (v / TOTAL * 100) + '%', l: v ? Math.round(v / 60) + 'm' : '0' }));
+    const depthOf = { verify:0, extract:0, setup:0, comments:1, idxVideo:1, clean:2, category:1, product:1, author:1, transcr:1, error:2, download:2, whisper:2, saveTr:2, translate:1, reindex:1 };
+    const gRows = TRACE.map(([k, st, w, d, kind], idx) => {
+      const c = trC(kind), open = s.open === k;
+      const out = kind === 'fail' ? 'Error: TranscriptionApi 429 rate limit\n    attempts 2/2, fallback acionado' : k === 'error' ? '{ step: "content:TranscriptionApi", reason: "429", recovered: true }' : k === 'verify' ? '{ exists: false }' : k === 'translate' ? '{ from: "en", to: "pt-BR", chars: 1840 }' : '{ ok: true }';
+      return {
+        short: short(S[k].q), time: fmtT(st), indent: (depthOf[k] * 16) + 'px', c, bg: kind === 'fail' ? '#241513' : 'transparent',
+        wl: (st / TOTAL * 100) + '%', ww: (w / TOTAL * 100) + '%', wc: w > 60 ? 'rgba(233,162,59,.6)' : 'rgba(160,150,135,.5)',
+        pl: ((st + w) / TOTAL * 100) + '%', pw: (d / TOTAL * 100) + '%',
+        dur: fmtD(w + d), durC: w > 60 ? '#e9a23b' : '#d8d0c4', open,
+        onClick: () => up(cur => ({ open: cur.open === k ? null : k })),
+        traceRows: traceRows(k),
+        timing: [{ k:'enfileirado', v:fmtT(st) }, { k:'espera', v:fmtD(w) }, { k:'início', v:fmtT(st + w) }, { k:'processamento', v:fmtD(d) }],
+        outTitle: kind === 'fail' ? 'stacktrace' : 'returnvalue', out, outBg: kind === 'fail' ? '#341a15' : '#1a1712', outBd: kind === 'fail' ? '#6e2b22' : '#2e2922',
+      };
+    });
+
+    return {
+      badge, anchor: badge, caption: t.label, groups, tabs, q: s.q, onQ: ev => up({ q: ev.target.value }), onKey: ev => { if (ev.key === 'Enter') runTrace(); }, runTrace,
+      searchBorder: isTrace ? '#6b4f22' : '#4a443c',
+      showKpis: s.view === 'grafo', kpis, isTrace,
+      traceStats: [{ k:'VIDEOID', v:'7428801239912', c:'#ece6dc' }, { k:'INÍCIO', v:'15 out 13:02:11', c:'#ece6dc' }, { k:'DURAÇÃO', v:fmtD(TOTAL), c:'#ece6dc' }, { k:'JOBS', v:String(TRACE.length), c:'#ece6dc' }, { k:'STATUS', v:'concluído via fallback', c:'#b3a8f5' }, { k:'MAIOR ESPERA', v:'TranscriptionApi · 9m00s', c:'#e9a23b' }],
+      clearTrace: () => up({ view: 'grafo', q: '', tsel: null }),
+      isGraph: !isConfig && s.layout === 'A', canvasH: '960px', nodes, edgesSvg, edgeLabels,
+      panelStep: !isTrace && s.layout === 'A' ? stepPanel(s.sel || 'transcr') : null, panelTrace,
+      isTable: s.view === 'grafo' && s.layout === 'B', rows,
+      isGantt: isTrace && s.layout === 'B', gantt: { ticks, rows: gRows },
+      isConfig, yaml: YAML_LINES, traceDoc: TRACE_DOC, checks: CHECKS.map(([icon, c, bg, t]) => ({ icon, c, bg, t })),
+    };
+  }
+  renderVals() {
+    const mode = this.props.mode ?? 'Lado a lado';
+    const tela = this.props.tela ?? 'grafo';
+    const opcao = this.props.opcao ?? 'A';
+    const ids = {}; let turn = 0; const keys = [];
+    TELAS.forEach(t => { if (!(t.k in ids)) { ids[t.k] = ++turn; keys.push(t.k); } });
+    const badgeOf = t => ids[t.k] + t.o.toLowerCase();
+    if (mode === 'Navegável') {
+      const t = TELAS.find(x => x.k === tela && x.o === opcao) || TELAS.find(x => x.k === tela) || TELAS[0];
+      return { frames: [this.frame('N:' + t.k + t.o, { ...t, label: 'Protótipo navegável · ' + t.label }, badgeOf(t))] };
+    }
+    return { frames: TELAS.map(t => this.frame('L:' + t.k + t.o, t, badgeOf(t))) };
+  }
+}
+</script>
+</body>
+</html>

@@ -122,6 +122,24 @@
 
 **Não fazer**: não gravar o run em `job.data`/`returnvalue`; não gravar o `recorder.run` (completo) sem passar pelo corte de nível; não guardar custo nos rollups; não adicionar `ai`, t-digest ou similar como dependência do root; não expor métricas de agente no `/metrics` Prometheus sem reabrir com Security (nomes de tool/modelo como label em rota sem auth); não mudar `AGENT_LATENCY_BOUNDS_MS` sem incrementar a versão `h` do ponto.
 
+## 📐 ADR-005 (PROPOSTA, não aprovada): Flows e traces: definição no setup, `_trace` no payload, série e índice por flow no collector (2026-10-16)
+
+**Status**: proposta do Architect, aguardando respostas do usuário (perguntas P1 a P11 em `docs/todo/005-flows/spec.md`). Desenho completo em `docs/todo/005-flows/architecture.md`; piloto Vyral em `docs/todo/005-flows/vyral-flows.md`.
+
+**Contexto**: task 005 (módulo 05 do design, "Flows e traces"). Um item de negócio atravessa várias filas (uma enfileira a próxima, com leque, condição, fallback e fila de erro). O painel vê filas soltas e não liga um job ao seguinte.
+
+**Decisão 1: o flow é declarado em objeto TS na config do monitor (`Config.flows`)**, não em YAML como no design. Etapa = fila + nomes de job opcionais. Validação no boot nunca lança: problemas viram checks servidos na aba Config. Sem parser YAML no root; a UI mostra a definição renderizada em YAML.
+
+**Decisão 2: o trace viaja em `data._trace` (`FlowTraceV1`), escrito uma vez ao enfileirar** por helpers puros (`startTrace`, `withTrace`, `readTrace`) em `packages/root/src/flow/`, com a mesma regra do `agent/`: sem I/O, sem dependência, nunca lança. `opts` custom foi descartado (o BullMQ não preserva chaves desconhecidas em todas as versões); chave Redis própria foi descartada pelo mesmo motivo da 004 (ciclo de vida, sandbox, acoplamento ao esquema de chaves). A etapa é derivada no servidor, não declarada pelo worker.
+
+**Decisão 3: agregados por etapa não exigem `_trace`.** O collector agrega processamento, espera, falha, `lost` e `retried` por etapa a partir do job lido no evento terminal; o `_trace` acrescenta arestas observadas, fim a fim e o índice de busca. Série `TieredSeries` **por flow** (`<prefix>flow:<id>::flow`), esparsa, histogramas de faixas fixas `FLOW_DURATION_BOUNDS_MS` (versão `h`), quantil compartilhado com o agente.
+
+**Decisão 4: índice de traces em zsets lexicográficos por flow** (`::traces` por `startedAt`, `::traces::jobs` e `::traces::keys` com score 0 e prefixo `traceId\x00` / `key\x00`, `::traces::meta` hash). Escrita só com `ZADD`/`HSET` idempotentes (sem read-modify-write entre réplicas), teto `recentTraces` (default 2000) e `jobsPerTrace` (300), despejo que remove todos os membros do trace. Nenhuma chave por trace.
+
+**Decisão 5: etapas pendentes lidas na hora, só na fronteira** (etapas seguintes às vistas no trace), com teto `pendingScanLimit` por fila e marca `partial`.
+
+**Não fazer**: não gravar trace por `job.update` nem em `opts`; não criar chave Redis por trace ou por chave de negócio; não aceitar expressão/jsonata na busca de trace; não expor flows no `/metrics` sem reabrir com Security; não mudar `FLOW_DURATION_BOUNDS_MS` sem incrementar `h`; não derivar tentativa sem `terminalAttempts`/`defaultAgentRunAttempt` (Bull 3 e BullMQ contam diferente).
+
 ## 🛡️ Modelo de Ameaças (Security Specialist)
 
 - **Sem autenticação/autorização nativa**: o middleware GraphQL exposto por qualquer adapter (e o CLI) não possui controle de acesso embutido. Qualquer requisição que alcance a rota montada tem acesso de leitura/escrita total às queues (dados de job, incluindo payloads que podem conter PII, e capacidade de retry/remoção de jobs).
