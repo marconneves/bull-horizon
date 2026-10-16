@@ -2,7 +2,7 @@
 
 **Revisor:** 🔒 Security Specialist
 **Data:** 2026-10-15
-**Escopo:** change set não commitado da task 004 (`git diff` + arquivos novos): `packages/root/src/agent/`, `metrics/`, `gql/type-defs/agents.ts`, `gql/data-sources/agents/`, resolvers, adapters, `packages/ui/src/screens/agents/`, `components/SafeMarkdown/`, `services/agent-run-log.ts`, `screens/jobs/LogsModal`, demo mocks, `docs/agent-runs.md`, `skills/bull-horizon-agent-jobs/` e `docs/todo/004-agentes-ia/design/`.
+**Escopo:** change set não commitado da task 004 (`git diff` + arquivos novos): `packages/root/src/agent/`, `metrics/`, `gql/type-defs/agents.ts`, `gql/data-sources/agents/`, resolvers, adapters, `packages/ui/src/screens/agents/`, `components/SafeMarkdown/`, `services/agent-run-log.ts`, `screens/jobs/LogsModal`, demo mocks, `docs/agent-runs.md`, `skills/bull-horizon-agent-jobs/` (hoje `skills/bull-horizon/references/agent-runs.md`) e `docs/todo/004-agentes-ia/design/`.
 **Base:** `threat-model.md` (pontos 1 a 9), OWASP Top 10 / CWE Top 25.
 
 ## Veredito
@@ -136,7 +136,7 @@ Validação: `npx jest` 9 suítes, 181 testes passando; `tsc --noEmit` do root; 
 
 ## Revalidação
 
-**Por:** 🔒 Security Specialist, 2026-10-15. Escopo: `packages/root` e a orientação em `docs/agent-runs.md` e `skills/bull-horizon-agent-jobs/` (a `packages/ui` está fora, ainda em edição).
+**Por:** 🔒 Security Specialist, 2026-10-15. Escopo: `packages/root` e a orientação em `docs/agent-runs.md` e `skills/bull-horizon-agent-jobs/` (hoje `skills/bull-horizon/`) (a `packages/ui` está fora, ainda em edição).
 
 **Veredito final: APROVADO.** F1 a F9 e as decisões (a) a (d) foram corrigidos ou documentados conforme recomendado. Não há Critical, High nem Medium em aberto.
 

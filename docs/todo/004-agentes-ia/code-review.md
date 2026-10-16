@@ -25,7 +25,7 @@ Escopo: diff não commitado inteiro da branch `feat/flow-para-ia` (42 arquivos m
 - [✅] T003 `QueueConfig.ai`, `Config.ai` (`pricing`, `recentRuns`), `Queue.agent`/`isAgentJob`, `getJobLogs(start, end)` em `bull-adapter.ts:261` e `bullmq-adapter.ts:290`; o `QueueConfig` duplicado de `typings/config.ts` virou reexport de `../queue`.
 - [✅] T004 e T005 collector de agentes, type-defs, data source e resolvers; `agentsTypeDef` registrado depois de Queue/Job/Query.
 - [✅] T006 a T009 tela `agents`, Run (Graph + Waterfall), Metrics, Runs, ação "Agent run" no job, linha colapsada no modal de Logs, demo mocks ligados em `providers/network/value.ts`.
-- [✅] T010 e T011 `docs/agent-runs.md`, README, skill `skills/bull-horizon-agent-jobs/`.
+- [✅] T010 e T011 `docs/agent-runs.md`, README, skill `skills/bull-horizon-agent-jobs/` (consolidada em `skills/bull-horizon/`).
 - [✅] T015 a T018 Conversa: `c` no índice, `Query.agentConversation` com teste `describe.each` Bull/BullMQ (`agent-conversation.test.ts:113`), tela Chat/List, KPIs, "Messages over time", "Tools used", botão "View whole conversation" em `ResponseCard.tsx`, mock `c-7f21`, seção "Conversation view" na doc e na skill.
 - [❌] Changeset: `.changeset/agent-runs-view.md` não menciona a visão Conversa nem `Query.agentConversation`. Ver must-fix 1.
 - [✅] T014 (migração do brand-api) fica fora deste repo, corretamente marcada como pendente e dependente da publicação.

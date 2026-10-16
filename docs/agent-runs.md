@@ -662,9 +662,8 @@ const recorder = createAgentRun({
 });
 ```
 
-**`conversationId` must be an opaque id** (a UUID or a database key). Never an email, phone number, document number or name, and never a hash of one: an unsalted hash of an email or phone number is reversible.
-Never an email, a phone number or a name: it is kept at `basic`, stored in the
-recent runs index and shown in the dashboard.
+**`conversationId` must be an opaque id** (a UUID or a database key). Never an email, phone number, document number or name, and never a hash of one: an unsalted hash of an email or phone number is reversible. It is kept at `basic`, stored in the recent runs index and shown in
+the dashboard.
 
 What each message shows:
 

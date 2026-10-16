@@ -113,7 +113,7 @@ Os 5 testes `QA-FINDING` de `qa-004-backend.test.ts` estão sem `skip` e passam.
 - **Doc-writer: `"text": ""`.** O helper não cria mais `text: ''` no passo; `stepFinish` sem texto omite a chave. `applyAgentRunDetail` também omite texto vazio (linhas antigas com `""`). Exemplo em `docs/agent-runs.md` corrigido.
 - **Doc-writer: cauda de 200 linhas.** Mantida: Redis não filtra lista no servidor, então varrer o log inteiro por prefixo custaria uma leitura completa por evento. Documentado em `docs/agent-runs.md` (Limits e Limitations) e nos erros comuns da skill (`note()` demais esconde runs anteriores).
 
-Docs atualizadas: `docs/agent-runs.md` (numeração de tentativa por lib, opção `attempt`/`limits`, degradação na falha de build, regra da releitura, summary de tool com falha, texto omitido, cauda de 200, overhead, `lost`), `skills/bull-horizon-agent-jobs/SKILL.md` (erros comuns).
+Docs atualizadas: `docs/agent-runs.md` (numeração de tentativa por lib, opção `attempt`/`limits`, degradação na falha de build, regra da releitura, summary de tool com falha, texto omitido, cauda de 200, overhead, `lost`), `skills/bull-horizon-agent-jobs/SKILL.md` (erros comuns; hoje em `skills/bull-horizon/references/agent-runs.md`).
 
 ## Re-teste (QA, 2026-10-15)
 

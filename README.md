@@ -163,7 +163,11 @@ new BullMonitorExpress({
 [docs/agent-runs.md](./docs/agent-runs.md) for the run contract, detail levels,
 limits, AI SDK and NestJS examples, and the security guidance. A Claude Code
 skill for instrumenting agent jobs lives in
-[skills/bull-horizon-agent-jobs](./skills/bull-horizon-agent-jobs).
+[skills/bull-horizon](./skills/bull-horizon/references/agent-runs.md).
+
+## Claude Code skill
+
+Copy [skills/bull-horizon](./skills/bull-horizon) into your project's `.claude/skills/` to let an agent set up, instrument and debug Bull Horizon end to end.
 
 ## Contributing
 
