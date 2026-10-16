@@ -12,6 +12,7 @@
   },
   "changesets": [
     "agent-runs-returnvalue",
-    "agent-runs-view"
+    "agent-runs-view",
+    "flows-and-traces"
   ]
 }
